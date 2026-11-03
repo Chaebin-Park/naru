@@ -2,6 +2,11 @@
 
 All notable changes to naru are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/) (pre-1.0: minor versions may change behaviour).
 
+## [Unreleased]
+
+### Added
+- `AGENTS.md`: build, verification and contribution rules for coding agents working on this repository.
+
 ## [0.1.0] - 2026-11-03
 
 First release: the core loop that gates an AI agent's "done" on receipts.
@@ -20,4 +25,5 @@ First release: the core loop that gates an AI agent's "done" on receipts.
 - Windows needs a POSIX `sh`, and timeouts there do not kill child processes.
 - No baselines, policy index, relay, git hooks or CI templates yet.
 
+[Unreleased]: https://github.com/Chaebin-Park/naru/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/Chaebin-Park/naru/releases/tag/v0.1.0
