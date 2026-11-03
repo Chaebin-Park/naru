@@ -1,0 +1,11 @@
+/naru
+/dist/
+*.test
+*.out
+.DS_Store
+# diagram sources and third-party logos stay local; docs use the rendered PNGs
+/diagrams/
+# naru's own receipts when dogfooding
+/.naru/receipts/
+/.naru/logs/
+/.naru/state/
