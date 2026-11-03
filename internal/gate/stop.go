@@ -62,27 +62,27 @@ func Stop(stdin io.Reader, stderr io.Writer, fallbackDir string) int {
 	}
 	cfg, err := config.Load(root)
 	if err != nil {
-		fmt.Fprintf(stderr, "naru: .naru/config.yaml is invalid, so completion cannot be verified:\n%v\nFix the config, then run `naru check`.\n", err)
-		return Block
+		msg := fmt.Sprintf("naru: .naru/config.yaml is invalid, so completion cannot be verified:\n%v\nFix the config, then run `naru check`.\n", err)
+		return block(root, in, config.DefaultMaxRepeats, textFingerprint(msg), msg, stderr)
 	}
 	m, src := mode.Resolve(root, cfg, "")
 	rep, err := status.Evaluate(root, cfg, m)
 	if err != nil {
-		fmt.Fprintf(stderr, "naru: cannot evaluate mode %q (from %s): %v\n", m, src, err)
+		msg := fmt.Sprintf("naru: cannot evaluate mode %q (from %s): %v\n", m, src, err)
 		if src == "stored" {
-			fmt.Fprintln(stderr, "The stored mode is no longer defined; run `naru mode --clear` or `naru mode <name>`.")
+			msg += "The stored mode is no longer defined; run `naru mode --clear` or `naru mode <name>`.\n"
 		}
-		return Block
+		return block(root, in, cfg.GateMaxRepeats(), textFingerprint(msg), msg, stderr)
 	}
 	if rep.Satisfied {
+		clearBreaker(root)
 		if m != cfg.DefaultMode {
 			// Surface a narrowed mode so a human reviewing the session can see it.
 			fmt.Fprintf(stderr, "naru: done for mode %q (selected via %s; default_mode is %q)\n", m, src, cfg.DefaultMode)
 		}
 		return Allow
 	}
-	fmt.Fprint(stderr, BlockMessage(rep))
-	return Block
+	return block(root, in, cfg.GateMaxRepeats(), reportFingerprint(rep), BlockMessage(rep), stderr)
 }
 
 func findProject(candidates ...string) (string, error) {

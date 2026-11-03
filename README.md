@@ -88,10 +88,13 @@ naru mode --clear
 
 ### Claude Code
 
-Add a Stop hook to `.claude/settings.json`:
+Put `naru` on `PATH`, then add a Stop hook and let the agent run checks in `.claude/settings.json`:
 
 ```json
 {
+  "permissions": {
+    "allow": ["Bash(naru check:*)", "Bash(naru status:*)"]
+  },
   "hooks": {
     "Stop": [
       { "hooks": [{ "type": "command", "command": "naru gate stop" }] }
@@ -100,12 +103,17 @@ Add a Stop hook to `.claude/settings.json`:
 }
 ```
 
+Use the bare `naru gate stop` command: the agent copies the command it sees in hook feedback, so an absolute path in the hook makes it call naru by that path and miss a `Bash(naru check:*)` allow rule.
+
 When the gate blocks, it exits 2 and explains on stderr which checks are not satisfied and what to run; Claude Code feeds that back to the model and keeps working.
 
 - The project is found from `$CLAUDE_PROJECT_DIR` first, then the hook payload's `cwd`, so an agent that `cd`s elsewhere is still gated. Outside a naru project the gate always allows.
 - An invalid config blocks, because an unverifiable state is not a passing one.
 - When the active mode is not `default_mode`, an allowed stop says so on stderr, so a narrowed mode is visible in the session.
+- No endless loops: if the agent cannot make progress (for example `naru check` is not permitted), the same block repeats with nothing changing. After `gate.max_repeats` identical blocks in one stop chain (default 3) naru lets the agent stop and says on stderr that completion is **NOT VERIFIED**. Any progress (an edit, a new run) resets the count. Set `gate: {max_repeats: 0}` to never give up.
 - Escape hatch for humans: set `NARU_GATE=off` in the environment Claude Code runs hooks with. Every stop then reports that completion was not verified.
+
+See [docs/verification.md](docs/verification.md) for recorded runs against real Claude Code sessions.
 
 ### Codex and others
 

@@ -59,10 +59,13 @@ naru status        # check별 pass / fail / stale / missing
 
 ## Claude Code 연결
 
-`.claude/settings.json`에 Stop 훅을 추가합니다.
+`naru`를 `PATH`에 두고 `.claude/settings.json`에 Stop 훅과 check 실행 권한을 추가합니다.
 
 ```json
 {
+  "permissions": {
+    "allow": ["Bash(naru check:*)", "Bash(naru status:*)"]
+  },
   "hooks": {
     "Stop": [
       { "hooks": [{ "type": "command", "command": "naru gate stop" }] }
@@ -72,6 +75,10 @@ naru status        # check별 pass / fail / stale / missing
 ```
 
 차단할 때는 exit 2와 함께, 무엇이 충족되지 않았고 무엇을 실행해야 하는지 stderr로 알려 줍니다. 프로젝트 위치는 `$CLAUDE_PROJECT_DIR`을 먼저 보고 그다음 payload의 `cwd`를 봅니다. naru 프로젝트가 아니면 항상 허용하고, 설정이 잘못되었으면 차단합니다. 검증할 수 없는 상태는 통과가 아니기 때문입니다. 기본 모드가 아닌 모드로 통과하면 그 사실을 stderr에 남깁니다. 사람이 gate를 끄려면 훅 환경에 `NARU_GATE=off`를 설정합니다.
+
+- 훅 명령은 절대경로 대신 `naru gate stop`으로 씁니다. 에이전트는 훅 피드백에 보이는 명령을 그대로 따라 쓰기 때문에, 절대경로를 쓰면 `Bash(naru check:*)` 허용 규칙에 걸리지 않습니다.
+- 에이전트가 진행할 수 없는 상태(예: `naru check` 권한 없음)에서 같은 차단이 한 Stop 흐름 안에서 `gate.max_repeats`번(기본 3) 반복되면, 종료를 허용하되 stderr에 **NOT VERIFIED**를 남깁니다. 파일 수정이나 새 실행처럼 진행이 생기면 횟수를 다시 셉니다. `gate: {max_repeats: 0}`이면 절대 포기하지 않습니다.
+- 실제 Claude Code 세션 검증 기록: [docs/verification.md](docs/verification.md)
 
 Codex 등 다른 에이전트는 네이티브 훅을 지원하기 전까지 `AGENTS.md`에 "완료 보고 전에 `naru status`를 실행하고, 0이 아니면 `naru check`로 고친 뒤 반복한다"는 지침을 넣어 연결합니다.
 
