@@ -33,6 +33,26 @@ type Config struct {
 	Checks      map[string]Check    `yaml:"checks"`
 	// Exclude lists glob patterns removed from every check's inputs.
 	Exclude []string `yaml:"exclude"`
+	Gate    Gate     `yaml:"gate"`
+}
+
+// DefaultMaxRepeats is how many identical consecutive Stop blocks naru issues
+// before it lets the agent stop (reporting that completion was not verified).
+const DefaultMaxRepeats = 3
+
+// Gate tunes `naru gate stop`.
+type Gate struct {
+	// MaxRepeats bounds identical consecutive blocks with no progress (nothing
+	// changed between them). 0 means never give up. Unset means DefaultMaxRepeats.
+	MaxRepeats *int `yaml:"max_repeats"`
+}
+
+// GateMaxRepeats returns the effective repeat limit.
+func (c *Config) GateMaxRepeats() int {
+	if c == nil || c.Gate.MaxRepeats == nil {
+		return DefaultMaxRepeats
+	}
+	return *c.Gate.MaxRepeats
 }
 
 // Check is one runnable verification.
@@ -138,6 +158,9 @@ func (c *Config) Validate() error {
 				errs = append(errs, fmt.Errorf("check %q: workdir must be a path inside the repository", name))
 			}
 		}
+	}
+	if c.Gate.MaxRepeats != nil && *c.Gate.MaxRepeats < 0 {
+		errs = append(errs, errors.New("gate.max_repeats must be 0 (never give up) or positive"))
 	}
 	if len(c.Modes) == 0 {
 		errs = append(errs, errors.New("at least one mode is required"))

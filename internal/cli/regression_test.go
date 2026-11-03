@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -167,5 +168,56 @@ func TestGateProjectDirAndEscapeHatch(t *testing.T) {
 	code = Run([]string{"gate", "stop"}, Env{Stdin: strings.NewReader(stopPayload(root)), Stdout: &out, Stderr: &errb, Dir: root})
 	if code != 0 || !strings.Contains(errb.String(), "gate disabled") {
 		t.Fatalf("NARU_GATE=off: code=%d %s", code, errb.String())
+	}
+}
+
+func stopChain(cwd string, active bool) string {
+	b, _ := json.Marshal(map[string]any{"hook_event_name": "Stop", "cwd": cwd, "stop_hook_active": active})
+	return string(b)
+}
+
+// Seen in a real Claude Code session: an agent that cannot run checks (permission
+// denied) was blocked 68 times. Identical blocks with no progress must end.
+func TestGateGivesUpAfterIdenticalBlocks(t *testing.T) {
+	root := newProject(t, false)
+	if r := run(t, root, stopChain(root, false), "gate", "stop"); r.code != 2 {
+		t.Fatalf("first stop: %+v", r)
+	}
+	for i := 2; i <= 3; i++ {
+		r := run(t, root, stopChain(root, true), "gate", "stop")
+		if r.code != 2 || !strings.Contains(r.stderr, "identical block") {
+			t.Fatalf("repeat %d: %+v", i, r)
+		}
+	}
+	r := run(t, root, stopChain(root, true), "gate", "stop")
+	if r.code != 0 || !strings.Contains(r.stderr, "NOT VERIFIED") {
+		t.Fatalf("breaker did not open: %+v", r)
+	}
+	// A new stop chain starts counting again.
+	if r := run(t, root, stopChain(root, false), "gate", "stop"); r.code != 2 {
+		t.Fatalf("new chain: %+v", r)
+	}
+}
+
+func TestGateRepeatCounterResetsOnProgress(t *testing.T) {
+	root := newProject(t, false)
+	run(t, root, stopChain(root, false), "gate", "stop")
+	run(t, root, stopChain(root, true), "gate", "stop")
+	run(t, root, stopChain(root, true), "gate", "stop")
+	run(t, root, "", "check") // progress: a (failing) receipt now exists
+	for i := 0; i < 3; i++ {
+		if r := run(t, root, stopChain(root, true), "gate", "stop"); r.code != 2 {
+			t.Fatalf("progress did not reset the counter (iteration %d): %+v", i, r)
+		}
+	}
+}
+
+func TestGateNeverGivesUpWhenConfigured(t *testing.T) {
+	root := newProject(t, false)
+	write(t, root, ".naru/config.yaml", projectConfig+"gate:\n  max_repeats: 0\n")
+	for i := 0; i < 6; i++ {
+		if r := run(t, root, stopChain(root, i > 0), "gate", "stop"); r.code != 2 {
+			t.Fatalf("max_repeats 0 gave up at %d: %+v", i, r)
+		}
 	}
 }
