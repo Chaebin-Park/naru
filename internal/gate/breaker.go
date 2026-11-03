@@ -8,6 +8,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/Chaebin-Park/naru/internal/config"
 	"github.com/Chaebin-Park/naru/internal/status"
@@ -71,7 +73,7 @@ func textFingerprint(s string) string {
 // block emits msg and returns Block, unless the same block has now repeated
 // more than maxRepeats times in one stop chain; then it returns Allow with a
 // "not verified" notice.
-func block(root string, in StopInput, maxRepeats int, fingerprint, msg string, stderr io.Writer) int {
+func block(root string, in StopInput, maxRepeats int, fingerprint, msg string, stdout, stderr io.Writer) int {
 	st := loadBreaker(root)
 	if in.StopHookActive && st.Fingerprint == fingerprint {
 		st.Repeats++
@@ -80,9 +82,9 @@ func block(root string, in StopInput, maxRepeats int, fingerprint, msg string, s
 	}
 	if maxRepeats > 0 && st.Repeats > maxRepeats {
 		clearBreaker(root)
-		fmt.Fprintf(stderr, "naru: NOT VERIFIED — the same block repeated %d times with no progress, so naru is letting the agent stop.\n", maxRepeats)
-		fmt.Fprint(stderr, msg)
-		fmt.Fprintln(stderr, "A human must resolve this (see above). Set gate.max_repeats: 0 to never give up.")
+		recordUnverified(root, msg)
+		head := fmt.Sprintf("naru: NOT VERIFIED — the same block repeated %d times with no progress, so naru let the agent stop.", maxRepeats)
+		warnUser(stdout, stderr, head+"\n"+strings.TrimRight(msg, "\n")+"\nA human must resolve this; `naru status` keeps showing it until a verified stop. Set gate.max_repeats: 0 to never give up.")
 		return Allow
 	}
 	saveBreaker(root, st)
@@ -91,4 +93,48 @@ func block(root string, in StopInput, maxRepeats int, fingerprint, msg string, s
 		fmt.Fprintf(stderr, "(identical block %d of %d; if you cannot make progress, say so and stop.)\n", st.Repeats, maxRepeats)
 	}
 	return Block
+}
+
+// warnUser shows msg to the human: Claude Code displays a hook's
+// {"systemMessage": ...} on stdout (with exit 0) to the user. The same text
+// goes to stderr for other agents and for logs.
+func warnUser(stdout, stderr io.Writer, msg string) {
+	b, _ := json.Marshal(map[string]string{"systemMessage": msg})
+	fmt.Fprintln(stdout, string(b))
+	fmt.Fprintln(stderr, msg)
+}
+
+// Unverified is the record of a stop naru allowed without verification.
+type Unverified struct {
+	At     time.Time `json:"at"`
+	Reason string    `json:"reason"`
+}
+
+func unverifiedPath(root string) string {
+	return filepath.Join(root, config.Dir, "state", "unverified.json")
+}
+
+func recordUnverified(root, reason string) {
+	p := unverifiedPath(root)
+	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+		return
+	}
+	data, _ := json.Marshal(Unverified{At: time.Now().UTC(), Reason: reason})
+	_ = os.WriteFile(p, data, 0o644)
+}
+
+func clearUnverified(root string) { _ = os.Remove(unverifiedPath(root)) }
+
+// LastUnverified returns the record of the last stop allowed without
+// verification, or nil when the latest stop was verified (or none happened).
+func LastUnverified(root string) *Unverified {
+	data, err := os.ReadFile(unverifiedPath(root))
+	if err != nil {
+		return nil
+	}
+	var u Unverified
+	if json.Unmarshal(data, &u) != nil {
+		return nil
+	}
+	return &u
 }

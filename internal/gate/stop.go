@@ -43,9 +43,9 @@ type StopInput struct {
 // fallbackDir; the first of these inside a naru project is gated. Outside any
 // naru project it allows (naru must not trap unrelated sessions). A broken
 // config blocks: an unverifiable state is not a passing state.
-func Stop(stdin io.Reader, stderr io.Writer, fallbackDir string) int {
+func Stop(stdin io.Reader, stdout, stderr io.Writer, fallbackDir string) int {
 	if strings.EqualFold(os.Getenv(DisableEnv), "off") {
-		fmt.Fprintf(stderr, "naru: gate disabled by %s=off; completion was not verified\n", DisableEnv)
+		warnUser(stdout, stderr, fmt.Sprintf("naru: gate disabled by %s=off; completion was not verified", DisableEnv))
 		return Allow
 	}
 	var in StopInput
@@ -63,7 +63,7 @@ func Stop(stdin io.Reader, stderr io.Writer, fallbackDir string) int {
 	cfg, err := config.Load(root)
 	if err != nil {
 		msg := fmt.Sprintf("naru: .naru/config.yaml is invalid, so completion cannot be verified:\n%v\nFix the config, then run `naru check`.\n", err)
-		return block(root, in, config.DefaultMaxRepeats, textFingerprint(msg), msg, stderr)
+		return block(root, in, config.DefaultMaxRepeats, textFingerprint(msg), msg, stdout, stderr)
 	}
 	m, src := mode.Resolve(root, cfg, "")
 	rep, err := status.Evaluate(root, cfg, m)
@@ -72,17 +72,18 @@ func Stop(stdin io.Reader, stderr io.Writer, fallbackDir string) int {
 		if src == "stored" {
 			msg += "The stored mode is no longer defined; run `naru mode --clear` or `naru mode <name>`.\n"
 		}
-		return block(root, in, cfg.GateMaxRepeats(), textFingerprint(msg), msg, stderr)
+		return block(root, in, cfg.GateMaxRepeats(), textFingerprint(msg), msg, stdout, stderr)
 	}
 	if rep.Satisfied {
 		clearBreaker(root)
+		clearUnverified(root)
 		if m != cfg.DefaultMode {
-			// Surface a narrowed mode so a human reviewing the session can see it.
-			fmt.Fprintf(stderr, "naru: done for mode %q (selected via %s; default_mode is %q)\n", m, src, cfg.DefaultMode)
+			// Surface a narrowed mode so the human sees it.
+			warnUser(stdout, stderr, fmt.Sprintf("naru: done for mode %q (selected via %s; default_mode is %q)", m, src, cfg.DefaultMode))
 		}
 		return Allow
 	}
-	return block(root, in, cfg.GateMaxRepeats(), reportFingerprint(rep), BlockMessage(rep), stderr)
+	return block(root, in, cfg.GateMaxRepeats(), reportFingerprint(rep), BlockMessage(rep), stdout, stderr)
 }
 
 func findProject(candidates ...string) (string, error) {
@@ -117,7 +118,7 @@ func BlockMessage(rep status.Report) string {
 		case status.Stale:
 			fmt.Fprintf(&b, "  - %s: inputs or check definition changed since the last run\n", c.Check)
 		case status.Fail:
-			fmt.Fprintf(&b, "  - %s: %s (exit %d), log %s\n", c.Check, c.Receipt.Result, c.Receipt.ExitCode, c.Receipt.LogPath)
+			fmt.Fprintf(&b, "  - %s: %s (exit %d) running `%s`, log %s\n", c.Check, c.Receipt.Result, c.Receipt.ExitCode, c.Receipt.Command, c.Receipt.LogPath)
 		case status.Empty:
 			fmt.Fprintf(&b, "  - %s: its inputs match no files; a human must fix the patterns in .naru/config.yaml\n", c.Check)
 		}

@@ -94,7 +94,7 @@ func TestStopGateFlow(t *testing.T) {
 				t.Fatalf("failing check: %+v", r)
 			}
 			r = run(t, sub, stopPayload(sub), "gate", "stop")
-			if r.code != 2 || !strings.Contains(r.stderr, "has-ok: fail (exit 1)") {
+			if r.code != 2 || !strings.Contains(r.stderr, "has-ok: fail (exit 1) running `grep -q ok src/value.txt`") {
 				t.Fatalf("failed receipt must block: %+v", r)
 			}
 

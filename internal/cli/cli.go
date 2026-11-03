@@ -57,6 +57,7 @@ Usage:
   naru status [--mode M] [--json]     show whether required checks pass for the current files
   naru mode [name | --clear]          show or set the mode for this working copy
   naru gate stop                      agent Stop hook: exit 2 with reasons unless satisfied
+  naru gate pre-tool                  agent PreToolUse hook: block edits to .naru/ and mode changes
   naru version
 
 Exit codes: 0 done, 1 not done, 64 usage/config error, 70 internal error, 130 interrupted.
@@ -264,6 +265,9 @@ func cmdStatus(args []string, env Env) int {
 			}
 			fmt.Fprintln(env.Stdout, line)
 		}
+		if u := gate.LastUnverified(root); u != nil {
+			fmt.Fprintf(env.Stdout, "warning: the last agent stop (%s) was allowed WITHOUT verification after repeated blocks\n", u.At.Local().Format("2006-01-02 15:04"))
+		}
 		if rep.Satisfied {
 			fmt.Fprintln(env.Stdout, "done: every required check passes for the current files")
 		} else {
@@ -315,9 +319,12 @@ func cmdMode(args []string, env Env) int {
 }
 
 func cmdGate(args []string, env Env) int {
-	if len(args) != 1 || args[0] != "stop" {
-		fmt.Fprintln(env.Stderr, "naru: usage: naru gate stop   (reads the hook payload from stdin)")
-		return exitUsage
+	if len(args) == 1 && args[0] == "stop" {
+		return gate.Stop(env.Stdin, env.Stdout, env.Stderr, env.Dir)
 	}
-	return gate.Stop(env.Stdin, env.Stderr, env.Dir)
+	if len(args) == 1 && args[0] == "pre-tool" {
+		return gate.PreTool(env.Stdin, env.Stderr, env.Dir)
+	}
+	fmt.Fprintln(env.Stderr, "naru: usage: naru gate stop | naru gate pre-tool   (reads the hook payload from stdin)")
+	return exitUsage
 }
