@@ -1,0 +1,18 @@
+# naru dogfoods itself.
+version: 1
+default_mode: code
+modes:
+  code: [fmt, vet, test]
+  docs: [fmt]
+checks:
+  fmt:
+    run: 'test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }'
+    inputs: ["**/*.go"]
+  vet:
+    run: "go vet ./..."
+    inputs: ["**/*.go", "go.mod", "go.sum"]
+  test:
+    run: "go test -race -count=1 ./..."
+    inputs: ["**/*.go", "go.mod", "go.sum"]
+    timeout: 5m
+exclude: ["diagrams/**"]
