@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"strings"
 	"syscall"
 	"time"
@@ -23,8 +24,20 @@ import (
 	"github.com/Chaebin-Park/naru/internal/status"
 )
 
-// Version is overridden at build time with -ldflags "-X .../cli.Version=v0.1.0".
-var Version = "dev"
+// Version is set at release build time with
+// -ldflags "-X github.com/Chaebin-Park/naru/internal/cli.Version=v0.1.0".
+// `go install ...@v0.1.0` leaves it empty, so the module version is used.
+var Version = ""
+
+func version() string {
+	if Version != "" {
+		return Version
+	}
+	if bi, ok := debug.ReadBuildInfo(); ok && bi.Main.Version != "" && bi.Main.Version != "(devel)" {
+		return bi.Main.Version
+	}
+	return "dev"
+}
 
 // Exit codes (except `gate`, which follows the hook protocol).
 const (
@@ -81,7 +94,7 @@ func Run(args []string, env Env) int {
 	case "gate":
 		return cmdGate(args[1:], env)
 	case "version", "--version":
-		fmt.Fprintln(env.Stdout, "naru", Version)
+		fmt.Fprintln(env.Stdout, "naru", version())
 		return exitOK
 	case "help", "-h", "--help":
 		fmt.Fprint(env.Stdout, usage)
@@ -176,7 +189,7 @@ func cmdCheck(args []string, env Env) int {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	opt := runner.Options{Evidence: ev, Version: Version, Context: ctx}
+	opt := runner.Options{Evidence: ev, Version: version(), Context: ctx}
 	if *verbose {
 		opt.Stream = env.Stderr
 	}
