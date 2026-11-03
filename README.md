@@ -96,12 +96,18 @@ Put `naru` on `PATH`, then add a Stop hook and let the agent run checks in `.cla
     "allow": ["Bash(naru check:*)", "Bash(naru status:*)"]
   },
   "hooks": {
+    "PreToolUse": [
+      { "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash",
+        "hooks": [{ "type": "command", "command": "naru gate pre-tool" }] }
+    ],
     "Stop": [
       { "hooks": [{ "type": "command", "command": "naru gate stop" }] }
     ]
   }
 }
 ```
+
+`naru gate pre-tool` blocks agent edits to `.naru/` (receipts, logs, config, stored mode) and agent mode changes (`naru mode <name>`), because either would let the agent satisfy the gate without doing the work. Reading `.naru/` stays allowed. This is a guard rail against shortcuts, not a security boundary; the authority is a clean `naru check` in CI, where receipts are never committed.
 
 Use the bare `naru gate stop` command: the agent copies the command it sees in hook feedback, so an absolute path in the hook makes it call naru by that path and miss a `Bash(naru check:*)` allow rule.
 
@@ -110,7 +116,7 @@ When the gate blocks, it exits 2 and explains on stderr which checks are not sat
 - The project is found from `$CLAUDE_PROJECT_DIR` first, then the hook payload's `cwd`, so an agent that `cd`s elsewhere is still gated. Outside a naru project the gate always allows.
 - An invalid config blocks, because an unverifiable state is not a passing one.
 - When the active mode is not `default_mode`, an allowed stop says so on stderr, so a narrowed mode is visible in the session.
-- No endless loops: if the agent cannot make progress (for example `naru check` is not permitted), the same block repeats with nothing changing. After `gate.max_repeats` identical blocks in one stop chain (default 3) naru lets the agent stop and says on stderr that completion is **NOT VERIFIED**. Any progress (an edit, a new run) resets the count. Set `gate: {max_repeats: 0}` to never give up.
+- No endless loops: if the agent cannot make progress (for example `naru check` is not permitted), the same block repeats with nothing changing. After `gate.max_repeats` identical blocks in one stop chain (default 3) naru lets the agent stop and reports **NOT VERIFIED** to the user (a hook `systemMessage`) and to the model; `naru status` keeps showing a warning until a later verified stop. Any progress (an edit, a new run) resets the count. Set `gate: {max_repeats: 0}` to never give up.
 - Escape hatch for humans: set `NARU_GATE=off` in the environment Claude Code runs hooks with. Every stop then reports that completion was not verified.
 
 See [docs/verification.md](docs/verification.md) for recorded runs against real Claude Code sessions.
@@ -138,7 +144,7 @@ Before reporting completion, run `naru status`. If it exits non-zero, run `naru 
 
 ## Known limitations (P0)
 
-- Receipts and config are local files. An agent that edits `.naru/` directly (receipts, `run: true`, or `naru mode`) can get past the gate; check-definition changes invalidate receipts and narrowed modes are reported, but prevention needs the planned PreToolUse guard for `.naru/`.
+- Receipts and config are local files. `naru gate pre-tool` blocks the obvious ways an agent could edit them, but its shell detection is a heuristic; rely on CI to re-run checks from a clean checkout.
 - Checks run sequentially with `sh -c`. Windows needs a POSIX shell (for example Git Bash), and a timeout there kills only the shell, not its children.
 - If a check leaves a background process holding its output open, naru records the exit status and stops waiting after 5 seconds.
 - No baselines, policy index, relay, or platform packs yet.

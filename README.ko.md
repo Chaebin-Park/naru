@@ -67,6 +67,10 @@ naru status        # check별 pass / fail / stale / missing
     "allow": ["Bash(naru check:*)", "Bash(naru status:*)"]
   },
   "hooks": {
+    "PreToolUse": [
+      { "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash",
+        "hooks": [{ "type": "command", "command": "naru gate pre-tool" }] }
+    ],
     "Stop": [
       { "hooks": [{ "type": "command", "command": "naru gate stop" }] }
     ]
@@ -76,15 +80,16 @@ naru status        # check별 pass / fail / stale / missing
 
 차단할 때는 exit 2와 함께, 무엇이 충족되지 않았고 무엇을 실행해야 하는지 stderr로 알려 줍니다. 프로젝트 위치는 `$CLAUDE_PROJECT_DIR`을 먼저 보고 그다음 payload의 `cwd`를 봅니다. naru 프로젝트가 아니면 항상 허용하고, 설정이 잘못되었으면 차단합니다. 검증할 수 없는 상태는 통과가 아니기 때문입니다. 기본 모드가 아닌 모드로 통과하면 그 사실을 stderr에 남깁니다. 사람이 gate를 끄려면 훅 환경에 `NARU_GATE=off`를 설정합니다.
 
+- `naru gate pre-tool`은 에이전트가 `.naru/`(receipt, 로그, 설정, 저장된 모드)를 고치거나 모드를 바꾸는 것을 막습니다. 읽기는 허용합니다. 셸 명령 판별은 휴리스틱이라 보안 경계가 아니고, 최종 기준은 CI에서 깨끗한 상태로 다시 실행하는 `naru check`입니다.
 - 훅 명령은 절대경로 대신 `naru gate stop`으로 씁니다. 에이전트는 훅 피드백에 보이는 명령을 그대로 따라 쓰기 때문에, 절대경로를 쓰면 `Bash(naru check:*)` 허용 규칙에 걸리지 않습니다.
-- 에이전트가 진행할 수 없는 상태(예: `naru check` 권한 없음)에서 같은 차단이 한 Stop 흐름 안에서 `gate.max_repeats`번(기본 3) 반복되면, 종료를 허용하되 stderr에 **NOT VERIFIED**를 남깁니다. 파일 수정이나 새 실행처럼 진행이 생기면 횟수를 다시 셉니다. `gate: {max_repeats: 0}`이면 절대 포기하지 않습니다.
+- 에이전트가 진행할 수 없는 상태(예: `naru check` 권한 없음)에서 같은 차단이 한 Stop 흐름 안에서 `gate.max_repeats`번(기본 3) 반복되면, 종료를 허용하되 사용자에게 **NOT VERIFIED**를 알리고(`systemMessage`), `naru status`에도 다음 검증된 종료 전까지 경고가 남습니다. 파일 수정이나 새 실행처럼 진행이 생기면 횟수를 다시 셉니다. `gate: {max_repeats: 0}`이면 절대 포기하지 않습니다.
 - 실제 Claude Code 세션 검증 기록: [docs/verification.md](docs/verification.md)
 
 Codex 등 다른 에이전트는 네이티브 훅을 지원하기 전까지 `AGENTS.md`에 "완료 보고 전에 `naru status`를 실행하고, 0이 아니면 `naru check`로 고친 뒤 반복한다"는 지침을 넣어 연결합니다.
 
 ## 현재 한계 (P0)
 
-- receipt와 설정이 로컬 파일이라 에이전트가 `.naru/`를 직접 고치면 gate를 넘을 수 있습니다. check 정의 변경은 receipt를 무효로 만들고 좁은 모드는 드러나지만, 막으려면 다음 단계의 PreToolUse 가드가 필요합니다.
+- receipt와 설정이 로컬 파일입니다. `naru gate pre-tool`이 흔한 수정 경로를 막지만 셸 판별은 휴리스틱이므로, CI에서 다시 검증해야 합니다.
 - check는 `sh -c`로 하나씩 순서대로 실행합니다. Windows에서는 POSIX 셸이 필요하고, timeout 때 자식 프로세스까지 종료하지 못합니다.
 
 ## 라이선스

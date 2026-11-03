@@ -1,6 +1,8 @@
 package runner
 
 import (
+	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -91,5 +93,40 @@ func TestEmptyInputsRefused(t *testing.T) {
 	_, err := Run(root, cfg, "c", Options{})
 	if err == nil || !strings.Contains(err.Error(), "match no files") {
 		t.Fatalf("empty inputs accepted: %v", err)
+	}
+}
+
+func TestCancelKillsCheckAndWritesNoReceipt(t *testing.T) {
+	root, cfg := project(t, base+`"sh -c 'sleep 30; touch survived' & sleep 30"`)
+	ctx, cancel := context.WithCancel(context.Background())
+	time.AfterFunc(200*time.Millisecond, cancel)
+	start := time.Now()
+	_, err := Run(root, cfg, "c", Options{Context: ctx})
+	if !errors.Is(err, ErrInterrupted) {
+		t.Fatalf("err = %v, want ErrInterrupted", err)
+	}
+	if time.Since(start) > 3*time.Second {
+		t.Fatal("cancel did not stop the check promptly")
+	}
+	if r, _ := receipt.NewStore(root).Get("c"); r != nil {
+		t.Fatalf("interrupted run wrote a receipt: %+v", r)
+	}
+	time.Sleep(100 * time.Millisecond)
+	if _, err := os.Stat(filepath.Join(root, "survived")); err == nil {
+		t.Fatal("grandchild survived the interrupt")
+	}
+}
+
+func TestLogExplainsSilentFailure(t *testing.T) {
+	root, cfg := project(t, base+`"grep -q 42 in.txt"`)
+	out, err := Run(root, cfg, "c", Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	log, _ := os.ReadFile(filepath.Join(root, filepath.FromSlash(out.Receipt.LogPath)))
+	for _, want := range []string{"$ grep -q 42 in.txt", "result fail, exit 1"} {
+		if !strings.Contains(string(log), want) {
+			t.Errorf("log missing %q:\n%s", want, log)
+		}
 	}
 }

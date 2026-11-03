@@ -87,6 +87,12 @@ func Run(root string, cfg *config.Config, name string, opt Options) (Outcome, er
 		writers = append(writers, opt.Stream)
 	}
 	out := io.MultiWriter(writers...)
+	// The log always says what ran, so a silent failure (e.g. `grep -q`) is still explainable.
+	dir := ch.Workdir
+	if dir == "" {
+		dir = "."
+	}
+	fmt.Fprintf(logFile, "naru: check %q\n$ %s\n(dir: %s, inputs: %d files)\n\n", name, ch.Run, dir, digest.FileCount)
 
 	ctx, cancel := context.WithTimeout(parent, ch.TimeoutDuration())
 	defer cancel()
@@ -131,6 +137,7 @@ func Run(root string, cfg *config.Config, name string, opt Options) (Outcome, er
 		}
 	}
 	end := now()
+	fmt.Fprintf(logFile, "\nnaru: result %s, exit %d\n", result, exitCode)
 
 	r := receipt.Receipt{
 		Schema:      receipt.Schema,
