@@ -3,7 +3,7 @@
   "id": "NARU-008",
   "previous": "NARU-007",
   "base": "c77e63d5c624b3b997bad3c3f90906df25df72c3",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Load repository-local packs and bind their definitions to evidence",
     "profile": "code-v1",
@@ -30,6 +30,6 @@
       "Path checks reject symlinks but do not sandbox trusted shell commands or hostile concurrent filesystem changes."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "377b5fe517395e529a697bfd7e96d671dcf2eddd",
+  "evidence": "fa2dbc456ba9e15ce68dcb29ce1c12ff9211967cb595292c7a39570d4b27781e"
 }
