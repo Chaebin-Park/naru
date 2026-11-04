@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "id": "NARU-007",
+  "previous": "NARU-006",
+  "base": "72af17e8ab9732a38a04f7e40342b53bcee54800",
+  "status": "active",
+  "plan": {
+    "title": "Define deterministic surface extraction contracts and fixtures",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Equivalent extraction output ordering produces identical canonical bytes and digest.",
+        "test": "github.com/Chaebin-Park/naru/internal/surface/TestCanonicalFixtures"
+      },
+      {
+        "id": "AC-2",
+        "description": "Meaningful values, array order, item membership and extractor identity affect the digest without binding it to unrelated input changes.",
+        "test": "github.com/Chaebin-Park/naru/internal/surface/TestSemanticChanges"
+      },
+      {
+        "id": "AC-3",
+        "description": "Failed, missing, malformed, ambiguous and oversized output cannot produce a valid empty snapshot.",
+        "test": "github.com/Chaebin-Park/naru/internal/surface/TestInvalidExtraction"
+      }
+    ],
+    "limitations": [
+      "Protocol and in-memory canonicalization only; process execution, packs, baseline storage, diff and approval belong to later tasks.",
+      "Extractors own semantic filtering and must version policy changes; no generic volatile-field removal or language AST support.",
+      "Exact JSON number spelling and array order are preserved; this format is not RFC 8785."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
