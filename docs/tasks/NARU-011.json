@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "id": "NARU-011",
+  "previous": "NARU-010",
+  "base": "40334f7264d4ab9f61c0c964f5264953a6b0adb8",
+  "status": "active",
+  "plan": {
+    "title": "Add a bounded Spring Boot pack and public contract example",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "The pack loads all four surfaces with prerequisites and namespaces.",
+        "test": "github.com/Chaebin-Park/naru/internal/config/TestSpringBootPack"
+      },
+      {
+        "id": "AC-2",
+        "description": "Public fixtures expose API removal, route, migration and configuration-key changes without configuration values.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestSpringBootFixtures"
+      },
+      {
+        "id": "AC-3",
+        "description": "Invalid, missing or stale extractor output fails rather than reusing prior artifacts.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestSpringBootInvalidOutput"
+      }
+    ],
+    "limitations": [
+      "Spring Boot 3.5.16 Spring MVC public example only; Java 21 and Maven are external prerequisites.",
+      "Explicit contract/extra profiles, selected synthetic API probes, SQL file hashes and properties keys; not complete API coverage or live database schema introspection.",
+      "Python standard library adapter on macOS/Linux; no new Go dependencies or automatic tool installation.",
+      "Default Go tests exercise public fixtures; actual Maven smoke is recorded separately.",
+      "No implicit surface-to-mode policy or authenticated human approval."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
