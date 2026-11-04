@@ -17,6 +17,7 @@ import (
 
 	"github.com/Chaebin-Park/naru/internal/config"
 	"github.com/Chaebin-Park/naru/internal/gate"
+	"github.com/Chaebin-Park/naru/internal/hooks"
 	"github.com/Chaebin-Park/naru/internal/initcmd"
 	"github.com/Chaebin-Park/naru/internal/mode"
 	"github.com/Chaebin-Park/naru/internal/receipt"
@@ -71,6 +72,8 @@ Usage:
   naru mode [name | --clear]          show or set the mode for this working copy
   naru gate stop                      agent Stop hook: exit 2 with reasons unless satisfied
   naru gate pre-tool                  agent PreToolUse hook: block edits to .naru/ and mode changes
+  naru gate pre-push                  require fresh default_mode receipts and no NOT VERIFIED record
+  naru hooks install [--force]        install a Git pre-push hook
   naru version
 
 Exit codes: 0 done, 1 not done, 64 usage/config error, 70 internal error, 130 interrupted.
@@ -93,6 +96,8 @@ func Run(args []string, env Env) int {
 		return cmdMode(args[1:], env)
 	case "gate":
 		return cmdGate(args[1:], env)
+	case "hooks":
+		return cmdHooks(args[1:], env)
 	case "version", "--version":
 		fmt.Fprintln(env.Stdout, "naru", version())
 		return exitOK
@@ -332,12 +337,42 @@ func cmdMode(args []string, env Env) int {
 }
 
 func cmdGate(args []string, env Env) int {
+	if len(args) == 1 && args[0] == "pre-push" {
+		return gate.PrePush(env.Dir, env.Stderr)
+	}
 	if len(args) == 1 && args[0] == "stop" {
 		return gate.Stop(env.Stdin, env.Stdout, env.Stderr, env.Dir)
 	}
 	if len(args) == 1 && args[0] == "pre-tool" {
 		return gate.PreTool(env.Stdin, env.Stderr, env.Dir)
 	}
-	fmt.Fprintln(env.Stderr, "naru: usage: naru gate stop | naru gate pre-tool   (reads the hook payload from stdin)")
+	fmt.Fprintln(env.Stderr, "naru: usage: naru gate stop | naru gate pre-tool | naru gate pre-push")
 	return exitUsage
+}
+
+func cmdHooks(args []string, env Env) int {
+	if len(args) == 0 || args[0] != "install" {
+		_, _ = fmt.Fprintln(env.Stderr, "naru: usage: naru hooks install [--force]")
+		return exitUsage
+	}
+	fs := newFlags("hooks install", env)
+	force := fs.Bool("force", false, "replace an existing regular pre-push hook")
+	if err := fs.Parse(args[1:]); err != nil {
+		return exitUsage
+	}
+	if fs.NArg() != 0 {
+		_, _ = fmt.Fprintln(env.Stderr, "naru: usage: naru hooks install [--force]")
+		return exitUsage
+	}
+	root, _, code := project(env)
+	if code != exitOK {
+		return code
+	}
+	p, err := hooks.Install(root, *force)
+	if err != nil {
+		_, _ = fmt.Fprintf(env.Stderr, "naru: %v\n", err)
+		return exitNotDone
+	}
+	_, _ = fmt.Fprintf(env.Stdout, "installed %s; keep naru on PATH (linked worktrees share Git hooks)\n", p)
+	return exitOK
 }

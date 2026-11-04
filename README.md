@@ -129,6 +129,46 @@ Native hook support is planned. Until then, add to `AGENTS.md`:
 Before reporting completion, run `naru status`. If it exits non-zero, run `naru check`, fix failures, and repeat.
 ```
 
+## Git pre-push gate
+
+Install explicitly from a naru project at the Git working tree root:
+
+```sh
+naru hooks install
+naru check --mode code    # replace code with your default_mode
+naru gate pre-push        # inspect the same verdict without pushing
+```
+
+The installed executable hook calls `naru gate pre-push`; `naru` must be on the hook's `PATH`. It exits 1 unless every check in `default_mode` has a fresh passing receipt and `.naru/state/unverified.json` is absent. Missing/invalid configuration, unreadable receipts, and malformed NOT VERIFIED records block. The stored mode, `NARU_MODE`, `NARU_GATE=off`, and the Stop repetition limit cannot relax this gate. Checks are not run automatically.
+
+After a NOT VERIFIED stop, run checks for `default_mode`, then perform a verified Stop to clear the record. For a default mode named `code`, from the project root:
+
+```sh
+naru check --mode code
+# Only continue when the check above succeeds:
+env -u NARU_GATE -u CLAUDE_PROJECT_DIR NARU_MODE=code naru gate stop </dev/null
+naru gate pre-push
+```
+
+Installation preserves an existing hook unless `--force` is supplied; force replaces only regular files. Linked worktrees share hooks, so installation can affect other working copies. Custom `core.hooksPath` settings are never changed or written through; integrate with the existing manager instead. Installation refuses inherited `GIT_DIR`, `GIT_WORK_TREE`, or `GIT_COMMON_DIR` overrides.
+
+For [Husky](https://typicode.github.io/husky/how-to.html), add this to the existing `.husky/pre-push` hook, preserving other commands:
+
+```sh
+naru gate pre-push || exit $?
+```
+
+For [Lefthook](https://lefthook.dev/configuration/run/), merge this command into `lefthook.yml`:
+
+```yaml
+pre-push:
+  commands:
+    naru:
+      run: naru gate pre-push
+```
+
+Humans can bypass the hook with `git push --no-verify`. This gate evaluates the **current working tree**, not every commit/ref being pushed (including pushes of other branches or tags). It is a local guard rail, not a security boundary: re-run `naru check` in a clean CI checkout of the target revision.
+
 ## Receipts
 
 `naru check` writes `.naru/receipts/<check>.json` (latest run) and `.naru/logs/<check>-<time>.log`. The receipt records the command, the inputs hash and file count, the git HEAD, result and exit code, timing, and an evidence class (`local`, `agent-run`, or `ci`; set with `--evidence` or `$NARU_EVIDENCE`, and `ci` when `$CI` is set). `naru init` adds `.naru/.gitignore` so receipts, logs, and the stored mode stay out of version control.

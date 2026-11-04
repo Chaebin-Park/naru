@@ -5,6 +5,10 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 ## [Unreleased]
 
 ### Added
+- `naru gate pre-push`: require fresh default-mode receipts and no NOT VERIFIED record.
+- `naru hooks install [--force]`: install a pre-push hook while protecting existing hooks.
+
+### Added
 - `AGENTS.md`: build, verification and contribution rules for coding agents working on this repository.
 
 ## [0.1.0] - 2026-11-03

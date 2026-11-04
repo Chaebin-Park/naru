@@ -8,6 +8,47 @@
 
 > 상태: 초기 개발(P0). `init`, `check`, `status`, `mode`, Claude Code Stop gate가 동작합니다. baseline, 정책, relay, 플랫폼 pack은 이후 단계입니다.
 
+## Git pre-push 검사
+
+Git 작업 트리 루트에 있는 naru 프로젝트에서 명시적으로 설치합니다.
+
+```sh
+naru hooks install
+naru check --mode code    # code를 프로젝트 default_mode로 바꾸세요
+naru gate pre-push        # push 없이 같은 판정 확인
+```
+
+설치된 실행 가능 훅은 `naru gate pre-push`를 호출하므로 훅의 `PATH`에 naru가 있어야 합니다. `default_mode`의 모든 검사가 현재 파일 기준 pass이고 `.naru/state/unverified.json`이 없을 때만 exit 0, 그 외에는 exit 1입니다. 설정 누락·오류, 검증 기록 읽기 오류, 손상된 NOT VERIFIED 기록도 차단합니다. 저장된 모드, `NARU_MODE`, `NARU_GATE=off`, Stop 반복 상한은 이 판정을 완화하지 않습니다. 검사를 자동 실행하지는 않습니다.
+
+NOT VERIFIED 기록이 있으면 기본 모드로 검증한 뒤 검증된 Stop으로 기록을 해제합니다. 기본 모드가 `code`인 경우 프로젝트 루트에서:
+
+```sh
+naru check --mode code
+# 위 검사가 성공한 경우에만 계속합니다:
+env -u NARU_GATE -u CLAUDE_PROJECT_DIR NARU_MODE=code naru gate stop </dev/null
+naru gate pre-push
+```
+
+기존 훅은 보존하며 `--force`를 명시하면 일반 파일만 교체합니다. 연결된 worktree는 훅을 공유하므로 다른 작업 복사본에도 영향을 줄 수 있습니다. `core.hooksPath`가 설정되어 있으면 설정·파일을 변경하지 않고 기존 관리자 연동을 안내합니다. 설치 명령은 상속된 `GIT_DIR`·`GIT_WORK_TREE`·`GIT_COMMON_DIR`이 있으면 거부합니다.
+
+[Husky](https://typicode.github.io/husky/how-to.html)는 기존 `.husky/pre-push`의 다른 명령을 보존하면서 다음을 추가합니다.
+
+```sh
+naru gate pre-push || exit $?
+```
+
+[Lefthook](https://lefthook.dev/configuration/run/)은 기존 `lefthook.yml`에 다음 명령을 병합합니다.
+
+```yaml
+pre-push:
+  commands:
+    naru:
+      run: naru gate pre-push
+```
+
+사람은 `git push --no-verify`로 우회할 수 있습니다. 이 검사는 현재 작업 트리를 평가하며, 전송되는 각 커밋·다른 브랜치·태그의 내용을 검증하지 않습니다. 로컬 보조 장치이므로 대상 리비전을 깨끗하게 checkout한 CI에서 `naru check`를 다시 실행해야 합니다.
+
+
 ## 왜 필요한가
 
 에이전트는 테스트를 돌리지 않고 "통과했다"고 보고하거나, 통과한 뒤에도 코드를 계속 고치곤 합니다. 입력 파일에 묶인 receipt가 두 경우를 모두 잡습니다.
