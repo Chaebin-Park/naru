@@ -89,3 +89,7 @@ An internal, in-memory schema 1 surface protocol now validates extractor output 
 ## NARU-008 local packs
 
 Config can select local packs and declare surfaces. Pack checks run through the existing check lifecycle; their fingerprints include the selected pack files. Invalid manifests and collisions block loading. Init remains explicit and surface execution remains future work. See [packs](packs.md).
+
+## NARU-009 extraction and diff
+
+Baseline extract/diff commands now create guarded candidates and compare them against read-only snapshots. Failures cannot reuse earlier ready candidates; current inputs and snapshot integrity are rechecked. No automatic baseline replacement or surface gate integration is added. See [baselines](baselines.md).

@@ -79,6 +79,10 @@ func Build(r Request, stdout []byte, runErr error) (*Snapshot, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrInvalid, err)
 	}
+	return buildValue(r, value)
+}
+
+func buildValue(r Request, value any) (*Snapshot, error) {
 	obj, ok := value.(map[string]any)
 	if !ok || len(obj) != 2 || obj["schema"] != json.Number("1") {
 		return nil, fmt.Errorf("%w: expected schema 1 and items", ErrInvalid)

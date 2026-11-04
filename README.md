@@ -239,8 +239,12 @@ Declared prerequisites enter the input fingerprint; equivalent list ordering doe
 
 ## Surface contract foundation
 
-The internal [surface extraction contract](docs/surface-contract.md) defines deterministic JSON output, content digests, and invalid/empty-result handling for later baseline work. It has synthetic fixtures and tests; extractor execution, baseline commands and approvals are not available yet.
+The internal [surface extraction contract](docs/surface-contract.md) defines deterministic JSON output, content digests, and invalid/empty-result handling for later baseline work. It has synthetic fixtures and tests; candidate extraction/diff now use this contract; approval is separate.
 
 ## Local platform packs
 
 Select repository-owned `packs/<directory>/pack.yaml` files through `packs` in config. Their checks use `<pack-id>.<check>` names; manifest and bundled-file changes invalidate their evidence. See [pack loading and the dummy example](docs/packs.md). Downloads, automatic activation and version probing are not performed.
+
+## Baseline candidates
+
+Run `naru baseline extract <surface>` to produce a verified local candidate, then `naru baseline diff <surface>` to review sorted additions, removals and changes. Both support `--json`. Extraction never overwrites the baseline; first or changed results require review. See [candidate lifecycle and exit codes](docs/baselines.md). Approval remains a separate task.

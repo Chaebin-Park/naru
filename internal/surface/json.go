@@ -11,21 +11,23 @@ import (
 
 // parseOutput rejects ambiguous data before encoding/json can replace invalid
 // strings or overwrite duplicate keys. Numbers retain their original spelling.
-func parseOutput(data []byte) (any, error) {
-	if len(data) == 0 || len(data) > MaxOutputBytes || !utf8.Valid(data) || !json.Valid(data) {
-		return nil, errors.New("output must be one UTF-8 JSON value of at most 1 MiB")
+func parseOutput(data []byte) (any, error) { return parseJSON(data, MaxOutputBytes, 64) }
+
+func parseJSON(data []byte, limit, maxDepth int) (any, error) {
+	if len(data) == 0 || len(data) > limit || !utf8.Valid(data) || !json.Valid(data) {
+		return nil, errors.New("output must be one bounded UTF-8 JSON value")
 	}
 	if err := validSurrogates(data); err != nil {
 		return nil, err
 	}
 	d := json.NewDecoder(bytes.NewReader(data))
 	d.UseNumber()
-	return readValue(d, 0)
+	return readValue(d, 0, maxDepth)
 }
 
-func readValue(d *json.Decoder, depth int) (any, error) {
-	if depth > 64 {
-		return nil, errors.New("JSON nesting exceeds 64")
+func readValue(d *json.Decoder, depth, maxDepth int) (any, error) {
+	if depth > maxDepth {
+		return nil, fmt.Errorf("JSON nesting exceeds %d", maxDepth)
 	}
 	token, err := d.Token()
 	if err != nil {
@@ -46,7 +48,7 @@ func readValue(d *json.Decoder, depth int) (any, error) {
 			if _, exists := obj[name]; exists {
 				return nil, fmt.Errorf("duplicate key %q", name)
 			}
-			value, err := readValue(d, depth+1)
+			value, err := readValue(d, depth+1, maxDepth)
 			if err != nil {
 				return nil, err
 			}
@@ -57,7 +59,7 @@ func readValue(d *json.Decoder, depth int) (any, error) {
 	case json.Delim('['):
 		array := []any{}
 		for d.More() {
-			value, err := readValue(d, depth+1)
+			value, err := readValue(d, depth+1, maxDepth)
 			if err != nil {
 				return nil, err
 			}

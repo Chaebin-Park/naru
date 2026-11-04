@@ -29,6 +29,7 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 - Add a shared glossary and align Korean terminology across current feature and design documents.
 
 ### Added
+- `baseline extract` and `baseline diff` with bounded extractor execution, before/after input verification, separate candidate authority, validated snapshots and deterministic item changes. Baselines remain read-only pending the approval task.
 - Repository-local pack manifests with namespaced checks/surfaces, restrictive requirement merging, bounded symlink-free loading and pack-content fingerprints.
 - Internal surface extraction schema and deterministic JSON canonicalization with strict validation and synthetic fixtures. Pack loading, process execution and baseline CLI/approval remain future work.
 - Per-check `requires.tools` and `requires.os`, with persisted `not-run` reasons, implicit shell availability checks, and explicit rerun after environment recovery. No tool installation, version probes, or service health checks.

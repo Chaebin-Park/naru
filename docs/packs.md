@@ -14,7 +14,7 @@ modes:
   code: [dummy.readme]
 ```
 
-Copy the [dummy manifest](../internal/config/testdata/project/packs/dummy/pack.yaml) and provide a project `README.md` to try `naru check` and `naru status`. It uses a shell builtin check and declares a synthetic surface. Surface declarations are not mode checks and cannot satisfy a gate; their execution and baseline lifecycle are separate work.
+Copy the [dummy manifest](../internal/config/testdata/project/packs/dummy/pack.yaml) and provide a project `README.md` to try `naru check` and `naru status`. It uses a shell builtin check and declares a synthetic surface. Surface declarations are not mode checks and cannot satisfy a gate; use the [baseline commands](baselines.md) to extract and compare candidates; approval is separate.
 
 `naru init` keeps its existing stack detection and does not silently activate packs. After init, review/copy a local pack, add `packs`, and explicitly include namespaced checks in the desired modes. No new init flags or automatic selection are introduced. Local checks can coexist with pack checks.
 

@@ -1,6 +1,6 @@
 # Surface extraction contract
 
-NARU-007 defines the internal protocol and canonicalization used by later pack and baseline work. `internal/surface` validates output and builds a snapshot in memory. It does not run a process, read or write a baseline, approve changes, or add a CLI command. Configuration remains version 1; execution records remain schema 2. This protocol has its own schema 1.
+NARU-007 defines the internal protocol and canonicalization used by later pack and baseline work. `internal/surface` validates output and builds a snapshot in memory. This package does not run a process or approve changes. NARU-009 connects it to [candidate extraction and diff](baselines.md). Configuration remains version 1; execution records remain schema 2. This protocol has its own schema 1.
 
 A surface is a named set of observable contract items, such as routes or configuration keys. The extractor owns domain meaning; the common layer preserves it and rejects ambiguous output.
 
@@ -14,7 +14,7 @@ A surface is a named set of observable contract items, such as routes or configu
 
 The digest above is illustrative, not verification evidence. All four fields are required. IDs and extractor versions match `[A-Za-z0-9][A-Za-z0-9._:/+\-]{0,127}`; they are identifiers, never filesystem paths. `input_digest` is a lowercase 64-character SHA-256 hex string. The caller supplies it from observed inputs and relevant definitions, including pack/extractor identity and normalization policy. The extractor cannot override it in stdout. An extractor must change its version when its filtering, interpretation, or output semantics change. Declared versions are not authenticated binary identities.
 
-The future execution adapter sends exactly this request on stdin, collects stdout separately from diagnostic stderr, and passes **every** process/cancellation/capture/size error to `Build`. Only successful completion supplies a nil error. A valid-looking stdout from a failed process is rejected. The adapter must enforce the output limit while capturing; the in-memory builder cannot limit an already allocated buffer. Timeouts, workdir, environment requirements, locking, and before/after input verification must be provided by that adapter before a snapshot becomes evidence. NARU-007 does not claim to implement those lifecycle guarantees.
+The execution adapter sends exactly this request on stdin, collects stdout separately from diagnostic stderr, and passes **every** process/cancellation/capture/size error to `Build`. Only successful completion supplies a nil error. A valid-looking stdout from a failed process is rejected. The adapter must enforce the output limit while capturing; the in-memory builder cannot limit an already allocated buffer. Timeouts, workdir, environment requirements, locking, and before/after input verification must be provided by that adapter before a snapshot becomes evidence. NARU-007 does not claim to implement those lifecycle guarantees.
 
 ## Extractor output
 
@@ -47,7 +47,7 @@ The policy is `surface-json-v1`, not RFC 8785. Its exact serialization contract 
 
 The fixture [canonical routes](../internal/surface/testdata/routes.canonical.json) shows the exact document (its file newline is excluded from hashing). A fixed hash in `TestCanonicalFixtures` locks the byte policy. A policy change requires a new policy identifier and explicit baseline compatibility handling, not silent reuse.
 
-`Snapshot` contains schema, surface/extractor identities, `input_digest`, policy, canonical bytes and the content `digest`. The content digest excludes `input_digest`: two different source inputs can produce an unchanged observable contract. Freshness and approval must still compare their own exact input/candidate identities. Matching content digests alone do not prove that the current source was extracted, that execution succeeded, or that the result was approved. Snapshot fields are not authenticated, and this package does not implement persisted-snapshot decoding.
+`Snapshot` contains schema, surface/extractor identities, `input_digest`, policy, canonical bytes and the content `digest`. The content digest excludes `input_digest`: two different source inputs can produce an unchanged observable contract. Freshness and approval must still compare their own exact input/candidate identities. Matching content digests alone do not prove that the current source was extracted, that execution succeeded, or that the result was approved. Snapshot fields are not authenticated, and DecodeSnapshot now validates persisted identity and recomputes canonical bytes and digest.
 
 ## Volatile fields and semantic preservation
 
@@ -61,4 +61,4 @@ There is no generic ignored-field list. A field called `timestamp`, `path`, `ver
 - `TestFixturesAreCheckInputs`: repository test receipts include testdata, so fixture edits invalidate earlier success.
 - `TestRequestContract` and `FuzzBuild`: request validation, no partial result on failure, and deterministic accepted output.
 
-These tests replay synthetic output; they do not claim that a real extractor is deterministic. NARU-008 provides repository-local pack declarations/loading. NARU-009 provides extraction execution, candidate storage and diff; NARU-010 provides approval. No external downloads, dependencies, tool installation or existing check/gate behavior changes are introduced here.
+These tests replay synthetic output; they do not claim that a real extractor is deterministic. NARU-008 provides repository-local pack declarations/loading. NARU-009 now provides extraction execution, candidate storage and diff; NARU-010 remains the approval task. No external downloads, dependencies, tool installation or existing check/gate behavior changes are introduced here.

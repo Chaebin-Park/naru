@@ -97,7 +97,7 @@ func (c *Config) loadPacks(root string) error {
 				return "", ch, err
 			}
 			if ch.Workdir != "" {
-				if err := packWorkdir(root, ch.Workdir); err != nil {
+				if err := ValidateWorkdir(root, ch.Workdir); err != nil {
 					return "", ch, err
 				}
 			}

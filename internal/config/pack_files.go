@@ -41,7 +41,8 @@ func safeRelative(root, rel string) (string, error) {
 	return path, nil
 }
 
-func packWorkdir(root, rel string) error {
+// ValidateWorkdir rejects missing, non-directory or symlinked paths beneath root.
+func ValidateWorkdir(root, rel string) error {
 	if rel == "." {
 		return nil
 	}
