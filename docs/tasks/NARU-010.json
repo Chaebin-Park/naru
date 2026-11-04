@@ -3,7 +3,7 @@
   "id": "NARU-010",
   "previous": "NARU-009",
   "base": "4cd334ae9ebe45bcc15810f62680fe9470f6ce69",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Approve exact baseline candidates through a terminal review flow",
     "profile": "code-v1",
@@ -31,6 +31,6 @@
       "No automatic surface-to-mode policy, remote publication or physical power-loss guarantee."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "11ba6c6e3559bba64f657b9d2b8eb5872b343692",
+  "evidence": "e4259443aad53bf34ecd4a96a5ddfdd95dc4dba5d99f50da0ae7ee8c541aaf68"
 }
