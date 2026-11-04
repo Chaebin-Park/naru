@@ -85,3 +85,7 @@ Optional `requires.tools` (PATH executable names) and `requires.os` (`darwin`, `
 ## NARU-007 surface foundation
 
 An internal, in-memory schema 1 surface protocol now validates extractor output and produces canonical bytes and SHA-256 content digests. It preserves semantic values and separates input freshness from contract content. This adds no commands or configuration fields and does not alter existing gates. Execution, pack loading and baseline storage/approval remain unimplemented. See [surface contract](surface-contract.md).
+
+## NARU-008 local packs
+
+Config can select local packs and declare surfaces. Pack checks run through the existing check lifecycle; their fingerprints include the selected pack files. Invalid manifests and collisions block loading. Init remains explicit and surface execution remains future work. See [packs](packs.md).

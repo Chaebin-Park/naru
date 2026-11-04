@@ -239,4 +239,8 @@ Declared prerequisites enter the input fingerprint; equivalent list ordering doe
 
 ## Surface contract foundation
 
-The internal [surface extraction contract](docs/surface-contract.md) defines deterministic JSON output, content digests, and invalid/empty-result handling for later baseline work. It has synthetic fixtures and tests; extractor execution, packs, baseline commands and approvals are not available yet.
+The internal [surface extraction contract](docs/surface-contract.md) defines deterministic JSON output, content digests, and invalid/empty-result handling for later baseline work. It has synthetic fixtures and tests; extractor execution, baseline commands and approvals are not available yet.
+
+## Local platform packs
+
+Select repository-owned `packs/<directory>/pack.yaml` files through `packs` in config. Their checks use `<pack-id>.<check>` names; manifest and bundled-file changes invalidate their evidence. See [pack loading and the dummy example](docs/packs.md). Downloads, automatic activation and version probing are not performed.

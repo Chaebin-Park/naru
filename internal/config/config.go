@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -27,6 +28,8 @@ const DefaultTimeout = 10 * time.Minute
 
 // Config is the parsed .naru/config.yaml.
 type Config struct {
+	Packs       []string            `yaml:"packs"`
+	Surfaces    map[string]Surface  `yaml:"surfaces"`
 	Version     int                 `yaml:"version"`
 	DefaultMode string              `yaml:"default_mode"`
 	Modes       map[string][]string `yaml:"modes"`
@@ -61,10 +64,11 @@ type Check struct {
 	Run string `yaml:"run"`
 	// Inputs are root-relative glob patterns ("**" matches any depth).
 	// The receipt is bound to the content hash of the matched files.
-	Inputs   []string     `yaml:"inputs"`
-	Timeout  string       `yaml:"timeout"`
-	Workdir  string       `yaml:"workdir"`
-	Requires Requirements `yaml:"requires"`
+	Inputs     []string     `yaml:"inputs"`
+	Timeout    string       `yaml:"timeout"`
+	Workdir    string       `yaml:"workdir"`
+	Requires   Requirements `yaml:"requires"`
+	packDigest string
 }
 
 // TimeoutDuration returns the parsed timeout or DefaultTimeout.
@@ -107,26 +111,57 @@ func Load(root string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return Parse(data)
+	c, err := decode(data)
+	if err != nil {
+		return nil, err
+	}
+	if err := c.loadPacks(root); err != nil {
+		return nil, err
+	}
+	return c, c.Validate()
 }
 
 // Parse decodes and validates config bytes. Unknown keys are rejected so typos surface.
-func Parse(data []byte) (*Config, error) {
+func decode(data []byte) (*Config, error) {
 	var c Config
-	dec := yaml.NewDecoder(bytes.NewReader(data))
-	dec.KnownFields(true)
-	if err := dec.Decode(&c); err != nil {
+	if err := decodeYAML(data, &c); err != nil {
 		return nil, fmt.Errorf("parse %s/%s: %w", Dir, FileName, err)
 	}
-	if err := c.Validate(); err != nil {
+	return &c, nil
+}
+
+func decodeYAML(data []byte, dst any) error {
+	dec := yaml.NewDecoder(bytes.NewReader(data))
+	dec.KnownFields(true)
+	if err := dec.Decode(dst); err != nil {
+		return err
+	}
+	var extra any
+	if err := dec.Decode(&extra); !errors.Is(err, io.EOF) {
+		return errors.New("expected exactly one YAML document")
+	}
+	return nil
+}
+
+func Parse(data []byte) (*Config, error) {
+	c, err := decode(data)
+	if err != nil {
 		return nil, err
 	}
-	return &c, nil
+	if len(c.Packs) != 0 {
+		return nil, errors.New("packs require config.Load with a repository root")
+	}
+	return c, c.Validate()
 }
 
 // Validate reports every structural problem at once.
 func (c *Config) Validate() error {
 	var errs []error
+	for _, name := range sortedKeys(c.Surfaces) {
+		if err := validateSurface(name, c.Surfaces[name]); err != nil {
+			errs = append(errs, err)
+		}
+	}
 	if c.Version != 1 {
 		errs = append(errs, fmt.Errorf("version must be 1 (got %d)", c.Version))
 	}
@@ -222,7 +257,10 @@ func validatePattern(p string) error {
 // runs and what it reads. It salts the inputs hash, so editing the command,
 // workdir, inputs or global excludes invalidates existing receipts.
 func (c *Config) Fingerprint(name string) string {
-	ch := c.Checks[name]
+	return c.fingerprint(c.Checks[name])
+}
+
+func (c *Config) fingerprint(ch Check) string {
 	var requires *Requirements
 	if len(ch.Requires.Tools) > 0 || len(ch.Requires.OS) > 0 {
 		value := ch.Requires
@@ -233,12 +271,13 @@ func (c *Config) Fingerprint(name string) string {
 		requires = &value
 	}
 	b, _ := json.Marshal(struct {
+		Pack     string        `json:"pack,omitempty"`
 		Requires *Requirements `json:"requires,omitempty"`
 		Run      string        `json:"run"`
 		Workdir  string        `json:"workdir"`
 		Inputs   []string      `json:"inputs"`
 		Exclude  []string      `json:"exclude"`
-	}{requires, ch.Run, ch.Workdir, ch.Inputs, c.Exclude})
+	}{ch.packDigest, requires, ch.Run, ch.Workdir, ch.Inputs, c.Exclude})
 	return string(b)
 }
 

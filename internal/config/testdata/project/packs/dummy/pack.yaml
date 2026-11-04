@@ -1,0 +1,16 @@
+schema: 1
+id: dummy
+version: 1.0.0
+requires:
+  tools: [sh]
+supported_tools:
+  sh: "POSIX-compatible shell; version is informational, not probed"
+checks:
+  readme:
+    run: test -f README.md
+    inputs: [README.md]
+surfaces:
+  contract:
+    run: 'printf ''{"schema":1,"items":[{"id":"example","value":{"required":true}}]}'''
+    inputs: [README.md]
+    extractor_version: dummy-v1
