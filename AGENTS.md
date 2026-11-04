@@ -1,6 +1,16 @@
 # AGENTS.md — working on naru
 
+Terms: [NARU glossary](docs/glossary.md). Command names and quoted session output keep their original spelling.
+
 naru gates an AI coding agent's "done" on receipts bound to the files its checks actually saw. These rules apply to any agent (Claude Code, Codex, others) editing this repository.
+
+## Implementation workflow
+
+Follow [CONTRIBUTING.md](CONTRIBUTING.md) for task/commit boundaries, Go conventions, tests, staged-snapshot verification, and completion records. Keep one coherent change per commit, with its tests and directly affected documentation.
+
+## Development analysis
+
+Run `sh scripts/devcheck.sh` after each coherent code edit batch and before reporting completion or committing. For continuous local feedback, use `sh scripts/devcheck.sh -watch` in a foreground terminal. Read the reported `.naru/state/devcheck-*/issues.md` and surface new findings to the user with IDs and source locations. Do not silently suppress findings or call an incomplete scan clean. `naru check` also runs analysis; vulnerability results must be refreshed, not inferred from a cached `status` receipt. See [development analysis](docs/development-analysis.md) for pinned tools and report semantics.
 
 ## Build and verify
 
@@ -30,7 +40,7 @@ A change is done only when `naru check` passes for the current files (see `.naru
 
 ## Rules
 
-- Safety first: the gate must never report pass for files that differ from what was checked. When unsure, fail closed and explain.
+- Safety first: the gate must never report pass for files that differ from what was checked. If the result is uncertain, block the action and explain why.
 - Every bug fix gets a regression test that fails without the fix. Behaviour seen in a live agent session goes into `docs/verification.md`.
 - Keep the agent-facing output short and actionable: what is wrong, what to run.
 - Code, comments, CLI messages and README are English; keep `README.ko.md` in sync for user-facing changes.

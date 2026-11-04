@@ -151,3 +151,5 @@ MVP에서는 macOS·Linux를 우선 검증하고 Windows는 제한 지원합니�
 [MIT](LICENSE)
 
 현재 동작·기록 형식·시험 대응표·후속 개선 항목: [현재 동작 기준 문서](docs/current-behavior.md).
+
+개발 중 피드백: [로컬 정적 분석·취약점 보고](docs/development-analysis.md). 코드 수정 후 `sh scripts/devcheck.sh`를 실행하며, `-watch`는 터미널에서 변경 감시를 켭니다.

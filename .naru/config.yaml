@@ -2,7 +2,7 @@
 version: 1
 default_mode: code
 modes:
-  code: [fmt, vet, test]
+  code: [fmt, vet, test, analysis]
   docs: [fmt]
 checks:
   fmt:
@@ -15,4 +15,8 @@ checks:
     run: "go test -race -count=1 ./..."
     inputs: ["**/*.go", "go.mod", "go.sum"]
     timeout: 5m
+  analysis:
+    run: "sh scripts/devcheck.sh"
+    inputs: ["**/*.go", "go.mod", "go.sum", ".golangci.yml", "scripts/devcheck.sh"]
+    timeout: 15m
 exclude: ["diagrams/**"]

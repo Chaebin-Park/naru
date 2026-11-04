@@ -212,3 +212,5 @@ Waivers are deferred beyond the MVP. Unverified completion continues to use the 
 [MIT](LICENSE)
 
 Current behavior, receipt format, test mapping, and planned changes: [behavior baseline](docs/current-behavior.md).
+
+Development feedback: [local static analysis and vulnerability reports](docs/development-analysis.md). Run `sh scripts/devcheck.sh` after code edits; `-watch` enables foreground change monitoring.

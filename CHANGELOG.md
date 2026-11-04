@@ -29,6 +29,7 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 - Add a shared glossary and align Korean terminology across current feature and design documents.
 
 ### Added
+- Repository-local development scanning with pinned golangci-lint/govulncheck tools, foreground watch mode, structured local issue reports, and a required analysis check. This is development tooling, not a released naru subcommand.
 - `naru gate pre-push`: require fresh passing receipts for `default_mode` and no NOT VERIFIED record, independently of Stop overrides.
 - `naru hooks install [--force]`: opt-in Git pre-push hook installation with existing-hook protection and hook-manager integration guidance.
 - `AGENTS.md`: build, verification and contribution rules for coding agents working on this repository.
