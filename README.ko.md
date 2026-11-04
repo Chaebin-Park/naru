@@ -178,7 +178,7 @@ checks:
 
 ## 외부 계약 항목의 표준 형식
 
-내부 [추출 계약 명세](docs/surface-contract.md)에 JSON 표준 형식, 결과 digest, 오류·빈 결과 구분을 정의하고 시험 자료와 테스트를 추가했습니다. 추출·비교 명령이 이 계약을 사용하며 승인 기능은 후속 작업입니다.
+내부 [추출 계약 명세](docs/surface-contract.md)에 JSON 표준 형식, 결과 digest, 오류·빈 결과 구분을 정의하고 시험 자료와 테스트를 추가했습니다. 추출·비교 명령이 이 계약을 사용하며 승인은 아래 대화형 명령을 사용합니다.
 
 ## 로컬 플랫폼 묶음
 
@@ -186,4 +186,6 @@ checks:
 
 ## 기준본 후보와 비교
 
-`naru baseline extract <surface>`로 검증된 로컬 후보를 만들고 `naru baseline diff <surface>`로 추가·삭제·변경을 확인합니다. 두 명령 모두 `--json`을 지원합니다. 추출은 기준본을 덮어쓰지 않으며 처음이거나 변경된 결과는 검토가 필요합니다. [후보 상태와 종료 코드](docs/baselines.md)를 참고하세요. 승인 기능은 후속 작업입니다.
+`naru baseline extract <surface>`로 검증된 로컬 후보를 만들고 `naru baseline diff <surface>`로 추가·삭제·변경을 확인합니다. 두 명령 모두 `--json`을 지원합니다. 추출은 기준본을 덮어쓰지 않으며 처음이거나 변경된 결과는 검토가 필요합니다. [후보 상태와 종료 코드](docs/baselines.md)를 참고하세요. 승인은 아래 대화형 명령을 사용합니다.
+
+`naru baseline approve <surface>`는 macOS/Linux 터미널에서 검토자·사유·전체 digest 확인을 받아 후보를 승인합니다. 저장 직전에 입력과 검토한 후보·기존 기준본을 다시 확인하고 snapshot과 승인 기록을 함께 저장합니다. 빈 후보는 별도 확인이 필요합니다. 구형 단독 snapshot은 새 승인 전까지 완료로 인정하지 않습니다. 터미널 확인은 사람의 신원을 인증하는 기능이 아닙니다. [승인 동작과 한계](docs/baselines.md#interactive-approval)를 참고하세요.

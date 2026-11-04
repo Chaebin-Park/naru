@@ -93,3 +93,7 @@ Config can select local packs and declare surfaces. Pack checks run through the 
 ## NARU-009 extraction and diff
 
 Baseline extract/diff commands now create guarded candidates and compare them against read-only snapshots. Failures cannot reuse earlier ready candidates; current inputs and snapshot integrity are rechecked. No automatic baseline replacement or surface gate integration is added. See [baselines](baselines.md).
+
+## NARU-010 approval
+
+`baseline approve` requires terminal stdin/stderr, displays the diff, collects reviewer/reason and full digest confirmation (including an explicit empty marker), then rechecks candidate/input/baseline identity under the surface lock. Snapshot and approval metadata publish atomically in one record. Bare legacy snapshots remain readable but cannot produce unchanged without approval. Failed publication preserves prior bytes; cancellation before publication writes no approval. This is a review workflow, not human authentication or a mode-policy integration. See [baseline approval](baselines.md#interactive-approval).

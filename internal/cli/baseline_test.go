@@ -26,8 +26,8 @@ func TestBaselineCLI(t *testing.T) {
 		t.Fatalf("missing baseline %+v", got)
 	}
 	write(t, root, ".naru/baselines/api.json", strings.TrimSpace(extracted.stdout))
-	if got := run(t, root, "", "baseline", "diff", "api"); got.code != 0 {
-		t.Fatalf("unchanged %+v", got)
+	if got := run(t, root, "", "baseline", "diff", "api"); got.code != 1 || !strings.Contains(got.stdout, "approval-required") {
+		t.Fatalf("legacy %+v", got)
 	}
 	write(t, root, "output.json", `{"schema":1,"items":[]}`)
 	if got := run(t, root, "", "baseline", "diff", "api"); got.code != 1 {

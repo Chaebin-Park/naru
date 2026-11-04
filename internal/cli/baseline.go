@@ -16,8 +16,8 @@ import (
 )
 
 func cmdBaseline(args []string, env Env) int {
-	if len(args) == 0 || (args[0] != "extract" && args[0] != "diff") {
-		_, _ = fmt.Fprintln(env.Stderr, "usage: naru baseline extract|diff [--json] <surface>")
+	if len(args) == 0 || (args[0] != "extract" && args[0] != "diff" && args[0] != "approve") {
+		_, _ = fmt.Fprintln(env.Stderr, "usage: naru baseline extract|diff|approve [--json] <surface>")
 		return exitUsage
 	}
 	fs := newFlags("baseline "+args[0], env)
@@ -33,6 +33,9 @@ func cmdBaseline(args []string, env Env) int {
 	if _, ok := cfg.Surfaces[name]; !ok {
 		_, _ = fmt.Fprintf(env.Stderr, "naru: unknown surface %q\n", name)
 		return exitUsage
+	}
+	if args[0] == "approve" {
+		return approveBaseline(root, name, *asJSON, env)
 	}
 	if args[0] == "extract" {
 		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

@@ -25,6 +25,9 @@ type Report struct {
 	SurfaceID         string   `json:"surface_id"`
 	State             string   `json:"state"`
 	OldDigest         *string  `json:"old_digest"`
+	InputDigest       string   `json:"input_digest"`
+	CandidateCount    int      `json:"candidate_count"`
+	BaselineRevision  string   `json:"baseline_revision"`
 	NewDigest         string   `json:"new_digest"`
 	DefinitionChanged bool     `json:"definition_changed"`
 	Added             []Item   `json:"added"`
@@ -39,35 +42,51 @@ func Diff(root, name string) (report *Report, retErr error) {
 		return nil, err
 	}
 	defer func() { retErr = errors.Join(retErr, lock.Close()) }()
-	root = lock.Root
+	report, _, err = inspect(lock.Root, name)
+	return report, err
+}
+
+func inspect(root, name string) (*Report, *surface.Snapshot, error) {
 	cfg, err := config.Load(root)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	def, ok := cfg.Surfaces[name]
 	if !ok {
-		return nil, fmt.Errorf("unknown surface %q", name)
+		return nil, nil, fmt.Errorf("unknown surface %q", name)
 	}
 	store := Store{Root: root}
 	state, err := store.Current(name)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if state == nil || state.Phase != "ready" {
-		return nil, ErrNotReady
+		return nil, nil, ErrNotReady
 	}
 	current, err := fileset.Compute(root, def.Inputs, cfg.Exclude, cfg.SurfaceFingerprint(name))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if current.FileCount == 0 || current.Hash != "sha256:"+state.Snapshot.InputDigest {
-		return nil, ErrStale
+		return nil, nil, ErrStale
 	}
-	approved, err := store.Approved(name)
+	approved, revision, err := store.approved(name)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return compare(approved, state.Snapshot)
+	var old *surface.Snapshot
+	if approved != nil {
+		old = approved.Snapshot
+	}
+	report, err := compare(old, state.Snapshot)
+	if err != nil {
+		return nil, nil, err
+	}
+	report.BaselineRevision = revision
+	if approved != nil && approved.Approval == nil {
+		report.State = "approval-required"
+	}
+	return report, state.Snapshot, nil
 }
 
 func values(s *surface.Snapshot) (map[string]json.RawMessage, error) {
@@ -95,7 +114,7 @@ func compare(old, next *surface.Snapshot) (*Report, error) {
 	if err != nil {
 		return nil, err
 	}
-	r := &Report{SurfaceID: next.SurfaceID, State: "missing-baseline", NewDigest: next.Digest, Added: []Item{}, Removed: []Item{}, Modified: []Change{}}
+	r := &Report{SurfaceID: next.SurfaceID, State: "missing-baseline", NewDigest: next.Digest, InputDigest: next.InputDigest, CandidateCount: len(after), Added: []Item{}, Removed: []Item{}, Modified: []Change{}}
 	if old != nil {
 		r.OldDigest = &old.Digest
 		r.State = "changed"

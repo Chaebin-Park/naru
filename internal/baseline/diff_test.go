@@ -1,7 +1,7 @@
 package baseline
 
 import (
-	"encoding/json"
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -52,11 +52,14 @@ func TestCandidateDiffLifecycle(t *testing.T) {
 	if err != nil || report.State != "missing-baseline" || report.OldDigest != nil {
 		t.Fatalf("missing %+v %v", report, err)
 	}
-	approved, err := json.Marshal(first)
+	if _, err := Approve(context.Background(), root, "api", *report, "Test reviewer", "Initial fixture"); err != nil {
+		t.Fatal(err)
+	}
+	approved, err := read(filepath.Join(root, ".naru/baselines/api.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	putFile(t, root, ".naru/baselines/api.json", approved) // Synthetic approval fixture; production extract never writes here.
+
 	report, err = Diff(root, "api")
 	if err != nil || report.State != "unchanged" {
 		t.Fatalf("same %+v %v", report, err)

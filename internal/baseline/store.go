@@ -167,22 +167,6 @@ func (s Store) Current(name string) (*State, error) {
 	return decodeState(data, name)
 }
 
-// Approved reads a baseline snapshot. Only the future approval flow writes it.
-func (s Store) Approved(name string) (*surface.Snapshot, error) {
-	path, err := s.path(name, true)
-	if err != nil {
-		return nil, err
-	}
-	data, err := read(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	return surface.DecodeSnapshot(data, name)
-}
-
 // Put publishes a complete state under the caller's surface lock. A failed
 // write leaves the prior state; a prior running state can never satisfy diff.
 func (s Store) Put(state State) (retErr error) {
@@ -205,7 +189,11 @@ func (s Store) Put(state State) (retErr error) {
 	return atomicWrite(path, data)
 }
 
-func atomicWrite(path string, data []byte) (retErr error) {
+func atomicWrite(path string, data []byte) error {
+	return publish(path, data, os.Rename)
+}
+
+func publish(path string, data []byte, rename func(string, string) error) (retErr error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return err
 	}
@@ -236,7 +224,7 @@ func atomicWrite(path string, data []byte) (retErr error) {
 	if err := f.Close(); err != nil {
 		return err
 	}
-	if err := os.Rename(f.Name(), path); err != nil {
+	if err := rename(f.Name(), path); err != nil {
 		return fmt.Errorf("publish candidate: %w", err)
 	}
 	published = true

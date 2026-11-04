@@ -75,7 +75,7 @@ Usage:
   naru gate pre-tool                  agent PreToolUse hook: block edits to .naru/ and mode changes
   naru gate pre-push                  require fresh default_mode receipts and no NOT VERIFIED record
   naru hooks install [--force]        install a Git pre-push hook (preserve existing hooks by default)
-  naru baseline extract|diff [--json] <surface>  extract a candidate or compare it to a baseline
+  naru baseline extract|diff|approve [--json] <surface>  extract a candidate or compare it to a baseline
   naru version
 
 Exit codes: 0 done, 1 not done, 64 usage/config error, 70 internal error, 130 interrupted.
