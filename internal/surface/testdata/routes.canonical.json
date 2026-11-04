@@ -1,0 +1,1 @@
+{"schema":1,"policy":"surface-json-v1","surface_id":"server/routes","extractor_version":"routes-v1","items":[{"id":"config/limit","value":{"default":9007199254740993,"required":false}},{"id":"route/users","value":{"method":"GET","path":"/users","responses":[200,404]}}]}

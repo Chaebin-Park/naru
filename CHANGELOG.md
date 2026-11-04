@@ -29,6 +29,7 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 - Add a shared glossary and align Korean terminology across current feature and design documents.
 
 ### Added
+- Internal surface extraction schema and deterministic JSON canonicalization with strict validation and synthetic fixtures. Pack loading, process execution and baseline CLI/approval remain future work.
 - Per-check `requires.tools` and `requires.os`, with persisted `not-run` reasons, implicit shell availability checks, and explicit rerun after environment recovery. No tool installation, version probes, or service health checks.
 - Development task gate with committed task records, isolated verification, required test evidence, and fail-closed begin/resume/close transitions. This does not install agent-host interception hooks.
 - Repository-local development scanning with pinned golangci-lint/govulncheck tools, foreground watch mode, structured local issue reports, and a required analysis check. This is development tooling, not a released naru subcommand.

@@ -81,3 +81,7 @@ On 2026-11-04, Go 1.27.3 on macOS arm64 passed the four added test functions (in
 ## NARU-006 environment requirements
 
 Optional `requires.tools` (PATH executable names) and `requires.os` (`darwin`, `linux`, `windows`) are checked before input hashing or command execution. Every check implicitly requires `sh`. Unavailable checks persist `not-run` with a reason and no command exit code. They cannot satisfy the gates; restoring the environment requires an explicit rerun. Existing Stop overrides remain NOT VERIFIED. Declared requirements enter the definition fingerprint; omitted requirements preserve its prior form. Tool versions, service health, installation, and remote execution are outside this task. See [execution records](execution-records.md#unavailable-prerequisites) for storage and compatibility details.
+
+## NARU-007 surface foundation
+
+An internal, in-memory schema 1 surface protocol now validates extractor output and produces canonical bytes and SHA-256 content digests. It preserves semantic values and separates input freshness from contract content. This adds no commands or configuration fields and does not alter existing gates. Execution, pack loading and baseline storage/approval remain unimplemented. See [surface contract](surface-contract.md).

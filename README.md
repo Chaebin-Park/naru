@@ -236,3 +236,7 @@ checks:
 An unavailable prerequisite produces `not-run` and `check` exits 1 without starting the command or hashing inputs. The record identifies `missing_tool` or `unsupported_platform`; its exit code is null. Status and gates cannot accept it as passing evidence. Restore the tool or use a supported environment, then rerun the check: restoring the environment alone does not clear a saved `not-run`. Existing Stop overrides retain their NOT VERIFIED policy.
 
 Declared prerequisites enter the input fingerprint; equivalent list ordering does not change it, and omitting prerequisites preserves earlier fingerprints. These checks do not inspect tool versions, daemon health, credentials, or service connectivity. NARU does not install tools or delegate execution to CI automatically. Availability can still change between inspection and command start.
+
+## Surface contract foundation
+
+The internal [surface extraction contract](docs/surface-contract.md) defines deterministic JSON output, content digests, and invalid/empty-result handling for later baseline work. It has synthetic fixtures and tests; extractor execution, packs, baseline commands and approvals are not available yet.
