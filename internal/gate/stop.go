@@ -45,7 +45,9 @@ type StopInput struct {
 // config blocks: an unverifiable state is not a passing state.
 func Stop(stdin io.Reader, stdout, stderr io.Writer, fallbackDir string) int {
 	if strings.EqualFold(os.Getenv(DisableEnv), "off") {
-		warnUser(stdout, stderr, fmt.Sprintf("naru: gate disabled by %s=off; completion was not verified", DisableEnv))
+		if err := warnUser(stdout, stderr, fmt.Sprintf("naru: gate disabled by %s=off; completion was not verified", DisableEnv)); err != nil {
+			return Block
+		}
 		return Allow
 	}
 	var in StopInput
@@ -57,7 +59,7 @@ func Stop(stdin io.Reader, stdout, stderr io.Writer, fallbackDir string) int {
 		return Allow
 	}
 	if err != nil {
-		fmt.Fprintf(stderr, "naru: cannot locate project root: %v\n", err)
+		_, _ = fmt.Fprintf(stderr, "naru: cannot locate project root: %v\n", err)
 		return Block
 	}
 	cfg, err := config.Load(root)
@@ -75,11 +77,15 @@ func Stop(stdin io.Reader, stdout, stderr io.Writer, fallbackDir string) int {
 		return block(root, in, cfg.GateMaxRepeats(), textFingerprint(msg), msg, stdout, stderr)
 	}
 	if rep.Satisfied {
-		clearBreaker(root)
-		clearUnverified(root)
+		if err := errors.Join(clearBreaker(root), clearUnverified(root)); err != nil {
+			_, _ = fmt.Fprintf(stderr, "naru: cannot clear gate state after verification: %v\n", err)
+			return Block
+		}
 		if m != cfg.DefaultMode {
 			// Surface a narrowed mode so the human sees it.
-			warnUser(stdout, stderr, fmt.Sprintf("naru: done for mode %q (selected via %s; default_mode is %q)", m, src, cfg.DefaultMode))
+			if err := warnUser(stdout, stderr, fmt.Sprintf("naru: done for mode %q (selected via %s; default_mode is %q)", m, src, cfg.DefaultMode)); err != nil {
+				return Block
+			}
 		}
 		return Allow
 	}
@@ -102,28 +108,21 @@ func findProject(candidates ...string) (string, error) {
 
 // BlockMessage explains, compactly, what must happen before finishing.
 func BlockMessage(rep status.Report) string {
-	var b strings.Builder
+	var b strings.Builder // Builder writes cannot fail.
 	var pending []string
 	for _, c := range rep.Checks {
 		if c.State != status.Pass {
 			pending = append(pending, c.Check)
 		}
 	}
-	fmt.Fprintf(&b, "naru: not done — %d of %d required checks for mode %q are not satisfied for the current files:\n",
+	_, _ = fmt.Fprintf(&b, "naru: not done — %d of %d required checks for mode %q are not satisfied for the current files:\n",
 		len(pending), len(rep.Checks), rep.Mode)
 	for _, c := range rep.Checks {
-		switch c.State {
-		case status.Missing:
-			fmt.Fprintf(&b, "  - %s: never run\n", c.Check)
-		case status.Stale:
-			fmt.Fprintf(&b, "  - %s: inputs or check definition changed since the last run\n", c.Check)
-		case status.Fail:
-			fmt.Fprintf(&b, "  - %s: %s (exit %d) running `%s`, log %s\n", c.Check, c.Receipt.Result, c.Receipt.ExitCode, c.Receipt.Command, c.Receipt.LogPath)
-		case status.Empty:
-			fmt.Fprintf(&b, "  - %s: its inputs match no files; a human must fix the patterns in .naru/config.yaml\n", c.Check)
+		if c.State != status.Pass {
+			_, _ = fmt.Fprintf(&b, "  - %s: %s\n", c.Check, c.Message)
 		}
 	}
-	fmt.Fprintf(&b, "Run `naru check %s`, fix any failures, and finish only after it passes. Do not edit .naru/ to get past this.\n",
+	_, _ = fmt.Fprintf(&b, "Run `naru check %s`, fix any failures, and finish only after it passes. Do not edit .naru/ to get past this.\n",
 		strings.Join(pending, " "))
 	return b.String()
 }

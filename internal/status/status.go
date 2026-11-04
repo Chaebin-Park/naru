@@ -2,10 +2,7 @@
 package status
 
 import (
-	"fmt"
-
 	"github.com/Chaebin-Park/naru/internal/config"
-	"github.com/Chaebin-Park/naru/internal/fileset"
 	"github.com/Chaebin-Park/naru/internal/receipt"
 )
 
@@ -22,54 +19,27 @@ const (
 
 // CheckStatus is one row of a status report.
 type CheckStatus struct {
-	Check       string           `json:"check"`
-	State       State            `json:"state"`
-	CurrentHash string           `json:"current_hash"`
-	Receipt     *receipt.Receipt `json:"receipt,omitempty"`
+	RunID       *string             `json:"run_id"`
+	Reason      string              `json:"reason"`
+	Message     string              `json:"message"`
+	Provenance  *receipt.Provenance `json:"provenance"`
+	Record      *receipt.Record     `json:"record,omitempty"`
+	Check       string              `json:"check"`
+	State       State               `json:"state"`
+	CurrentHash string              `json:"current_hash"`
+	Receipt     *receipt.Receipt    `json:"receipt,omitempty"`
 }
 
 // Report is the status of every check a mode requires.
 type Report struct {
-	Mode      string        `json:"mode"`
-	Satisfied bool          `json:"satisfied"`
-	Checks    []CheckStatus `json:"checks"`
+	Schema     int             `json:"schema"`
+	Unverified UnverifiedState `json:"unverified"`
+	Mode       string          `json:"mode"`
+	Satisfied  bool            `json:"satisfied"`
+	Checks     []CheckStatus   `json:"checks"`
 }
 
 // Evaluate computes the report for mode without running anything.
 func Evaluate(root string, cfg *config.Config, mode string) (Report, error) {
-	names, err := cfg.ModeChecks(mode)
-	if err != nil {
-		return Report{}, err
-	}
-	store := receipt.NewStore(root)
-	rep := Report{Mode: mode, Satisfied: true}
-	for _, name := range names {
-		ch := cfg.Checks[name]
-		d, err := fileset.Compute(root, ch.Inputs, cfg.Exclude, cfg.Fingerprint(name))
-		if err != nil {
-			return Report{}, fmt.Errorf("check %q: %w", name, err)
-		}
-		r, err := store.Get(name)
-		if err != nil {
-			return Report{}, err
-		}
-		cs := CheckStatus{Check: name, CurrentHash: d.Hash, Receipt: r}
-		switch {
-		case d.FileCount == 0:
-			cs.State = Empty
-		case r == nil:
-			cs.State = Missing
-		case r.InputsHash != d.Hash:
-			cs.State = Stale
-		case r.Result != receipt.ResultPass:
-			cs.State = Fail
-		default:
-			cs.State = Pass
-		}
-		if cs.State != Pass {
-			rep.Satisfied = false
-		}
-		rep.Checks = append(rep.Checks, cs)
-	}
-	return rep, nil
+	return EvaluateState(root, cfg, mode)
 }

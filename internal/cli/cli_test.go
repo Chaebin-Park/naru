@@ -30,10 +30,10 @@ func run(t *testing.T, dir, stdin string, args ...string) result {
 func write(t *testing.T, root, rel, content string) {
 	t.Helper()
 	p := filepath.Join(root, filepath.FromSlash(rel))
-	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(p, []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(p, []byte(content), 0o600); err != nil { // #nosec G703 -- Test callers supply fixture-relative paths in a test-owned directory; no external input.
 		t.Fatal(err)
 	}
 }
@@ -201,11 +201,11 @@ func TestInitDetectsStackAndRefusesOverwrite(t *testing.T) {
 	if r.code != 0 || !strings.Contains(r.stdout, "detected go") {
 		t.Fatalf("init: %+v", r)
 	}
-	cfg, _ := os.ReadFile(filepath.Join(root, ".naru/config.yaml"))
+	cfg, _ := os.ReadFile(filepath.Join(root, ".naru/config.yaml")) // #nosec G304 -- Reads a synthetic fixture or a file in the test-owned temporary directory.
 	if !strings.Contains(string(cfg), `"go test ./..."`) || !strings.Contains(string(cfg), `inputs: ["**"]`) {
 		t.Fatalf("go check missing:\n%s", cfg)
 	}
-	if gi, _ := os.ReadFile(filepath.Join(root, ".naru/.gitignore")); !strings.Contains(string(gi), "receipts/") {
+	if gi, _ := os.ReadFile(filepath.Join(root, ".naru/.gitignore")); !strings.Contains(string(gi), "receipts/") { // #nosec G304 -- Reads a synthetic fixture or a file in the test-owned temporary directory.
 		t.Fatalf(".gitignore missing receipts: %q", gi)
 	}
 	if r := run(t, root, "", "init"); r.code != 64 {

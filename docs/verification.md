@@ -1,5 +1,7 @@
 # Verification against real Claude Code sessions
 
+Terms: [NARU glossary](glossary.md). Command names and quoted session output keep their original spelling.
+
 Recorded on 2026-11-03 with Claude Code 2.1.317 (`claude -p`, model `sonnet`, `--setting-sources project --strict-mcp-config`, so only the test project's settings and hook were active). The project had one check:
 
 ```yaml

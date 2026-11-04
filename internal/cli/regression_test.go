@@ -15,7 +15,7 @@ func git(t *testing.T, dir string, args ...string) {
 		t.Skip("git not available")
 	}
 	base := []string{"-c", "user.name=t", "-c", "user.email=t@example.com", "-c", "protocol.file.allow=always", "-c", "init.defaultBranch=main"}
-	cmd := exec.Command("git", append(base, args...)...)
+	cmd := exec.Command("git", append(base, args...)...) // #nosec G204 -- Test-controlled executable and arguments exercise the CLI in isolated temporary directories.
 	cmd.Dir = dir
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("git %v: %v\n%s", args, err, out)
@@ -140,11 +140,11 @@ func TestExecutableBitIsAnInput(t *testing.T) {
 	root := t.TempDir()
 	write(t, root, ".naru/config.yaml", anyInputs)
 	write(t, root, "gradlew", "#!/bin/sh\n")
-	if err := os.Chmod(filepath.Join(root, "gradlew"), 0o755); err != nil {
+	if err := os.Chmod(filepath.Join(root, "gradlew"), 0o755); err != nil { // #nosec G302 -- Executable-bit regression deliberately toggles permission bits on a temporary fixture.
 		t.Fatal(err)
 	}
 	run(t, root, "", "check")
-	if err := os.Chmod(filepath.Join(root, "gradlew"), 0o644); err != nil {
+	if err := os.Chmod(filepath.Join(root, "gradlew"), 0o644); err != nil { // #nosec G302 -- Executable-bit regression deliberately toggles permission bits on a temporary fixture.
 		t.Fatal(err)
 	}
 	if r := run(t, root, "", "status"); r.code != 1 {

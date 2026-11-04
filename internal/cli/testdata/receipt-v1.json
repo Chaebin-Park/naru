@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "check": "has-ok",
+  "command": "grep -q ok src/value.txt",
+  "inputs_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "file_count": 1,
+  "file_source": "walk",
+  "git_head": "0123456789012345678901234567890123456789",
+  "result": "pass",
+  "exit_code": 0,
+  "evidence": "local",
+  "started_at": "2026-11-04T00:00:00Z",
+  "finished_at": "2026-11-04T00:00:00.012Z",
+  "duration_ms": 12,
+  "log_path": ".naru/logs/has-ok-example.log",
+  "naru_version": "dev"
+}

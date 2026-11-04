@@ -130,17 +130,17 @@ func PreTool(stdin io.Reader, stderr io.Writer, fallbackDir string) int {
 			target = in.ToolInput.NotebookPath
 		}
 		if target != "" && insideNaruDir(root, cwd, target) {
-			fmt.Fprintf(stderr, "naru: blocked %s on %s — .naru/ holds the config and the evidence the Stop gate trusts, so agents must not edit it. If the config is wrong, tell the user what to change.\n", in.ToolName, target)
+			_, _ = fmt.Fprintf(stderr, "naru: blocked %s on %s — .naru/ holds the config and the evidence the Stop gate trusts, so agents must not edit it. If the config is wrong, tell the user what to change.\n", in.ToolName, target)
 			return Block
 		}
 	case in.ToolName == "Bash":
 		cmd := in.ToolInput.Command
 		if modeChange.MatchString(cmd) {
-			fmt.Fprintln(stderr, "naru: blocked — the mode decides which checks must pass, so a human chooses it. Ask the user to run `naru mode <name>` if a different mode is appropriate.")
+			_, _ = fmt.Fprintln(stderr, "naru: blocked — the mode decides which checks must pass, so a human chooses it. Ask the user to run `naru mode <name>` if a different mode is appropriate.")
 			return Block
 		}
 		if bashWritesNaru(cmd) {
-			fmt.Fprintln(stderr, "naru: blocked — this command may modify .naru/, which holds the config and the evidence the Stop gate trusts. Run `naru check` to produce receipts; tell the user if the config needs to change.")
+			_, _ = fmt.Fprintln(stderr, "naru: blocked — this command may modify .naru/, which holds the config and the evidence the Stop gate trusts. Run `naru check` to produce receipts; tell the user if the config needs to change.")
 			return Block
 		}
 	}

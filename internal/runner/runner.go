@@ -5,16 +5,12 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/Chaebin-Park/naru/internal/config"
-	"github.com/Chaebin-Park/naru/internal/fileset"
 	"github.com/Chaebin-Park/naru/internal/receipt"
 )
 
@@ -26,6 +22,7 @@ type Options struct {
 	Now      func() time.Time
 	// Context cancels the run (e.g. on Ctrl-C); nil means context.Background().
 	Context context.Context
+	store   func(string) executionStore
 }
 
 // waitDelay bounds how long to wait for output after the command exits or is killed.
@@ -35,131 +32,31 @@ var waitDelay = 5 * time.Second
 // depend only on the command and stay "pass" forever, so naru refuses to run it.
 var ErrEmptyInputs = errors.New("inputs match no files")
 
-// ErrInterrupted means the run was cancelled before finishing; no receipt is written.
+// ErrInterrupted means the caller cancelled; a started execution records cancellation.
 var ErrInterrupted = errors.New("interrupted")
 
 // Outcome is the result of running one check.
 type Outcome struct {
 	Receipt receipt.Receipt
+	Record  *receipt.Record
 	// Tail holds the last lines of output, for failure summaries.
 	Tail string
 }
 
-// Run executes one check, writes its log and receipt, and returns the outcome.
-// The inputs digest is taken before the command runs, so edits made while the
-// check runs leave the receipt stale rather than falsely fresh.
+// Run executes under a check lock and publishes before/after execution evidence.
 func Run(root string, cfg *config.Config, name string, opt Options) (Outcome, error) {
-	ch, ok := cfg.Checks[name]
-	if !ok {
-		return Outcome{}, fmt.Errorf("unknown check %q", name)
-	}
-	now := opt.Now
-	if now == nil {
-		now = time.Now
-	}
-	digest, err := fileset.Compute(root, ch.Inputs, cfg.Exclude, cfg.Fingerprint(name))
-	if err != nil {
-		return Outcome{}, fmt.Errorf("check %q: hashing inputs: %w", name, err)
-	}
-	if digest.FileCount == 0 {
-		return Outcome{}, fmt.Errorf("check %q: %w (inputs %v); fix the patterns in .naru/config.yaml", name, ErrEmptyInputs, ch.Inputs)
-	}
-	parent := opt.Context
-	if parent == nil {
-		parent = context.Background()
-	}
+	return runWithLog(root, cfg, name, opt, func(path string) (logSink, error) {
+		return os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600) // #nosec G304 -- Generated check/run ID path under the canonical project root.
+	})
+}
 
-	start := now()
-	logRel := filepath.ToSlash(filepath.Join(".naru", "logs", fmt.Sprintf("%s-%s.log", name, start.UTC().Format("20060102T150405.000Z"))))
-	logPath := filepath.Join(root, filepath.FromSlash(logRel))
-	if err := os.MkdirAll(filepath.Dir(logPath), 0o755); err != nil {
-		return Outcome{}, err
-	}
-	logFile, err := os.Create(logPath)
-	if err != nil {
-		return Outcome{}, err
-	}
-	defer logFile.Close()
+type logSink interface {
+	io.WriteCloser
+	Sync() error
+}
 
-	var tail tailBuffer
-	writers := []io.Writer{logFile, &tail}
-	if opt.Stream != nil {
-		writers = append(writers, opt.Stream)
-	}
-	out := io.MultiWriter(writers...)
-	// The log always says what ran, so a silent failure (e.g. `grep -q`) is still explainable.
-	dir := ch.Workdir
-	if dir == "" {
-		dir = "."
-	}
-	fmt.Fprintf(logFile, "naru: check %q\n$ %s\n(dir: %s, inputs: %d files)\n\n", name, ch.Run, dir, digest.FileCount)
-
-	ctx, cancel := context.WithTimeout(parent, ch.TimeoutDuration())
-	defer cancel()
-	cmd := exec.CommandContext(ctx, "sh", "-c", ch.Run)
-	cmd.Dir = root
-	if ch.Workdir != "" {
-		cmd.Dir = filepath.Join(root, filepath.FromSlash(ch.Workdir))
-	}
-	cmd.Env = append(os.Environ(), "NARU_CHECK="+name, "NARU_ROOT="+root)
-	cmd.Stdout = out
-	cmd.Stderr = out
-	setProcessGroup(cmd)
-	// If a descendant escapes the process group and keeps the output pipe open,
-	// stop waiting for it shortly after the kill instead of hanging forever.
-	cmd.WaitDelay = waitDelay
-
-	result, exitCode := receipt.ResultPass, 0
-	runErr := cmd.Run()
-	if parent.Err() != nil {
-		fmt.Fprintf(out, "\nnaru: check %q interrupted\n", name)
-		return Outcome{}, fmt.Errorf("check %q: %w", name, ErrInterrupted)
-	}
-	switch {
-	case ctx.Err() == context.DeadlineExceeded:
-		result, exitCode = receipt.ResultTimeout, -1
-		fmt.Fprintf(out, "\nnaru: check %q timed out after %s\n", name, ch.TimeoutDuration())
-	case errors.Is(runErr, exec.ErrWaitDelay):
-		// The command exited, but a background child kept its output open.
-		// Its exit status is still the result.
-		exitCode = cmd.ProcessState.ExitCode()
-		if exitCode != 0 {
-			result = receipt.ResultFail
-		}
-		fmt.Fprintf(out, "\nnaru: check %q exited %d but a background process kept its output open; it was not waited for\n", name, exitCode)
-	case runErr != nil:
-		var ee *exec.ExitError
-		if errors.As(runErr, &ee) {
-			result, exitCode = receipt.ResultFail, ee.ExitCode()
-		} else {
-			result, exitCode = receipt.ResultError, -1
-			fmt.Fprintf(out, "\nnaru: could not start check %q: %v\n", name, runErr)
-		}
-	}
-	end := now()
-	fmt.Fprintf(logFile, "\nnaru: result %s, exit %d\n", result, exitCode)
-
-	r := receipt.Receipt{
-		Schema:      receipt.Schema,
-		Check:       name,
-		Command:     ch.Run,
-		InputsHash:  digest.Hash,
-		FileCount:   digest.FileCount,
-		FileSource:  string(digest.Source),
-		GitHead:     fileset.GitHead(root),
-		Result:      result,
-		ExitCode:    exitCode,
-		Evidence:    opt.Evidence,
-		StartedAt:   start.UTC(),
-		FinishedAt:  end.UTC(),
-		DurationMS:  end.Sub(start).Milliseconds(),
-		LogPath:     logRel,
-		NaruVersion: opt.Version,
-	}
-	if err := receipt.NewStore(root).Put(r); err != nil {
-		return Outcome{}, fmt.Errorf("check %q: writing receipt: %w", name, err)
-	}
-	return Outcome{Receipt: r, Tail: tail.String()}, nil
+func runWithLog(root string, cfg *config.Config, name string, opt Options, openLog func(string) (logSink, error)) (Outcome, error) {
+	return runState(root, cfg, name, opt, openLog)
 }
 
 // tailBuffer keeps roughly the last 8 KiB of output.
@@ -185,4 +82,23 @@ func (t *tailBuffer) String() string {
 		lines = lines[len(lines)-40:]
 	}
 	return strings.Join(lines, "\n")
+}
+
+// checkedOutput keeps command-copy and diagnostic errors until completion.
+// os/exec serializes writes when Stdout and Stderr share this writer.
+type checkedOutput struct {
+	io.Writer
+	err error
+}
+
+func (w *checkedOutput) Write(p []byte) (int, error) {
+	if w.err != nil {
+		return 0, w.err
+	}
+	n, err := w.Writer.Write(p)
+	if err == nil && n != len(p) {
+		err = io.ErrShortWrite
+	}
+	w.err = err
+	return n, err
 }

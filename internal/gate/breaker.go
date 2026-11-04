@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -39,26 +40,40 @@ func loadBreaker(root string) breakerState {
 	return st
 }
 
-func saveBreaker(root string, st breakerState) {
+func saveBreaker(root string, st breakerState) error {
 	p := breakerPath(root)
-	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-		return
+	if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
+		return err
 	}
-	data, _ := json.Marshal(st)
-	_ = os.WriteFile(p, data, 0o644)
+	data, err := json.Marshal(st)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(p, data, 0o600)
 }
 
-func clearBreaker(root string) { _ = os.Remove(breakerPath(root)) }
+func removeState(path string) error {
+	err := os.Remove(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	return err
+}
+
+func clearBreaker(root string) error { return removeState(breakerPath(root)) }
 
 // reportFingerprint changes whenever the agent makes progress: an input edit, a
 // new run, or a different result.
 func reportFingerprint(rep status.Report) string {
-	h := sha256.New()
-	fmt.Fprintf(h, "mode=%s\n", rep.Mode)
+	h := sha256.New() // hash.Hash.Write never returns an error.
+	_, _ = fmt.Fprintf(h, "mode=%s\n", rep.Mode)
 	for _, c := range rep.Checks {
-		fmt.Fprintf(h, "%s|%s|%s", c.Check, c.State, c.CurrentHash)
+		_, _ = fmt.Fprintf(h, "%s|%s|%s", c.Check, c.State, c.CurrentHash)
+		if c.Record != nil {
+			_, _ = fmt.Fprintf(h, "|%s|%s|%s", c.Record.RunID, c.Record.Phase, c.Reason)
+		}
 		if c.Receipt != nil {
-			fmt.Fprintf(h, "|%s|%s|%d", c.Receipt.FinishedAt, c.Receipt.Result, c.Receipt.ExitCode)
+			_, _ = fmt.Fprintf(h, "|%s|%s|%d", c.Receipt.FinishedAt, c.Receipt.Result, c.Receipt.ExitCode)
 		}
 		h.Write([]byte{'\n'})
 	}
@@ -72,7 +87,8 @@ func textFingerprint(s string) string {
 
 // block emits msg and returns Block, unless the same block has now repeated
 // more than maxRepeats times in one stop chain; then it returns Allow with a
-// "not verified" notice.
+// "not verified" notice. Diagnostic write errors on blocking paths cannot
+// turn a block into an allowance; allowance notices must be delivered.
 func block(root string, in StopInput, maxRepeats int, fingerprint, msg string, stdout, stderr io.Writer) int {
 	st := loadBreaker(root)
 	if in.StopHookActive && st.Fingerprint == fingerprint {
@@ -81,16 +97,26 @@ func block(root string, in StopInput, maxRepeats int, fingerprint, msg string, s
 		st = breakerState{Fingerprint: fingerprint, Repeats: 1}
 	}
 	if maxRepeats > 0 && st.Repeats > maxRepeats {
-		clearBreaker(root)
-		recordUnverified(root, msg)
+		if err := recordUnverified(root, msg); err != nil {
+			_, _ = fmt.Fprintf(stderr, "naru: cannot save NOT VERIFIED record: %v\n", err)
+			return Block
+		}
+		if err := clearBreaker(root); err != nil {
+			_, _ = fmt.Fprintf(stderr, "naru: cannot clear gate state: %v\n", err)
+			return Block
+		}
 		head := fmt.Sprintf("naru: NOT VERIFIED — the same block repeated %d times with no progress, so naru let the agent stop.", maxRepeats)
-		warnUser(stdout, stderr, head+"\n"+strings.TrimRight(msg, "\n")+"\nA human must resolve this; `naru status` keeps showing it until a verified stop. Set gate.max_repeats: 0 to never give up.")
+		if err := warnUser(stdout, stderr, head+"\n"+strings.TrimRight(msg, "\n")+"\nA human must resolve this; `naru status` keeps showing it until a verified stop. Set gate.max_repeats: 0 to never give up."); err != nil {
+			return Block
+		}
 		return Allow
 	}
-	saveBreaker(root, st)
-	fmt.Fprint(stderr, msg)
+	if err := saveBreaker(root, st); err != nil {
+		_, _ = fmt.Fprintf(stderr, "naru: cannot save gate state: %v\n", err)
+	}
+	_, _ = fmt.Fprint(stderr, msg)
 	if maxRepeats > 0 && st.Repeats > 1 {
-		fmt.Fprintf(stderr, "(identical block %d of %d; if you cannot make progress, say so and stop.)\n", st.Repeats, maxRepeats)
+		_, _ = fmt.Fprintf(stderr, "(identical block %d of %d; if you cannot make progress, say so and stop.)\n", st.Repeats, maxRepeats)
 	}
 	return Block
 }
@@ -98,10 +124,11 @@ func block(root string, in StopInput, maxRepeats int, fingerprint, msg string, s
 // warnUser shows msg to the human: Claude Code displays a hook's
 // {"systemMessage": ...} on stdout (with exit 0) to the user. The same text
 // goes to stderr for other agents and for logs.
-func warnUser(stdout, stderr io.Writer, msg string) {
+func warnUser(stdout, stderr io.Writer, msg string) error {
 	b, _ := json.Marshal(map[string]string{"systemMessage": msg})
-	fmt.Fprintln(stdout, string(b))
-	fmt.Fprintln(stderr, msg)
+	_, outErr := fmt.Fprintln(stdout, string(b))
+	_, errErr := fmt.Fprintln(stderr, msg)
+	return errors.Join(outErr, errErr)
 }
 
 // Unverified is the record of a stop naru allowed without verification.
@@ -114,16 +141,19 @@ func unverifiedPath(root string) string {
 	return filepath.Join(root, config.Dir, "state", "unverified.json")
 }
 
-func recordUnverified(root, reason string) {
+func recordUnverified(root, reason string) error {
 	p := unverifiedPath(root)
-	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-		return
+	if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
+		return err
 	}
-	data, _ := json.Marshal(Unverified{At: time.Now().UTC(), Reason: reason})
-	_ = os.WriteFile(p, data, 0o644)
+	data, err := json.Marshal(Unverified{At: time.Now().UTC(), Reason: reason})
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(p, data, 0o600)
 }
 
-func clearUnverified(root string) { _ = os.Remove(unverifiedPath(root)) }
+func clearUnverified(root string) error { return removeState(unverifiedPath(root)) }
 
 // LastUnverified returns the record of the last stop allowed without
 // verification, or nil when the latest stop was verified (or none happened).

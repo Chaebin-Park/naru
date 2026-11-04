@@ -37,13 +37,13 @@ func TestPrePushStates(t *testing.T) {
 		}
 		assert(0, "")
 	}
-	write(t, root, ".naru/receipts/has-ok.json", "broken")
-	assert(1, "cannot evaluate")
+	write(t, root, ".naru/state/checks/has-ok.json", "broken")
+	assert(1, "corrupt")
 	if err := os.Remove(filepath.Join(root, "src/value.txt")); err != nil {
 		t.Fatal(err)
 	}
 	// Restore a valid receipt to isolate the empty-input verdict.
-	if err := os.Remove(filepath.Join(root, ".naru/receipts/has-ok.json")); err != nil {
+	if err := os.Remove(filepath.Join(root, ".naru/state/checks/has-ok.json")); err != nil {
 		t.Fatal(err)
 	}
 	assert(1, "match no files")

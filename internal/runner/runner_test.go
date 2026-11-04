@@ -16,7 +16,13 @@ import (
 func project(t *testing.T, yaml string) (string, *config.Config) {
 	t.Helper()
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, "in.txt"), []byte("x"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "in.txt"), []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(filepath.Join(root, ".naru"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, ".naru/config.yaml"), []byte(yaml), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	cfg, err := config.Parse([]byte(yaml))
@@ -50,7 +56,7 @@ func TestExitCodeMapping(t *testing.T) {
 	}
 }
 
-// A background child that keeps stdout open must not turn a passing check into ERROR.
+// Preserve the command result while blocking on unaccounted-for background children.
 func TestBackgroundChildKeepingOutputOpen(t *testing.T) {
 	old := waitDelay
 	waitDelay = 200 * time.Millisecond
@@ -64,10 +70,16 @@ func TestBackgroundChildKeepingOutputOpen(t *testing.T) {
 	if out.Receipt.Result != receipt.ResultPass || out.Receipt.ExitCode != 0 {
 		t.Fatalf("got %s/%d, want pass/0", out.Receipt.Result, out.Receipt.ExitCode)
 	}
+	if out.Record.Inputs.Validity != receipt.InputsUnreadable || *out.Record.Inputs.Reason != "owner_lost" {
+		t.Fatal("background child incorrectly verified")
+	}
+	if _, err := Run(root, cfg, "c", Options{}); !errors.Is(err, ErrRecovery) {
+		t.Fatalf("overlapping background child: %v", err)
+	}
 	if time.Since(start) > 3*time.Second {
 		t.Fatal("waited for the background child")
 	}
-	log, _ := os.ReadFile(filepath.Join(root, filepath.FromSlash(out.Receipt.LogPath)))
+	log, _ := os.ReadFile(filepath.Join(root, filepath.FromSlash(out.Receipt.LogPath))) // #nosec G304 -- Reads a synthetic fixture or a file in the test-owned temporary directory.
 	if !strings.Contains(string(log), "background process kept its output open") {
 		t.Fatalf("log does not explain the early return:\n%s", log)
 	}
@@ -96,7 +108,7 @@ func TestEmptyInputsRefused(t *testing.T) {
 	}
 }
 
-func TestCancelKillsCheckAndWritesNoReceipt(t *testing.T) {
+func TestCancelKillsCheckAndRecordsCancellation(t *testing.T) {
 	root, cfg := project(t, base+`"sh -c 'sleep 30; touch survived' & sleep 30"`)
 	ctx, cancel := context.WithCancel(context.Background())
 	time.AfterFunc(200*time.Millisecond, cancel)
@@ -108,8 +120,8 @@ func TestCancelKillsCheckAndWritesNoReceipt(t *testing.T) {
 	if time.Since(start) > 3*time.Second {
 		t.Fatal("cancel did not stop the check promptly")
 	}
-	if r, _ := receipt.NewStore(root).Get("c"); r != nil {
-		t.Fatalf("interrupted run wrote a receipt: %+v", r)
+	if r, err := receipt.NewStateStore(root).Current("c"); err != nil || r == nil || r.Execution.Result == nil || *r.Execution.Result != receipt.ResultCancelled {
+		t.Fatalf("cancellation not recorded: %+v %v", r, err)
 	}
 	time.Sleep(100 * time.Millisecond)
 	if _, err := os.Stat(filepath.Join(root, "survived")); err == nil {
@@ -123,7 +135,7 @@ func TestLogExplainsSilentFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	log, _ := os.ReadFile(filepath.Join(root, filepath.FromSlash(out.Receipt.LogPath)))
+	log, _ := os.ReadFile(filepath.Join(root, filepath.FromSlash(out.Receipt.LogPath))) // #nosec G304 -- Reads a synthetic fixture or a file in the test-owned temporary directory.
 	for _, want := range []string{"$ grep -q 42 in.txt", "result fail, exit 1"} {
 		if !strings.Contains(string(log), want) {
 			t.Errorf("log missing %q:\n%s", want, log)

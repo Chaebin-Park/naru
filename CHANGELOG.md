@@ -1,14 +1,36 @@
 # Changelog
 
+Terms: [NARU glossary](docs/glossary.md). Command names and quoted session output keep their original spelling.
+
 All notable changes to naru are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/) (pre-1.0: minor versions may change behaviour).
 
 ## [Unreleased]
 
-### Added
-- `naru gate pre-push`: require fresh default-mode receipts and no NOT VERIFIED record.
-- `naru hooks install [--force]`: install a pre-push hook while protecting existing hooks.
+### Changed
+
+- New executions use strict schema 2 state with immutable history, per-check OS locks, recorded cancellation, and before/after input verification. Legacy receipts are preserved read-only and require rerunning before they can satisfy the new policy.
+- `status --json` is schema 2 with execution IDs, reasons, provenance, and NOT VERIFIED presence. Corrupt evidence now returns a structured invalid row and exit 1; IO errors return 70.
+- Interrupted owners and unaccounted-for background children block automatic restart pending manual recovery. Windows runtime/process-tree support and physical power-loss durability remain unverified.
+
+### Fixed
+
+- Block Stop when NOT VERIFIED state cannot be saved or cleared, and reject failed allowance notices.
+- Reject log write/sync/close failures before publishing a receipt; remove temporary receipts after failed replacements.
+- Report output failures on otherwise successful CLI commands and create private execution state with owner-only permissions.
+
+### Documentation
+
+- Record the current CLI, receipt format, verification boundaries, and known safety gaps; add regression coverage for mode/source precedence, corrupt receipts, and schema 1 field preservation.
+
+- Define MVP support priorities: macOS and Linux validation first, with Windows limitations and untested behavior stated explicitly.
+
+- Defer waivers beyond the MVP and retain the existing NOT VERIFIED completion policy.
+
+- Add a shared glossary and align Korean terminology across current feature and design documents.
 
 ### Added
+- `naru gate pre-push`: require fresh passing receipts for `default_mode` and no NOT VERIFIED record, independently of Stop overrides.
+- `naru hooks install [--force]`: opt-in Git pre-push hook installation with existing-hook protection and hook-manager integration guidance.
 - `AGENTS.md`: build, verification and contribution rules for coding agents working on this repository.
 
 ## [0.1.0] - 2026-11-03

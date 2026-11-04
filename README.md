@@ -1,8 +1,10 @@
 # naru
 
+Terms: [NARU glossary](docs/glossary.md). Command names and quoted session output keep their original spelling.
+
 > **naru** (나루) is Korean for a ferry crossing: changes cross only after the boatman checks them.
 
-`naru` makes an AI coding agent's "done" mean *verified*, not *claimed*. It runs the checks your project requires, records a **receipt** bound to the exact content of the files each check depends on, and blocks the agent from finishing while any required check is missing, failing, or stale.
+`naru` makes an AI coding agent's "done" mean *verified*, not *claimed*. It runs the checks your project requires, records a receipt (a check result tied to its inputs) for the exact content of the files each check depends on, and blocks the agent from finishing while any required check is missing, failing, or stale.
 
 [한국어 README](README.ko.md)
 
@@ -19,8 +21,12 @@ Agents often report "tests pass" without running them, or run them and then keep
 | check passed, then an input file changed | `stale` | blocks |
 | check passed for the current files | `pass` | allows |
 | a check's inputs match no files | `empty` | blocks (a receipt would prove nothing) |
+| execution is active, cancelled, interrupted, incompatible, or invalid | `running` / `cancelled` / `interrupted` / `incompatible` / `invalid` | blocks |
+| inputs changed during execution or cannot be verified | `input-changed` / `input-error` | blocks even when the command exits zero |
 
-The gate never runs checks itself, so it stays fast; it only compares receipts with the current files.
+`status --json` now reports schema 2, including explicit reason codes and NOT VERIFIED presence. Corrupt evidence produces an `invalid` row and exit 1; IO errors return 70. Before/after hashing is not a snapshot and can miss A→B→A changes.
+
+A gate decides whether an action can continue. It compares receipts with the current files. It does not run checks.
 
 ## How it fits together
 
@@ -116,7 +122,7 @@ When the gate blocks, it exits 2 and explains on stderr which checks are not sat
 - The project is found from `$CLAUDE_PROJECT_DIR` first, then the hook payload's `cwd`, so an agent that `cd`s elsewhere is still gated. Outside a naru project the gate always allows.
 - An invalid config blocks, because an unverifiable state is not a passing one.
 - When the active mode is not `default_mode`, an allowed stop says so on stderr, so a narrowed mode is visible in the session.
-- No endless loops: if the agent cannot make progress (for example `naru check` is not permitted), the same block repeats with nothing changing. After `gate.max_repeats` identical blocks in one stop chain (default 3) naru lets the agent stop and reports **NOT VERIFIED** to the user (a hook `systemMessage`) and to the model; `naru status` keeps showing a warning until a later verified stop. Any progress (an edit, a new run) resets the count. Set `gate: {max_repeats: 0}` to never give up.
+- No endless loops: if the agent cannot make progress (for example `naru check` is not permitted), the same block repeats with nothing changing. After `gate.max_repeats` identical blocks in one stop chain (default 3) naru lets the agent stop and reports **NOT VERIFIED** to the user (a hook `systemMessage`) and to the model; `naru status` keeps showing a warning until a later verified stop. Any progress (an edit, a new run) resets the count. Set `gate: {max_repeats: 0}` to never give up. Failure to save/clear gate state or deliver an allowance notice blocks Stop.
 - Escape hatch for humans: set `NARU_GATE=off` in the environment Claude Code runs hooks with. Every stop then reports that completion was not verified.
 
 See [docs/verification.md](docs/verification.md) for recorded runs against real Claude Code sessions.
@@ -171,7 +177,7 @@ Humans can bypass the hook with `git push --no-verify`. This gate evaluates the 
 
 ## Receipts
 
-`naru check` writes `.naru/receipts/<check>.json` (latest run) and `.naru/logs/<check>-<time>.log`. The receipt records the command, the inputs hash and file count, the git HEAD, result and exit code, timing, and an evidence class (`local`, `agent-run`, or `ci`; set with `--evidence` or `$NARU_EVIDENCE`, and `ci` when `$CI` is set). `naru init` adds `.naru/.gitignore` so receipts, logs, and the stored mode stay out of version control.
+`naru check` writes schema 2 current state to `.naru/state/checks/<check>.json`, preserves previous records in `.naru/state/history/<check>/<run_id>.json`, and creates `.naru/logs/<check>-<run_id>.log`. It records running state before starting the command, prevents duplicate runs of the same check, and compares inputs before and after execution. Existing schema 1 receipts remain unchanged but require a rerun under the new policy. [Execution records and recovery](docs/execution-records.md) describes validation, JSON output, compatibility, and recovery.
 
 ## Exit codes
 
@@ -179,10 +185,16 @@ Humans can bypass the hook with `git push --no-verify`. This gate evaluates the 
 | --- | --- | --- | --- | --- | --- |
 | `check`, `status` | done | not done | – | usage or config error | internal error |
 
-`check` exits 130 when interrupted (Ctrl-C stops the whole check process group and writes no receipt).
+Log write, sync, or close errors prevent a terminal success and return an internal error; an already-published running state remains unsatisfied. New private state directories use mode 0700 and files use 0600; existing permissions are not migrated. Otherwise successful CLI commands return an error if output cannot be written.
+
+`check` exits 130 when interrupted. A started execution records `cancelled`; earlier success stays in history and cannot satisfy the gate. On macOS/Linux, Ctrl-C stops the check process group. A crashed owner with leftover running state requires manual recovery before a new run; a free lock alone does not prove its children have exited.
 | `gate stop` | allow | – | block | usage error | – |
+| `gate pre-push` | allow | block | – | usage error | – |
+| `hooks install` | installed | refused or failed | – | usage/config error | internal error |
 
 ## Known limitations (P0)
+
+For the MVP, validation prioritizes macOS and Linux. Windows has limited support. Report runtime tests separately from builds and static checks. Mark untested behavior as unverified.
 
 - Receipts and config are local files. `naru gate pre-tool` blocks the obvious ways an agent could edit them, but its shell detection is a heuristic; rely on CI to re-run checks from a clean checkout.
 - Checks run sequentially with `sh -c`. Windows needs a POSIX shell (for example Git Bash), and a timeout there kills only the shell, not its children.
@@ -191,8 +203,12 @@ Humans can bypass the hook with `git push --no-verify`. This gate evaluates the 
 
 ## Roadmap
 
-P0 core loop → P1 baseline engine and Spring Boot pack → P2 Claude Code plugin, git hooks, relay, waivers → P3 Android and Web packs → P4 knowledge MCP and evals → P5 iOS pack, CI templates (GitHub Actions, Bitbucket Pipelines, Jenkins), review dashboard.
+P0 core loop → P1 baseline engine and Spring Boot pack → P2 Claude Code plugin, git hooks, relay → P3 Android and Web packs → P4 knowledge MCP and evals → P5 iOS pack, CI templates (GitHub Actions, Bitbucket Pipelines, Jenkins), review dashboard.
+
+Waivers are deferred beyond the MVP. Unverified completion continues to use the existing NOT VERIFIED policy.
 
 ## License
 
 [MIT](LICENSE)
+
+Current behavior, receipt format, test mapping, and planned changes: [behavior baseline](docs/current-behavior.md).

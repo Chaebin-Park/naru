@@ -72,7 +72,7 @@ func (s Store) Get(check string) (*Receipt, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := os.ReadFile(p)
+	data, err := os.ReadFile(p) // #nosec G304 -- Check names are validated by Store.path; reads local evidence, not a remote path.
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, nil
 	}
@@ -87,12 +87,12 @@ func (s Store) Get(check string) (*Receipt, error) {
 }
 
 // Put atomically replaces the latest receipt for r.Check.
-func (s Store) Put(r Receipt) error {
+func (s Store) Put(r Receipt) (retErr error) {
 	p, err := s.path(r.Check)
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(s.dir, 0o755); err != nil {
+	if err := os.MkdirAll(s.dir, 0o700); err != nil {
 		return err
 	}
 	data, err := json.MarshalIndent(r, "", "  ")
@@ -103,18 +103,23 @@ func (s Store) Put(r Receipt) error {
 	if err != nil {
 		return err
 	}
+	closed := false
+	defer func() {
+		if !closed {
+			retErr = errors.Join(retErr, tmp.Close())
+		}
+		if err := os.Remove(tmp.Name()); !errors.Is(err, os.ErrNotExist) {
+			retErr = errors.Join(retErr, err)
+		}
+	}()
 	if _, err := tmp.Write(append(data, '\n')); err != nil {
-		tmp.Close()
-		os.Remove(tmp.Name())
 		return err
 	}
 	if err := tmp.Sync(); err != nil {
-		tmp.Close()
-		os.Remove(tmp.Name())
 		return err
 	}
+	closed = true
 	if err := tmp.Close(); err != nil {
-		os.Remove(tmp.Name())
 		return err
 	}
 	return os.Rename(tmp.Name(), p)

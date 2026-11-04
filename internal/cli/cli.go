@@ -21,6 +21,7 @@ import (
 	"github.com/Chaebin-Park/naru/internal/initcmd"
 	"github.com/Chaebin-Park/naru/internal/mode"
 	"github.com/Chaebin-Park/naru/internal/receipt"
+	"github.com/Chaebin-Park/naru/internal/runlock"
 	"github.com/Chaebin-Park/naru/internal/runner"
 	"github.com/Chaebin-Park/naru/internal/status"
 )
@@ -73,16 +74,29 @@ Usage:
   naru gate stop                      agent Stop hook: exit 2 with reasons unless satisfied
   naru gate pre-tool                  agent PreToolUse hook: block edits to .naru/ and mode changes
   naru gate pre-push                  require fresh default_mode receipts and no NOT VERIFIED record
-  naru hooks install [--force]        install a Git pre-push hook
+  naru hooks install [--force]        install a Git pre-push hook (preserve existing hooks by default)
   naru version
 
 Exit codes: 0 done, 1 not done, 64 usage/config error, 70 internal error, 130 interrupted.
 `
 
 // Run dispatches a subcommand.
-func Run(args []string, env Env) int {
+func Run(args []string, env Env) (code int) {
+	stdout, stderr := &outputWriter{Writer: env.Stdout}, &outputWriter{Writer: env.Stderr}
+	env.Stdout, env.Stderr = stdout, stderr
+	defer func() {
+		if code == exitOK && (stdout.err != nil || stderr.err != nil) {
+			code = exitInternal
+			if len(args) > 1 && args[0] == "gate" {
+				code = gate.Block
+				if args[1] == "pre-push" {
+					code = exitNotDone
+				}
+			}
+		}
+	}()
 	if len(args) == 0 {
-		fmt.Fprint(env.Stderr, usage)
+		_, _ = fmt.Fprint(env.Stderr, usage)
 		return exitUsage
 	}
 	switch args[0] {
@@ -99,13 +113,13 @@ func Run(args []string, env Env) int {
 	case "hooks":
 		return cmdHooks(args[1:], env)
 	case "version", "--version":
-		fmt.Fprintln(env.Stdout, "naru", version())
+		_, _ = fmt.Fprintln(env.Stdout, "naru", version())
 		return exitOK
 	case "help", "-h", "--help":
-		fmt.Fprint(env.Stdout, usage)
+		_, _ = fmt.Fprint(env.Stdout, usage)
 		return exitOK
 	default:
-		fmt.Fprintf(env.Stderr, "naru: unknown command %q\n\n%s", args[0], usage)
+		_, _ = fmt.Fprintf(env.Stderr, "naru: unknown command %q\n\n%s", args[0], usage)
 		return exitUsage
 	}
 }
@@ -120,16 +134,16 @@ func newFlags(name string, env Env) *flag.FlagSet {
 func project(env Env) (string, *config.Config, int) {
 	root, err := config.FindRoot(env.Dir)
 	if errors.Is(err, config.ErrNotFound) {
-		fmt.Fprintln(env.Stderr, "naru: no .naru/config.yaml found here or in any parent directory; run `naru init`")
+		_, _ = fmt.Fprintln(env.Stderr, "naru: no .naru/config.yaml found here or in any parent directory; run `naru init`")
 		return "", nil, exitUsage
 	}
 	if err != nil {
-		fmt.Fprintf(env.Stderr, "naru: %v\n", err)
+		_, _ = fmt.Fprintf(env.Stderr, "naru: %v\n", err)
 		return "", nil, exitInternal
 	}
 	cfg, err := config.Load(root)
 	if err != nil {
-		fmt.Fprintf(env.Stderr, "naru: invalid .naru/config.yaml:\n%v\n", err)
+		_, _ = fmt.Fprintf(env.Stderr, "naru: invalid .naru/config.yaml:\n%v\n", err)
 		return "", nil, exitUsage
 	}
 	return root, cfg, exitOK
@@ -143,19 +157,19 @@ func cmdInit(args []string, env Env) int {
 	}
 	res, err := initcmd.Run(env.Dir, *force)
 	if err != nil {
-		fmt.Fprintf(env.Stderr, "naru: %v\n", err)
+		_, _ = fmt.Fprintf(env.Stderr, "naru: %v\n", err)
 		if res.Existing {
 			return exitUsage
 		}
 		return exitInternal
 	}
 	for _, f := range res.Created {
-		fmt.Fprintf(env.Stdout, "created %s\n", f)
+		_, _ = fmt.Fprintf(env.Stdout, "created %s\n", f)
 	}
 	if res.Stack == "" {
-		fmt.Fprintln(env.Stdout, "no known build file found; the placeholder check fails until you configure one")
+		_, _ = fmt.Fprintln(env.Stdout, "no known build file found; the placeholder check fails until you configure one")
 	} else {
-		fmt.Fprintf(env.Stdout, "detected %s; review the `test` check, then run `naru check`\n", res.Stack)
+		_, _ = fmt.Fprintf(env.Stdout, "detected %s; review the `test` check, then run `naru check`\n", res.Stack)
 	}
 	return exitOK
 }
@@ -177,19 +191,19 @@ func cmdCheck(args []string, env Env) int {
 		m, _ := mode.Resolve(root, cfg, *modeFlag)
 		var err error
 		if names, err = cfg.ModeChecks(m); err != nil {
-			fmt.Fprintf(env.Stderr, "naru: %v\n", err)
+			_, _ = fmt.Fprintf(env.Stderr, "naru: %v\n", err)
 			return exitUsage
 		}
 	}
 	for _, n := range names {
 		if _, ok := cfg.Checks[n]; !ok {
-			fmt.Fprintf(env.Stderr, "naru: unknown check %q\n", n)
+			_, _ = fmt.Fprintf(env.Stderr, "naru: unknown check %q\n", n)
 			return exitUsage
 		}
 	}
 	ev, err := resolveEvidence(*evidence)
 	if err != nil {
-		fmt.Fprintf(env.Stderr, "naru: %v\n", err)
+		_, _ = fmt.Fprintf(env.Stderr, "naru: %v\n", err)
 		return exitUsage
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -202,32 +216,38 @@ func cmdCheck(args []string, env Env) int {
 	for _, n := range names {
 		out, err := runner.Run(root, cfg, n, opt)
 		switch {
+		case errors.Is(err, runlock.ErrBusy), errors.Is(err, runner.ErrRecovery):
+			_, _ = fmt.Fprintf(env.Stderr, "naru: %v\n", err)
+			return exitNotDone
 		case errors.Is(err, runner.ErrEmptyInputs):
-			fmt.Fprintf(env.Stderr, "naru: %v\n", err)
+			_, _ = fmt.Fprintf(env.Stderr, "naru: %v\n", err)
 			return exitUsage
 		case errors.Is(err, runner.ErrInterrupted):
-			fmt.Fprintf(env.Stderr, "naru: %v; no receipt written\n", err)
+			_, _ = fmt.Fprintf(env.Stderr, "naru: %v; any started execution is recorded as cancelled\n", err)
 			return exitInterrupted
 		case err != nil:
-			fmt.Fprintf(env.Stderr, "naru: %v\n", err)
+			_, _ = fmt.Fprintf(env.Stderr, "naru: %v\n", err)
 			return exitInternal
 		}
 		r := out.Receipt
 		dur := (time.Duration(r.DurationMS) * time.Millisecond).Round(10 * time.Millisecond)
-		if r.Result == receipt.ResultPass {
-			fmt.Fprintf(env.Stdout, "PASS %s (%s, %d files)\n", n, dur, r.FileCount)
+		if r.Result == receipt.ResultPass && out.Record.Inputs.Validity == receipt.InputsMatched {
+			_, _ = fmt.Fprintf(env.Stdout, "PASS %s (%s, %d files)\n", n, dur, r.FileCount)
 			continue
 		}
 		failed++
-		fmt.Fprintf(env.Stdout, "%s %s exit=%d (%s) log: %s\n", strings.ToUpper(r.Result), n, r.ExitCode, dur, r.LogPath)
+		if out.Record.Inputs.Validity != receipt.InputsMatched {
+			_, _ = fmt.Fprintf(env.Stdout, "INPUT-%s %s; command result %s; rerun after resolving the input change or read failure\n", strings.ToUpper(out.Record.Inputs.Validity), n, r.Result)
+		}
+		_, _ = fmt.Fprintf(env.Stdout, "%s %s exit=%d (%s) log: %s\n", strings.ToUpper(r.Result), n, r.ExitCode, dur, r.LogPath)
 		if !*verbose && out.Tail != "" {
 			for _, line := range strings.Split(out.Tail, "\n") {
-				fmt.Fprintf(env.Stdout, "    %s\n", line)
+				_, _ = fmt.Fprintf(env.Stdout, "    %s\n", line)
 			}
 		}
 	}
 	if failed > 0 {
-		fmt.Fprintf(env.Stdout, "%d of %d checks did not pass\n", failed, len(names))
+		_, _ = fmt.Fprintf(env.Stdout, "%d of %d checks did not pass\n", failed, len(names))
 		return exitNotDone
 	}
 	return exitOK
@@ -263,10 +283,14 @@ func cmdStatus(args []string, env Env) int {
 		return code
 	}
 	m, src := mode.Resolve(root, cfg, *modeFlag)
+	if _, err := cfg.ModeChecks(m); err != nil {
+		_, _ = fmt.Fprintf(env.Stderr, "naru: %v\n", err)
+		return exitUsage
+	}
 	rep, err := status.Evaluate(root, cfg, m)
 	if err != nil {
-		fmt.Fprintf(env.Stderr, "naru: %v\n", err)
-		return exitUsage
+		_, _ = fmt.Fprintf(env.Stderr, "naru: %v\n", err)
+		return exitInternal
 	}
 	if *asJSON {
 		enc := json.NewEncoder(env.Stdout)
@@ -275,21 +299,27 @@ func cmdStatus(args []string, env Env) int {
 			return exitInternal
 		}
 	} else {
-		fmt.Fprintf(env.Stdout, "mode %s (%s)\n", m, src)
+		_, _ = fmt.Fprintf(env.Stdout, "mode %s (%s)\n", m, src)
 		for _, c := range rep.Checks {
 			line := fmt.Sprintf("  %-7s %s", c.State, c.Check)
+			if c.Message != "" {
+				line += "  " + c.Message
+			}
+			if c.Record != nil && c.Record.FinishedAt != nil {
+				line += fmt.Sprintf(" (last run %s, %s)", c.Record.FinishedAt.Local().Format("2006-01-02 15:04"), c.Record.Provenance.Kind)
+			}
 			if c.Receipt != nil && c.State != status.Missing {
 				line += fmt.Sprintf("  (last run %s, %s)", c.Receipt.FinishedAt.Local().Format("2006-01-02 15:04"), c.Receipt.Evidence)
 			}
-			fmt.Fprintln(env.Stdout, line)
+			_, _ = fmt.Fprintln(env.Stdout, line)
 		}
-		if u := gate.LastUnverified(root); u != nil {
-			fmt.Fprintf(env.Stdout, "warning: the last agent stop (%s) was allowed WITHOUT verification after repeated blocks\n", u.At.Local().Format("2006-01-02 15:04"))
+		if rep.Unverified.Present {
+			_, _ = fmt.Fprintln(env.Stdout, "warning: NOT VERIFIED record exists or cannot be read; completion was allowed WITHOUT verification")
 		}
 		if rep.Satisfied {
-			fmt.Fprintln(env.Stdout, "done: every required check passes for the current files")
+			_, _ = fmt.Fprintln(env.Stdout, "done: every required check passes for the current files")
 		} else {
-			fmt.Fprintln(env.Stdout, "not done: run `naru check` for the checks above that are not pass")
+			_, _ = fmt.Fprintln(env.Stdout, "not done: run `naru check` for the checks above that are not pass")
 		}
 	}
 	if !rep.Satisfied {
@@ -311,26 +341,26 @@ func cmdMode(args []string, env Env) int {
 	switch {
 	case *clear:
 		if err := mode.Clear(root); err != nil {
-			fmt.Fprintf(env.Stderr, "naru: %v\n", err)
+			_, _ = fmt.Fprintf(env.Stderr, "naru: %v\n", err)
 			return exitInternal
 		}
-		fmt.Fprintf(env.Stdout, "mode cleared; using default_mode %s\n", cfg.DefaultMode)
+		_, _ = fmt.Fprintf(env.Stdout, "mode cleared; using default_mode %s\n", cfg.DefaultMode)
 	case fs.NArg() == 1:
 		name := fs.Arg(0)
 		if _, err := cfg.ModeChecks(name); err != nil {
-			fmt.Fprintf(env.Stderr, "naru: %v\n", err)
+			_, _ = fmt.Fprintf(env.Stderr, "naru: %v\n", err)
 			return exitUsage
 		}
 		if err := mode.Store(root, name); err != nil {
-			fmt.Fprintf(env.Stderr, "naru: %v\n", err)
+			_, _ = fmt.Fprintf(env.Stderr, "naru: %v\n", err)
 			return exitInternal
 		}
-		fmt.Fprintf(env.Stdout, "mode set to %s: requires %s\n", name, strings.Join(cfg.Modes[name], ", "))
+		_, _ = fmt.Fprintf(env.Stdout, "mode set to %s: requires %s\n", name, strings.Join(cfg.Modes[name], ", "))
 	case fs.NArg() == 0:
 		m, src := mode.Resolve(root, cfg, "")
-		fmt.Fprintf(env.Stdout, "%s (%s)\n", m, src)
+		_, _ = fmt.Fprintf(env.Stdout, "%s (%s)\n", m, src)
 	default:
-		fmt.Fprintln(env.Stderr, "naru: usage: naru mode [name | --clear]")
+		_, _ = fmt.Fprintln(env.Stderr, "naru: usage: naru mode [name | --clear]")
 		return exitUsage
 	}
 	return exitOK
@@ -346,7 +376,7 @@ func cmdGate(args []string, env Env) int {
 	if len(args) == 1 && args[0] == "pre-tool" {
 		return gate.PreTool(env.Stdin, env.Stderr, env.Dir)
 	}
-	fmt.Fprintln(env.Stderr, "naru: usage: naru gate stop | naru gate pre-tool | naru gate pre-push")
+	_, _ = fmt.Fprintln(env.Stderr, "naru: usage: naru gate stop | naru gate pre-tool | naru gate pre-push")
 	return exitUsage
 }
 
@@ -375,4 +405,23 @@ func cmdHooks(args []string, env Env) int {
 	}
 	_, _ = fmt.Fprintf(env.Stdout, "installed %s; keep naru on PATH (linked worktrees share Git hooks)\n", p)
 	return exitOK
+}
+
+// outputWriter retains output errors for Run's exit-code boundary. Formatting
+// calls below can discard their immediate errors because this writer keeps them.
+type outputWriter struct {
+	io.Writer
+	err error
+}
+
+func (w *outputWriter) Write(p []byte) (int, error) {
+	if w.err != nil {
+		return 0, w.err
+	}
+	n, err := w.Writer.Write(p)
+	if err == nil && n != len(p) {
+		err = io.ErrShortWrite
+	}
+	w.err = err
+	return n, err
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"hash"
 	"io"
 	"io/fs"
 	"os"
@@ -35,7 +36,7 @@ var alwaysExcluded = []string{".naru/**", ".git", ".git/**", "**/.git", "**/.git
 var gitEnvOverrides = []string{"GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR", "GIT_OBJECT_DIRECTORY", "GIT_NAMESPACE"}
 
 func gitCmd(root string, args ...string) *exec.Cmd {
-	cmd := exec.Command("git", args...)
+	cmd := exec.Command("git", args...) // #nosec G204 -- Fixed git executable and internal argv; no shell interpolation.
 	cmd.Dir = root
 	var env []string
 	for _, kv := range os.Environ() {
@@ -249,8 +250,8 @@ func Compute(root string, include, exclude []string, salt string) (Digest, error
 
 // writeField length-prefixes each value so no two different input sets can
 // produce the same byte stream.
-func writeField(w io.Writer, s string) {
-	fmt.Fprintf(w, "%d:%s", len(s), s)
+func writeField(w hash.Hash, s string) {
+	_, _ = fmt.Fprintf(w, "%d:%s", len(s), s) // hash.Hash.Write never returns an error.
 }
 
 // entrySum fingerprints one entry: symlinks by target, regular files by content
@@ -277,12 +278,12 @@ func entrySum(path string) (string, error) {
 	return "f:" + sum, nil
 }
 
-func fileSHA256(path string) (string, error) {
-	f, err := os.Open(path)
+func fileSHA256(path string) (sum string, retErr error) {
+	f, err := os.Open(path) // #nosec G304 -- Hashes selected local project inputs; this API is not a filesystem confinement boundary.
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
+	defer func() { retErr = errors.Join(retErr, f.Close()) }()
 	h := sha256.New()
 	if _, err := io.Copy(h, f); err != nil {
 		return "", err

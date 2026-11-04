@@ -102,7 +102,7 @@ func FindRoot(start string) (string, error) {
 // Load reads and validates the config under root.
 func Load(root string) (*Config, error) {
 	path := filepath.Join(root, Dir, FileName)
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- Reads the selected local project config; caller chooses the repository root.
 	if err != nil {
 		return nil, err
 	}

@@ -10,10 +10,10 @@ import (
 func write(t *testing.T, root, rel, content string) {
 	t.Helper()
 	p := filepath.Join(root, filepath.FromSlash(rel))
-	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(p, []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(p, []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -115,7 +115,9 @@ func TestComputeTracksSymlinkTargets(t *testing.T) {
 	if d1.FileCount != 1 {
 		t.Fatalf("symlink input not counted: %+v", d1)
 	}
-	os.Remove(filepath.Join(root, "current.txt"))
+	if err := os.Remove(filepath.Join(root, "current.txt")); err != nil {
+		t.Fatal(err)
+	}
 	if err := os.Symlink("real/b.txt", filepath.Join(root, "current.txt")); err != nil {
 		t.Fatal(err)
 	}

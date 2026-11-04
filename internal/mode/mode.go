@@ -45,10 +45,10 @@ func Stored(root string) (string, error) {
 // Store saves the mode for subsequent commands in this working copy.
 func Store(root, name string) error {
 	p := statePath(root)
-	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
 		return err
 	}
-	return os.WriteFile(p, []byte(name+"\n"), 0o644)
+	return os.WriteFile(p, []byte(name+"\n"), 0o600)
 }
 
 // Clear removes the stored mode so default_mode applies again.
