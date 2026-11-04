@@ -8,12 +8,14 @@ import (
 	"path/filepath"
 
 	"github.com/Chaebin-Park/naru/internal/config"
+	"github.com/Chaebin-Park/naru/internal/environment"
 	"github.com/Chaebin-Park/naru/internal/fileset"
 	"github.com/Chaebin-Park/naru/internal/receipt"
 	"github.com/Chaebin-Park/naru/internal/runlock"
 )
 
 const (
+	NotRun       State = "not-run"
 	Running      State = "running"
 	Interrupted  State = "interrupted"
 	Cancelled    State = "cancelled"
@@ -104,6 +106,12 @@ func evaluateCheck(root string, cfg *config.Config, name string) (row CheckStatu
 		}
 	}
 	ch := cfg.Checks[name]
+	if r := e.Record; r != nil && r.Execution.Result != nil && *r.Execution.Result == receipt.ResultNotRun {
+		return set(NotRun, r.Execution.Unavailable.Reason, r.Execution.Unavailable.Message())
+	}
+	if unavailable := environment.Inspect(ch.Requires); unavailable != nil {
+		return set(NotRun, unavailable.Reason, unavailable.Message())
+	}
 	d, err := fileset.Compute(root, ch.Inputs, cfg.Exclude, cfg.Fingerprint(name))
 	if err != nil {
 		return row, err

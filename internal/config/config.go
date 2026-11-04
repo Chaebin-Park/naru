@@ -61,9 +61,10 @@ type Check struct {
 	Run string `yaml:"run"`
 	// Inputs are root-relative glob patterns ("**" matches any depth).
 	// The receipt is bound to the content hash of the matched files.
-	Inputs  []string `yaml:"inputs"`
-	Timeout string   `yaml:"timeout"`
-	Workdir string   `yaml:"workdir"`
+	Inputs   []string     `yaml:"inputs"`
+	Timeout  string       `yaml:"timeout"`
+	Workdir  string       `yaml:"workdir"`
+	Requires Requirements `yaml:"requires"`
 }
 
 // TimeoutDuration returns the parsed timeout or DefaultTimeout.
@@ -134,6 +135,9 @@ func (c *Config) Validate() error {
 	}
 	for _, name := range sortedKeys(c.Checks) {
 		ch := c.Checks[name]
+		if err := ch.Requires.validate(); err != nil {
+			errs = append(errs, fmt.Errorf("check %q: %w", name, err))
+		}
 		if !NamePattern.MatchString(name) {
 			errs = append(errs, fmt.Errorf("check name %q must match %s", name, NamePattern))
 		}
@@ -219,12 +223,22 @@ func validatePattern(p string) error {
 // workdir, inputs or global excludes invalidates existing receipts.
 func (c *Config) Fingerprint(name string) string {
 	ch := c.Checks[name]
+	var requires *Requirements
+	if len(ch.Requires.Tools) > 0 || len(ch.Requires.OS) > 0 {
+		value := ch.Requires
+		value.Tools = append([]string(nil), value.Tools...)
+		value.OS = append([]string(nil), value.OS...)
+		sort.Strings(value.Tools)
+		sort.Strings(value.OS)
+		requires = &value
+	}
 	b, _ := json.Marshal(struct {
-		Run     string   `json:"run"`
-		Workdir string   `json:"workdir"`
-		Inputs  []string `json:"inputs"`
-		Exclude []string `json:"exclude"`
-	}{ch.Run, ch.Workdir, ch.Inputs, c.Exclude})
+		Requires *Requirements `json:"requires,omitempty"`
+		Run      string        `json:"run"`
+		Workdir  string        `json:"workdir"`
+		Inputs   []string      `json:"inputs"`
+		Exclude  []string      `json:"exclude"`
+	}{requires, ch.Run, ch.Workdir, ch.Inputs, c.Exclude})
 	return string(b)
 }
 

@@ -43,7 +43,7 @@ func stateConfig(t *testing.T, root, command string) *config.Config {
 }
 func stateWrite(t *testing.T, root, path, data string) {
 	t.Helper()
-	if err := os.WriteFile(filepath.Join(root, path), []byte(data), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(root, path), []byte(data), 0o600); err != nil { // #nosec G703 -- Test-owned project root and fixture-relative paths; no external filesystem input.
 		t.Fatal(err)
 	}
 }
@@ -269,14 +269,14 @@ func TestCompletionFailureLeavesRunningAuthority(t *testing.T) {
 		t.Fatalf("old pass returned: %+v %v", r, err)
 	}
 }
-func TestMissingShellRecordsError(t *testing.T) {
+func TestMissingShellRecordsNotRun(t *testing.T) {
 	root, cfg := stateProject(t, "true")
 	t.Setenv("PATH", t.TempDir())
 	out, err := stateRun(root, cfg, Options{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if out.Record.Execution.Result == nil || *out.Record.Execution.Result != receipt.ResultError {
+	if out.Record.Execution.Result == nil || *out.Record.Execution.Result != receipt.ResultNotRun {
 		t.Fatalf("missing shell: %+v", out.Record)
 	}
 }

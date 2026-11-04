@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/Chaebin-Park/naru/internal/config"
+	"github.com/Chaebin-Park/naru/internal/environment"
 	"github.com/Chaebin-Park/naru/internal/fileset"
 	"github.com/Chaebin-Park/naru/internal/receipt"
 	"github.com/Chaebin-Park/naru/internal/runlock"
@@ -83,12 +84,16 @@ func runState(root string, cfg *config.Config, name string, opt Options, openLog
 	if !ok {
 		return Outcome{}, fmt.Errorf("check %q was removed", name)
 	}
-	before, err := fileset.Compute(root, ch.Inputs, cfg.Exclude, cfg.Fingerprint(name))
-	if err != nil {
-		return Outcome{}, err
-	}
-	if before.FileCount == 0 {
-		return Outcome{}, ErrEmptyInputs
+	unavailable := environment.Inspect(ch.Requires)
+	var before fileset.Digest
+	if unavailable == nil {
+		before, err = fileset.Compute(root, ch.Inputs, cfg.Exclude, cfg.Fingerprint(name))
+		if err != nil {
+			return Outcome{}, err
+		}
+		if before.FileCount == 0 {
+			return Outcome{}, ErrEmptyInputs
+		}
 	}
 	var random [16]byte
 	if _, err := rand.Read(random[:]); err != nil {
@@ -97,6 +102,35 @@ func runState(root string, cfg *config.Config, name string, opt Options, openLog
 	id := hex.EncodeToString(random[:])
 	logRel := ".naru/logs/" + name + "-" + id + ".log"
 	logPath := filepath.Join(root, filepath.FromSlash(logRel))
+	dir := ch.Workdir
+	if dir == "" {
+		dir = "."
+	}
+	now := opt.Now
+	if now == nil {
+		now = time.Now
+	}
+	started := now().UTC()
+	elapsedStart := time.Now()
+	r := receipt.Record{Schema: receipt.StateSchema, Check: name, RunID: id, Phase: receipt.PhaseRunning, StartedAt: started,
+		Provenance: receipt.Provenance{Kind: opt.Evidence}, Execution: receipt.Execution{Command: ch.Run, Workdir: dir, TimeoutMS: ch.TimeoutDuration().Milliseconds(), LogPath: logRel, NaruVersion: opt.Version},
+		Inputs: receipt.Inputs{Policy: receipt.InputPolicy, Before: inputDigest(before), Validity: receipt.InputsPending}}
+	if parent.Err() != nil {
+		return Outcome{}, ErrInterrupted
+	}
+	// Persist denial before log I/O can fail and leave an earlier pass authoritative.
+	if unavailable != nil {
+		result, duration := receipt.ResultNotRun, int64(0)
+		r.Phase = receipt.PhaseTerminal
+		r.FinishedAt = &started
+		r.Execution.Result = &result
+		r.Execution.DurationMS = &duration
+		r.Execution.Unavailable = unavailable
+		r.Inputs.Validity = receipt.InputsUnobserved
+		if err := store.Begin(r); err != nil {
+			return Outcome{}, fmt.Errorf("save unavailable execution: %w", err)
+		}
+	}
 	if info, err := os.Lstat(filepath.Dir(logPath)); err == nil && !info.IsDir() {
 		return Outcome{}, errors.New("log directory is not a plain directory")
 	} else if err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -115,22 +149,19 @@ func runState(root string, cfg *config.Config, name string, opt Options, openLog
 			retErr = errors.Join(retErr, logFile.Close())
 		}
 	}()
-	dir := ch.Workdir
-	if dir == "" {
-		dir = "."
-	}
 	if _, err := fmt.Fprintf(logFile, "naru: check %q, run %s\n$ %s\n(dir: %s, inputs: %d files)\n\n", name, id, ch.Run, dir, before.FileCount); err != nil {
 		return Outcome{}, err
 	}
-	now := opt.Now
-	if now == nil {
-		now = time.Now
+	if unavailable != nil {
+		_, writeErr := fmt.Fprintln(logFile, "naru: not-run: "+unavailable.Message())
+		syncErr := logFile.Sync()
+		closed = true
+		closeErr := logFile.Close()
+		if err := errors.Join(writeErr, syncErr, closeErr); err != nil {
+			return Outcome{}, err
+		}
+		return Outcome{Receipt: legacyView(r), Record: &r}, nil
 	}
-	started := now().UTC()
-	elapsedStart := time.Now()
-	r := receipt.Record{Schema: receipt.StateSchema, Check: name, RunID: id, Phase: receipt.PhaseRunning, StartedAt: started,
-		Provenance: receipt.Provenance{Kind: opt.Evidence}, Execution: receipt.Execution{Command: ch.Run, Workdir: dir, TimeoutMS: ch.TimeoutDuration().Milliseconds(), LogPath: logRel, NaruVersion: opt.Version},
-		Inputs: receipt.Inputs{Policy: receipt.InputPolicy, Before: inputDigest(before), Validity: receipt.InputsPending}}
 	if parent.Err() != nil {
 		return Outcome{}, ErrInterrupted
 	}

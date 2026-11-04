@@ -1,6 +1,6 @@
 # Execution records and recovery
 
-NARU-005 uses schema 2 for new executions. Configuration remains version 1. Existing schema 1 receipts are preserved in place; they are never upgraded by inventing after-input evidence. Downgrading to an older binary is unsupported because it can reuse an old success while ignoring newer cancellation or interruption state.
+NARU-006 uses schema 2 for new executions. Configuration remains version 1. Existing schema 1 receipts are preserved in place; they are never upgraded by inventing after-input evidence. Downgrading to an older binary is unsupported because it can reuse an old success while ignoring newer cancellation or interruption state.
 
 ## Files and execution order
 
@@ -20,7 +20,7 @@ New state uses temporary files, checked writes, file sync, close, directory prep
 
 Schema 2 requires explicit nullable fields and rejects missing keys, unexpected nulls, unknown keys, duplicate JSON keys, trailing JSON, incorrect check/run identity, unsupported contracts, and inconsistent result/input combinations. The command result, provenance label, execution phase, and input validity are separate fields. Provenance does not authenticate who ran the command.
 
-A check passes only when its record is terminal, the command result is `pass`, input validity is `matched`, and the current hash and file count still match. The digest algorithm remains unchanged: selected paths, content, executable bits, symlink target strings, and `run/workdir/inputs/exclude`. Timeout, tool/environment versions, and symlink target contents are not included.
+A check passes only when its record is terminal, the command result is `pass`, input validity is `matched`, and the current hash and file count still match. The digest algorithm remains unchanged: selected paths, content, executable bits, symlink target strings, and `run/workdir/inputs/exclude`, plus declared nonempty `requires` (sorted lists). Timeout, tool/environment versions, and symlink target contents are not included.
 
 Before/after comparison detects changes observed at those two boundaries, including a reloaded command/input definition. It is not a snapshot: A→B→A changes and changes during a multi-file read can escape detection. Checks that mutate their own inputs need a clean rerun. A zero-exit command can produce `input-changed` or `input-error`; this is not a successful check.
 
@@ -50,3 +50,13 @@ For recovery, a human must first inspect and terminate the surviving processes b
 On macOS/Linux, normal cancellation kills the shell's process group. Processes that deliberately detach, close inherited output, or escape the process group are outside that lifecycle guarantee. Run finite, trusted foreground checks. Existing background-command behavior must not be taken as a process sandbox. Windows still requires `sh`; its lock adapter has been cross-checked by vet, but Windows execution and descendant management are not verified. Separate working-copy roots and different checks have independent locks; symlink aliases of one root share the same lock. Network/distributed filesystems, external state deletion, and mixed old/new binaries are unsupported.
 
 Implementation references: [flock handle lifetime](https://man7.org/linux/man-pages/man2/flock.2.html), [LockFileEx](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-lockfileex), [Go process execution](https://pkg.go.dev/os/exec#Cmd).
+
+## Unavailable prerequisites
+
+After locking and reloading configuration, the runner inspects `requires.os`, implicit `sh`, and `requires.tools`. It does not execute probes. When unavailable, it archives prior state and publishes terminal `not-run` before log I/O. A log failure returns 70 but cannot restore a previous successful record. Input hashing and command execution are skipped.
+
+Schema 2 adds optional `execution.unavailable: {reason, subject}` with reason `missing_tool` or `unsupported_platform`. A `not-run` record has null exit code, zero duration, equal start/finish times, input validity `unobserved`, an empty before digest and null after digest/reason. Other results cannot carry `unavailable`. Earlier schema 2 records remain readable; older binaries may reject these new values and are not supported for downgrade.
+
+`status` reports `not-run` for saved unavailable records, or when the current prerequisites are missing and no running or invalid record takes precedence. A saved unavailable record remains unsatisfied after tools return; only a new successful run clears it. A fresh project without evidence is `missing` only when its prerequisites are available. `check` returns 1 for unavailable prerequisites; malformed declarations return 64. Status, Stop, and pre-push retain their existing policy and exit-code mappings.
+
+Executable presence is not tool-version, service-health, credential, or connectivity verification. There is no automatic installation or remote execution. The environment can change after inspection. Tests: `TestUnavailableEnvironmentLifecycle`, `TestUnsupportedPlatformDoesNotRun`, `TestNotRunRecordValidation`, `TestUnavailableLogFailureCannotRestorePriorPass`, and `TestUnavailableRequirementsCLI`.

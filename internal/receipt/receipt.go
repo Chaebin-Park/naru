@@ -23,7 +23,7 @@ const (
 	ResultError   = "error" // the command could not be started
 )
 
-// Evidence classes. "not-run" is never written as a receipt; it is a status.
+// Evidence classes label provenance independently of execution results.
 const (
 	EvidenceLocal = "local"
 	EvidenceAgent = "agent-run"

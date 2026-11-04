@@ -117,9 +117,10 @@ func (s StateStore) Read(check string) (Evidence, error) {
 	return Evidence{Legacy: r}, err
 }
 
-// Begin archives an existing current record before installing the new running state.
+// Begin archives prior authority before recording running or unavailable work.
 func (s StateStore) Begin(r Record) error {
-	if r.Phase != PhaseRunning {
+	notRun := r.Phase == PhaseTerminal && r.Execution.Result != nil && *r.Execution.Result == ResultNotRun
+	if r.Phase != PhaseRunning && !notRun {
 		return ErrInvalid
 	}
 	path, err := s.path(r.Check)

@@ -236,6 +236,10 @@ func cmdCheck(args []string, env Env) int {
 			continue
 		}
 		failed++
+		if r.Result == receipt.ResultNotRun {
+			_, _ = fmt.Fprintf(env.Stdout, "NOT-RUN %s: %s\n", n, out.Record.Execution.Unavailable.Message())
+			continue
+		}
 		if out.Record.Inputs.Validity != receipt.InputsMatched {
 			_, _ = fmt.Fprintf(env.Stdout, "INPUT-%s %s; command result %s; rerun after resolving the input change or read failure\n", strings.ToUpper(out.Record.Inputs.Validity), n, r.Result)
 		}

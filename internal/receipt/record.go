@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Chaebin-Park/naru/internal/config"
+	"github.com/Chaebin-Park/naru/internal/environment"
 )
 
 // StateSchema and InputPolicy identify the execution evidence contract.
@@ -20,6 +21,8 @@ const InputPolicy = "before-after-v1"
 const (
 	PhaseRunning      = "running"
 	PhaseTerminal     = "terminal"
+	ResultNotRun      = "not-run"
+	InputsUnobserved  = "unobserved"
 	ResultCancelled   = "cancelled"
 	ResultInterrupted = "interrupted"
 	InputsPending     = "pending"
@@ -49,14 +52,15 @@ type Provenance struct {
 	Kind string `json:"kind"`
 }
 type Execution struct {
-	Command     string  `json:"command"`
-	Workdir     string  `json:"workdir"`
-	TimeoutMS   int64   `json:"timeout_ms"`
-	Result      *string `json:"result"`
-	ExitCode    *int    `json:"exit_code"`
-	DurationMS  *int64  `json:"duration_ms"`
-	LogPath     string  `json:"log_path"`
-	NaruVersion string  `json:"naru_version"`
+	Unavailable *environment.Unavailable `json:"unavailable,omitempty"`
+	Command     string                   `json:"command"`
+	Workdir     string                   `json:"workdir"`
+	TimeoutMS   int64                    `json:"timeout_ms"`
+	Result      *string                  `json:"result"`
+	ExitCode    *int                     `json:"exit_code"`
+	DurationMS  *int64                   `json:"duration_ms"`
+	LogPath     string                   `json:"log_path"`
+	NaruVersion string                   `json:"naru_version"`
 }
 type InputDigest struct {
 	Hash       string `json:"hash"`
@@ -101,6 +105,15 @@ func (r Record) Validate(check string) error {
 	}
 	if e.LogPath != ".naru/logs/"+check+"-"+r.RunID+".log" {
 		return bad("log identity")
+	}
+	if e.Result != nil && *e.Result == ResultNotRun {
+		if r.Phase != PhaseTerminal || r.FinishedAt == nil || !utc(*r.FinishedAt) || r.FinishedAt.Before(r.StartedAt) || e.ExitCode != nil || e.DurationMS == nil || *e.DurationMS != 0 || e.Unavailable == nil || !e.Unavailable.Validate() || i.Validity != InputsUnobserved || i.Before != (InputDigest{}) || i.After != nil || i.Reason != nil {
+			return bad("not-run fields")
+		}
+		return nil
+	}
+	if e.Unavailable != nil {
+		return bad("unavailable requires not-run")
 	}
 	if !validDigest(i.Before) || (i.After != nil && !validDigest(*i.After)) {
 		return bad("input digest")

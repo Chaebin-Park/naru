@@ -1,6 +1,6 @@
 # Current behavior baseline
 
-Updated for NARU-005 on 2026-11-04. This describes the NARU-005 implementation, not a published release. The original NARU-004 baseline was recorded against `a2cc4c0` plus NARU-001. The historical verification result at the end remains unchanged. Current schema, storage order, limits, and recovery are detailed in [execution records](execution-records.md).
+Updated for NARU-006 on 2026-11-04. This describes the NARU-006 implementation, not a published release. The original NARU-004 baseline was recorded against `a2cc4c0` plus NARU-001. The historical verification result at the end remains unchanged. Current schema, storage order, limits, and recovery are detailed in [execution records](execution-records.md).
 
 Terms: [glossary](glossary.md). Live agent evidence: [verification](verification.md).
 
@@ -11,7 +11,7 @@ Flags precede positional arguments. Subcommand flag parsing uses Go's `flag` pac
 | Command | Options and behavior | Exit codes |
 | --- | --- | --- |
 | `init` | `--force`; detect stack, create config; preserve existing config unless forced; unknown stack gets a failing placeholder | 0 created, 64 existing/usage, 70 write error |
-| `check` | `--mode`, `--verbose`, `--evidence`; optional check names; sequential execution; named checks bypass mode selection; validate all names before running | 0 all pass, 1 failed/timeout/error, duplicate, input mismatch, recovery required, 64 config/name/evidence/empty inputs, 70 internal error, 130 interrupted |
+| `check` | `--mode`, `--verbose`, `--evidence`; optional check names; sequential execution; named checks bypass mode selection; validate all names before running | 0 all pass, 1 failed/timeout/error/not-run, duplicate, input mismatch, recovery required, 64 config/name/evidence/empty inputs, 70 internal error, 130 interrupted |
 | `status` | `--mode`, `--json`; evaluate without running checks | 0 satisfied, 1 unsatisfied, 64 config/usage error, 70 IO/output/internal error; corrupt evidence is invalid with exit 1 |
 | `mode` | Show selection; `name` stores it; `--clear` removes stored choice | 0 success, 64 invalid choice/usage/config, 70 storage error |
 | `gate stop` | Read hook JSON from stdin; check selected mode | 0 allow (including unverified escape), 2 block, 64 invalid gate invocation |
@@ -77,3 +77,7 @@ New execution tests cover every required field, strict decoding, history collisi
 ## NARU-004 verification result
 
 On 2026-11-04, Go 1.27.3 on macOS arm64 passed the four added test functions (including nine precedence subcases), `gofmt -l .` (empty), `go vet ./...`, `go test -race -count=1 ./...`, Windows/Linux cross-platform vet, and `go build`. The built binary passed `naru check`: fmt, vet, test. The push integration opt-in was unset. Cross-platform vet is static analysis, not runtime verification. No new coverage percentage was measured.
+
+## NARU-006 environment requirements
+
+Optional `requires.tools` (PATH executable names) and `requires.os` (`darwin`, `linux`, `windows`) are checked before input hashing or command execution. Every check implicitly requires `sh`. Unavailable checks persist `not-run` with a reason and no command exit code. They cannot satisfy the gates; restoring the environment requires an explicit rerun. Existing Stop overrides remain NOT VERIFIED. Declared requirements enter the definition fingerprint; omitted requirements preserve its prior form. Tool versions, service health, installation, and remote execution are outside this task. See [execution records](execution-records.md#unavailable-prerequisites) for storage and compatibility details.
