@@ -3,7 +3,7 @@
   "id": "NARU-011",
   "previous": "NARU-010",
   "base": "40334f7264d4ab9f61c0c964f5264953a6b0adb8",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Add a bounded Spring Boot pack and public contract example",
     "profile": "code-v1",
@@ -32,6 +32,6 @@
       "No implicit surface-to-mode policy or authenticated human approval."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "8c7ead4982655a84c85491e1ec0b14a6c9603469",
+  "evidence": "97b18c1cab8596657cfe31309b7a6302794a05d14bc87348c53de680179f2cf9"
 }

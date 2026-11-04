@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "branch": "main",
-  "active": "NARU-011",
-  "completed": "NARU-010",
+  "active": "",
+  "completed": "NARU-011",
   "imported_base": "c9634a652358a4710c230497c152144a7bd99fa4"
 }
