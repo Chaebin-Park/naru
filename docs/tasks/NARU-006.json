@@ -3,7 +3,7 @@
   "id": "NARU-006",
   "previous": "",
   "base": "c9634a652358a4710c230497c152144a7bd99fa4",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Handle unavailable check environments without reusing past success",
     "profile": "code-v1",
@@ -30,6 +30,6 @@
       "No automatic installation or remote execution."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "7ac004b637bacd7f51a2ef354a403950aa9762e6",
+  "evidence": "b87559881b21234375ddbde0a524e2720a8515242a5dea2e342835a4a8957713"
 }
