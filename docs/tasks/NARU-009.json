@@ -3,7 +3,7 @@
   "id": "NARU-009",
   "previous": "NARU-008",
   "base": "1ce13d80922465b872d2b5b1a448c25d66e09879",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Extract surface candidates and compare against read-only baselines",
     "profile": "code-v1",
@@ -35,6 +35,6 @@
       "No surface gate integration or automatic baseline acceptance. Windows process-tree runtime remains unverified."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "6c7da8432eecf0af5fb761a692ccfa1b1e901a07",
+  "evidence": "1c240534ba712fd0f8731fd420d9a63773cf0805324d6c380da672141a100273"
 }
