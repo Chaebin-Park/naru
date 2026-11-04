@@ -250,3 +250,5 @@ Select repository-owned `packs/<directory>/pack.yaml` files through `packs` in c
 Run `naru baseline extract <surface>` to produce a verified local candidate, then `naru baseline diff <surface>` to review sorted additions, removals and changes. Both support `--json`. Extraction never overwrites the baseline; first or changed results require review. See [candidate lifecycle and exit codes](docs/baselines.md). Use the separate interactive approval command below to publish a reviewed candidate.
 
 `naru baseline approve <surface>` reviews and publishes a candidate through terminal prompts on macOS/Linux. It rechecks inputs and the exact preview before saving the snapshot and review metadata together. Empty candidates require explicit confirmation. Legacy bare snapshots require approval before an unchanged result. See [approval and limits](docs/baselines.md#interactive-approval).
+
+A [Spring Boot public-example pack](packs/spring-boot/README.md) now demonstrates API probes, profile-specific routes, SQL file hashes and configuration keys. It requires Java/Maven/Python and manual activation. Its build check does not automatically enforce approved surface equality.

@@ -97,3 +97,7 @@ Baseline extract/diff commands now create guarded candidates and compare them ag
 ## NARU-010 approval
 
 `baseline approve` requires terminal stdin/stderr, displays the diff, collects reviewer/reason and full digest confirmation (including an explicit empty marker), then rechecks candidate/input/baseline identity under the surface lock. Snapshot and approval metadata publish atomically in one record. Bare legacy snapshots remain readable but cannot produce unchanged without approval. Failed publication preserves prior bytes; cancellation before publication writes no approval. This is a review workflow, not human authentication or a mode-policy integration. See [baseline approval](baselines.md#interactive-approval).
+
+## NARU-011 Spring Boot example
+
+The repository now includes a limited Spring MVC public sample and local pack with four surfaces. The adapter uses fresh locked Maven exports for API/routes and bounded resource reads for SQL hashes/configuration keys. It does not alter the core evaluator or automatically connect surfaces to check modes. Fixture tests run through Go; actual Maven/CLI smoke is separate evidence. See [support scope](../packs/spring-boot/README.md).

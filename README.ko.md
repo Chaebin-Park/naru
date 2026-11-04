@@ -189,3 +189,5 @@ checks:
 `naru baseline extract <surface>`로 검증된 로컬 후보를 만들고 `naru baseline diff <surface>`로 추가·삭제·변경을 확인합니다. 두 명령 모두 `--json`을 지원합니다. 추출은 기준본을 덮어쓰지 않으며 처음이거나 변경된 결과는 검토가 필요합니다. [후보 상태와 종료 코드](docs/baselines.md)를 참고하세요. 승인은 아래 대화형 명령을 사용합니다.
 
 `naru baseline approve <surface>`는 macOS/Linux 터미널에서 검토자·사유·전체 digest 확인을 받아 후보를 승인합니다. 저장 직전에 입력과 검토한 후보·기존 기준본을 다시 확인하고 snapshot과 승인 기록을 함께 저장합니다. 빈 후보는 별도 확인이 필요합니다. 구형 단독 snapshot은 새 승인 전까지 완료로 인정하지 않습니다. 터미널 확인은 사람의 신원을 인증하는 기능이 아닙니다. [승인 동작과 한계](docs/baselines.md#interactive-approval)를 참고하세요.
+
+[Spring Boot 공개 예제 묶음](packs/spring-boot/README.md)은 API 응답, 프로필별 라우트, SQL 파일 해시, 설정 키의 변화를 보여줍니다. Java·Maven·Python이 필요하며 직접 활성화해야 합니다. 설정 값은 내보내지 않습니다. 빌드 검사만으로 승인된 외부 계약과의 일치를 자동 강제하지는 않습니다.

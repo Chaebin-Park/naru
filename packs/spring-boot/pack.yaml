@@ -1,0 +1,37 @@
+schema: 1
+id: spring-boot
+version: 1.0.0
+requires:
+  os: [darwin, linux]
+  tools: [python3, java, mvn]
+supported_tools:
+  spring-boot: "3.5.16 Spring MVC synthetic example only"
+  java: "21; select an existing supported JDK with JAVA_HOME"
+  mvn: "3.6.3+; verified with 3.9.16"
+  python3: "3.9+ standard library, POSIX flock"
+checks:
+  contracts:
+    run: python3 packs/spring-boot/extract.py api > /dev/null
+    inputs: [examples/spring-boot/pom.xml, "examples/spring-boot/src/**"]
+    timeout: 5m
+surfaces:
+  api:
+    run: python3 packs/spring-boot/extract.py api
+    inputs: [examples/spring-boot/pom.xml, "examples/spring-boot/src/**"]
+    timeout: 5m
+    extractor_version: spring-boot-v1
+  routes:
+    run: python3 packs/spring-boot/extract.py routes
+    inputs: [examples/spring-boot/pom.xml, "examples/spring-boot/src/**"]
+    timeout: 5m
+    extractor_version: spring-boot-v1
+  migrations:
+    run: python3 packs/spring-boot/extract.py migrations
+    inputs: [examples/spring-boot/pom.xml, "examples/spring-boot/src/**"]
+    timeout: 5m
+    extractor_version: spring-boot-v1
+  config:
+    run: python3 packs/spring-boot/extract.py config
+    inputs: [examples/spring-boot/pom.xml, "examples/spring-boot/src/**"]
+    timeout: 5m
+    extractor_version: spring-boot-v1

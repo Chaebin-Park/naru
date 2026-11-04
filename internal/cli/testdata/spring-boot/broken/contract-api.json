@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "contract:GET:/greeting",
+      "value": {
+        "profile": "contract",
+        "status": 404,
+        "body": null
+      }
+    }
+  ]
+}

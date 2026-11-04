@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "extra:GET:/greeting",
+      "value": {
+        "profile": "extra",
+        "status": 200,
+        "body": {
+          "greeting": "hello",
+          "version": 1
+        }
+      }
+    }
+  ]
+}

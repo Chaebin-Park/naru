@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "contract:Greeting/greeting",
+      "value": {
+        "profile": "contract",
+        "methods": [
+          "GET"
+        ],
+        "paths": [
+          "/renamed"
+        ]
+      }
+    }
+  ]
+}

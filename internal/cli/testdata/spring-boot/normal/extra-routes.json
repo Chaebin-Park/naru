@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "extra:Greeting/greeting",
+      "value": {
+        "profile": "extra",
+        "methods": [
+          "GET"
+        ],
+        "paths": [
+          "/greeting"
+        ]
+      }
+    }
+  ]
+}

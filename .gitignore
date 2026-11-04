@@ -9,3 +9,5 @@
 /.naru/receipts/
 /.naru/logs/
 /.naru/state/
+
+/examples/spring-boot/target/

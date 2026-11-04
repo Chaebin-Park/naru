@@ -29,6 +29,7 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 - Add a shared glossary and align Korean terminology across current feature and design documents.
 
 ### Added
+- Bounded Spring Boot 3.5.16 public-example pack with profile-specific API/routes, SQL hashes, configuration-key extraction, fresh build exports and synthetic failure fixtures. Requires external Java/Maven/Python; no new Go dependencies or automatic activation.
 - Terminal-only `baseline approve` with exact-preview and input revalidation, explicit empty-result confirmation, atomic snapshot/review metadata publication, and conditional legacy snapshot compatibility. Reviewer identity is self-reported; macOS/Linux terminal support does not provide authentication.
 - `baseline extract` and `baseline diff` with bounded extractor execution, before/after input verification, separate candidate authority, validated snapshots and deterministic item changes. Extraction keeps baselines read-only; the separate approval command publishes them.
 - Repository-local pack manifests with namespaced checks/surfaces, restrictive requirement merging, bounded symlink-free loading and pack-content fingerprints.

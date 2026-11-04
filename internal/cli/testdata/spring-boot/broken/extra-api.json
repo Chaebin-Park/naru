@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "extra:GET:/greeting",
+      "value": {
+        "profile": "extra",
+        "status": 404,
+        "body": null
+      }
+    }
+  ]
+}
