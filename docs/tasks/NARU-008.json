@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "id": "NARU-008",
+  "previous": "NARU-007",
+  "base": "c77e63d5c624b3b997bad3c3f90906df25df72c3",
+  "status": "active",
+  "plan": {
+    "title": "Load repository-local packs and bind their definitions to evidence",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Load a local manifest with namespaced checks and surfaces and restrictive inherited prerequisites.",
+        "test": "github.com/Chaebin-Park/naru/internal/config/TestPackLoading"
+      },
+      {
+        "id": "AC-2",
+        "description": "Reject collisions, unsupported schemas, invalid requirements and traversal or symlink paths.",
+        "test": "github.com/Chaebin-Park/naru/internal/config/TestPackRejections"
+      },
+      {
+        "id": "AC-3",
+        "description": "Changing pack definitions or bundled files invalidates passing evidence.",
+        "test": "github.com/Chaebin-Park/naru/internal/runner/TestPackChangesInvalidateEvidence"
+      }
+    ],
+    "limitations": [
+      "Repository-local packs only; no download, installation, package registry or tool-version probing.",
+      "Pack surfaces are declarations for the next baseline task; init activation remains explicit config editing.",
+      "Path checks reject symlinks but do not sandbox trusted shell commands or hostile concurrent filesystem changes."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
