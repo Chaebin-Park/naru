@@ -214,3 +214,5 @@ Waivers are deferred beyond the MVP. Unverified completion continues to use the 
 Current behavior, receipt format, test mapping, and planned changes: [behavior baseline](docs/current-behavior.md).
 
 Development feedback: [local static analysis and vulnerability reports](docs/development-analysis.md). Run `sh scripts/devcheck.sh` after code edits; `-watch` enables foreground change monitoring.
+
+Task workflow: [completion and commit gate](docs/task-gate.md). A successor requires committed completion and matching verification evidence.

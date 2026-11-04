@@ -21,7 +21,7 @@ func (g *Gate) state() (Workflow, string, error) {
 	return w, h, g.settled()
 }
 func (g *Gate) Resume(id string) error {
-	w, _, e := g.state()
+	w, head, e := g.state()
 	if e != nil {
 		return e
 	}
@@ -32,7 +32,7 @@ func (g *Gate) Resume(id string) error {
 	if e != nil {
 		return e
 	}
-	if t.Status != "active" {
+	if t.Status != "active" || t.Previous != w.Completed {
 		return invalid("active ledger points to completed task")
 	}
 	// Ordinary product modifications are allowed, but pending ledger changes are not.
@@ -43,7 +43,7 @@ func (g *Gate) Resume(id string) error {
 	if s != "" {
 		return deny("PLAN_CHANGED", "commit or recover task metadata before resuming")
 	}
-	return nil
+	return g.history(t, head, false)
 }
 func (g *Gate) Check(next string) error {
 	w, head, e := g.state()
@@ -96,5 +96,8 @@ func (g *Gate) Check(next string) error {
 	if e = g.implementation(t, t.Implementation); e != nil {
 		return e
 	}
-	return g.evidence(t, t.Implementation)
+	if e = g.evidence(t, t.Implementation); e != nil {
+		return e
+	}
+	return g.clean()
 }

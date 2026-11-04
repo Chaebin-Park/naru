@@ -11,8 +11,9 @@ import (
 )
 
 type Gate struct {
-	Root string
-	ctx  context.Context
+	Root      string
+	ctx       context.Context
+	verifyRun func(string, string, *Evidence) error
 }
 
 func Open(ctx context.Context, root string) (*Gate, error) {
@@ -29,7 +30,7 @@ func Open(ctx context.Context, root string) (*Gate, error) {
 	if err != nil {
 		return nil, err
 	}
-	g := &Gate{root, ctx}
+	g := &Gate{Root: root, ctx: ctx}
 	top, err := g.git("rev-parse", "--show-toplevel")
 	if err != nil {
 		return nil, err
@@ -159,7 +160,8 @@ func (g *Gate) metadataOnly(commit, id string) error {
 }
 
 // implementation verifies a linear range, immutable plan, and task attribution.
-func (g *Gate) implementation(t Task, tip string) error {
+func (g *Gate) implementation(t Task, tip string) error { return g.history(t, tip, true) }
+func (g *Gate) history(t Task, tip string, requireImplementation bool) error {
 	if _, e := g.git("merge-base", "--is-ancestor", t.Base, tip); e != nil {
 		return deny("COMMIT_MISSING", "task base is not an ancestor")
 	}
@@ -168,7 +170,7 @@ func (g *Gate) implementation(t Task, tip string) error {
 		return e
 	}
 	commits := strings.Fields(s)
-	if len(commits) < 2 {
+	if len(commits) == 0 || (requireImplementation && len(commits) < 2) {
 		return deny("COMMIT_MISSING", "no implementation commit after task start")
 	}
 	for i, c := range commits {
