@@ -3,7 +3,7 @@
   "id": "NARU-007",
   "previous": "NARU-006",
   "base": "72af17e8ab9732a38a04f7e40342b53bcee54800",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Define deterministic surface extraction contracts and fixtures",
     "profile": "code-v1",
@@ -30,6 +30,6 @@
       "Exact JSON number spelling and array order are preserved; this format is not RFC 8785."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "283c0ab379d5f21785a7b9f8a7903d06d76a2838",
+  "evidence": "e53fd89e13d36767614a42897b8420397e24f670c9afbd870e7a5fa6c0e4a89a"
 }
