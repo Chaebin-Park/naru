@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "id": "NARU-009",
+  "previous": "NARU-008",
+  "base": "1ce13d80922465b872d2b5b1a448c25d66e09879",
+  "status": "active",
+  "plan": {
+    "title": "Extract surface candidates and compare against read-only baselines",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Surface execution validates prerequisites and before/after inputs, and failed extraction cannot preserve ready candidate authority.",
+        "test": "github.com/Chaebin-Park/naru/internal/runner/TestSurfaceExtractionLifecycle"
+      },
+      {
+        "id": "AC-2",
+        "description": "Diff deterministically reports missing baseline, additions, changes and removals while rejecting stale or failed candidates.",
+        "test": "github.com/Chaebin-Park/naru/internal/baseline/TestCandidateDiffLifecycle"
+      },
+      {
+        "id": "AC-3",
+        "description": "Baseline extract/diff CLI returns distinct success, changes and errors without writing approved baselines.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestBaselineCLI"
+      },
+      {
+        "id": "AC-4",
+        "description": "Persisted snapshots reject tampering, ambiguous JSON and identity mismatches.",
+        "test": "github.com/Chaebin-Park/naru/internal/surface/TestSnapshotValidation"
+      }
+    ],
+    "limitations": [
+      "Baseline files are read-only in this task; approval is NARU-010.",
+      "Execution is trusted shell code, not a process sandbox; leftover running state requires manual recovery.",
+      "No surface gate integration or automatic baseline acceptance. Windows process-tree runtime remains unverified."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
