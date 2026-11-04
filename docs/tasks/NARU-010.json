@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "id": "NARU-010",
+  "previous": "NARU-009",
+  "base": "4cd334ae9ebe45bcc15810f62680fe9470f6ce69",
+  "status": "active",
+  "plan": {
+    "title": "Approve exact baseline candidates through a terminal review flow",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Approval records exact old/new and input digests, reviewer, reason and time; changed inputs or candidates invalidate the preview.",
+        "test": "github.com/Chaebin-Park/naru/internal/baseline/TestApprovalLifecycle"
+      },
+      {
+        "id": "AC-2",
+        "description": "Non-terminal CLI approval is rejected before mutation.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestApprovalRequiresTTY"
+      },
+      {
+        "id": "AC-3",
+        "description": "Interrupted or failed publication preserves the prior baseline without partial metadata.",
+        "test": "github.com/Chaebin-Park/naru/internal/baseline/TestApprovalPublicationFailure"
+      }
+    ],
+    "limitations": [
+      "TTY is an interaction condition, not human authentication or an agent security boundary.",
+      "macOS/Linux terminal detection uses standard-library platform calls; other OS approval is rejected until supported.",
+      "Bare legacy baseline snapshots remain readable but require explicit approval metadata before unchanged status.",
+      "No automatic surface-to-mode policy, remote publication or physical power-loss guarantee."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
