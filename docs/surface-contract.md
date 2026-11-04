@@ -61,4 +61,4 @@ There is no generic ignored-field list. A field called `timestamp`, `path`, `ver
 - `TestFixturesAreCheckInputs`: repository test receipts include testdata, so fixture edits invalidate earlier success.
 - `TestRequestContract` and `FuzzBuild`: request validation, no partial result on failure, and deterministic accepted output.
 
-These tests replay synthetic output; they do not claim that a real extractor is deterministic. NARU-008 provides repository-local pack declarations/loading. NARU-009 now provides extraction execution, candidate storage and diff; NARU-010 remains the approval task. No external downloads, dependencies, tool installation or existing check/gate behavior changes are introduced here.
+These tests replay synthetic output; they do not claim that a real extractor is deterministic. NARU-008 provides repository-local pack declarations/loading. NARU-009 now provides extraction execution, candidate storage and diff; NARU-010 provides terminal review and atomic approval records; NARU-011 supplies a bounded Spring Boot example. No external downloads, dependencies, tool installation or existing check/gate behavior changes are introduced here.
