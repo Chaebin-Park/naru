@@ -70,3 +70,9 @@ The lock serializes cooperating gate invocations. External Git/file operations a
 The controlled task-transition entry point and agent instructions enforce this workflow. They do **not** intercept arbitrary file writes made outside that entry point, authenticate local evidence against its owner, or install an agent-host hook. Host tool interception and protected CI policies are separate integrations. Task labels and passing tests do not prove arbitrary acceptance prose; test selection and review remain engineering responsibilities.
 
 The verifier uses Go process cancellation and bounded output waiting. It is not a process sandbox for malicious or deliberately detached child processes. Windows/Linux vet is static evidence, not runtime evidence. Actual push tests remain excluded unless separately authorized and deliberately run outside this default profile.
+
+## Activation in this repository
+
+The initial migration keeps NARU-006 active. Its pre-existing product changes remain uncommitted until its implementation and acceptance tests are finished. NARU-007 cannot begin during that work. Required acceptance test names are recorded in the committed NARU-006 plan. The historical work before migration is an imported boundary, not a retroactive gate attestation.
+
+Every agent must invoke `resume` before continuing NARU-006, and the full verify/close sequence before beginning its successor. No host settings, Git hook configuration, or remote repository policy are changed by this activation.

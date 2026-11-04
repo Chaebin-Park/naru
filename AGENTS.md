@@ -8,6 +8,20 @@ naru gates an AI coding agent's "done" on receipts bound to the files its checks
 
 Follow [CONTRIBUTING.md](CONTRIBUTING.md) for task/commit boundaries, Go conventions, tests, staged-snapshot verification, and completion records. Keep one coherent change per commit, with its tests and directly affected documentation.
 
+## Required task transition gate
+
+Before any task implementation, read `docs/tasks/workflow.json` and run the gate:
+
+- For the active task: `sh scripts/task-gate.sh resume --task <ID> --json`.
+- For a new task: `sh scripts/task-gate.sh begin --task <ID> --plan <public-plan.json> --json`.
+- Require process exit 0 AND valid JSON with `allowed: true` and the matching action/task/HEAD. Any missing output, nonzero return, or mismatch blocks the requested task. A prior `check` result is not reusable permission.
+- If a predecessor is incomplete, resume that predecessor; do not start the next task, bypass the command, or edit task records to manufacture completion.
+- Give implementation commits exactly one matching `Task: <ID>` trailer. After the implementation commits, run `verify --task <ID> --json`, then `close --task <ID> --json`. Both must succeed before moving on.
+- `begin` and `close` create local metadata commits. They do not push. Keep private context in the Wiki and public acceptance/tests in the task plan.
+- Missing Go or evidence is a blocker, not permission to skip the gate. Use the approved available toolchain; do not install one automatically.
+
+See [task gate](docs/task-gate.md) for verification, return codes and recovery. This enforces the controlled task workflow; no agent-host tool interception hook is installed.
+
 ## Development analysis
 
 Run `sh scripts/devcheck.sh` after each coherent code edit batch and before reporting completion or committing. For continuous local feedback, use `sh scripts/devcheck.sh -watch` in a foreground terminal. Read the reported `.naru/state/devcheck-*/issues.md` and surface new findings to the user with IDs and source locations. Do not silently suppress findings or call an incomplete scan clean. `naru check` also runs analysis; vulnerability results must be refreshed, not inferred from a cached `status` receipt. See [development analysis](docs/development-analysis.md) for pinned tools and report semantics.

@@ -21,6 +21,14 @@ Before committing, inspect `git diff --cached` and `git diff --cached --check`. 
 
 Do not rewrite or amend existing commits as routine cleanup. Do not infer permission to push from permission to commit. Pushes (including local test remotes), tags, releases, repository-setting changes, and system installation require prior maintainer approval. Ordinary task documentation does not itself create a commit.
 
+## Task transition enforcement
+
+The committed task ledger is authoritative for advancing to the next task. Follow the [task gate workflow](docs/task-gate.md) and the required entry points in AGENTS.md. `resume` permits unfinished changes only for the active task. `begin` refuses an incomplete predecessor, dirty index/worktree, missing completion commits, mismatched verification or unmet acceptance tests. Do not infer permission from a clean tree alone.
+
+Implementation commits carry exactly one active `Task:` trailer. Run `verify` on the committed implementation, then `close`; the latter commits only the completion metadata. Keep the complete/committed boundary even when moving between subtasks. No generic force/skip path is available. New task plans must be supplied from outside the clean working tree; `begin` writes the authoritative copy.
+
+Verification runs in a fresh temporary clone using the full `code-v1` profile. The local report is tied to the task, commit, tree and plan. Failed revalidation invalidates previous success. A lost report can be regenerated for the last completed task; it cannot be replaced by a handwritten pass flag.
+
 ## Go conventions
 
 Follow nearby code and `gofmt`. Keep compatibility with the `go.mod` language/toolchain minimum (currently Go 1.23); testing with a newer toolchain alone does not prove minimum-version compatibility. Do not add language features or APIs above that minimum without an explicit compatibility decision.
