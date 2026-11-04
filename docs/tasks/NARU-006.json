@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "id": "NARU-006",
+  "previous": "",
+  "base": "c9634a652358a4710c230497c152144a7bd99fa4",
+  "status": "active",
+  "plan": {
+    "title": "Handle unavailable check environments without reusing past success",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Pass, missing tool, not-run, restored tool and rerun preserve the correct authority and history without executing when unavailable.",
+        "test": "github.com/Chaebin-Park/naru/internal/runner/TestUnavailableEnvironmentLifecycle"
+      },
+      {
+        "id": "AC-2",
+        "description": "An unsupported platform does not execute the check command.",
+        "test": "github.com/Chaebin-Park/naru/internal/runner/TestUnsupportedPlatformDoesNotRun"
+      },
+      {
+        "id": "AC-3",
+        "description": "Invalid not-run record combinations are rejected.",
+        "test": "github.com/Chaebin-Park/naru/internal/receipt/TestNotRunRecordValidation"
+      }
+    ],
+    "limitations": [
+      "Imported unfinished work predates gate activation; it is not verified or completed by migration.",
+      "Executable presence does not prove tool version or service readiness.",
+      "No automatic installation or remote execution."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
