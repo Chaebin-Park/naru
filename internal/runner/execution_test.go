@@ -163,13 +163,41 @@ func TestKilledOwnerDoesNotPermitOrphanOverlap(t *testing.T) {
 		t.Fatalf("guessed automatic recovery: %v", err)
 	}
 }
+
+// TestExecutionCancellationProcess announces readiness after exec, so clean
+// cancellation cannot race a polling shell's creation of a sleep child.
+func TestExecutionCancellationProcess(t *testing.T) {
+	if os.Getenv("NARU_CANCEL_HELPER") != "1" {
+		return
+	}
+	parent := os.Getppid()
+	if err := os.WriteFile("ready", []byte("ready"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	deadline := time.NewTimer(15 * time.Second)
+	defer deadline.Stop()
+	tick := time.NewTicker(10 * time.Millisecond)
+	defer tick.Stop()
+	for {
+		select {
+		case <-deadline.C:
+			t.Fatal("fixture was not cancelled before its deadline")
+		case <-tick.C:
+			if os.Getppid() != parent {
+				t.Fatal("owning test exited without cancelling the fixture")
+			}
+		}
+	}
+}
+
 func TestCancelledExecutionArchivesPass(t *testing.T) {
 	root, cfg := stateProject(t, "true")
 	first, err := stateRun(root, cfg, Options{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	cfg = stateConfig(t, root, barrierCommand)
+	quotedHelper := "'" + strings.ReplaceAll(os.Args[0], "'", "'\\''") + "'"
+	cfg = stateConfig(t, root, "NARU_CANCEL_HELPER=1 exec "+quotedHelper+" -test.run=^TestExecutionCancellationProcess$")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	done := make(chan error, 1)
@@ -187,6 +215,9 @@ func TestCancelledExecutionArchivesPass(t *testing.T) {
 	r, err := receipt.NewStateStore(root).Current("c")
 	if err != nil || r.Phase != receipt.PhaseTerminal || *r.Execution.Result != receipt.ResultCancelled {
 		t.Fatalf("old pass reused: %+v %v", r, err)
+	}
+	if r.Inputs.Validity != receipt.InputsMatched || r.Inputs.Reason != nil {
+		t.Fatalf("clean cancellation lost input authority: %+v", r.Inputs)
 	}
 	history := filepath.Join(root, ".naru/state/history/c", first.Record.RunID+".json")
 	data, err := os.ReadFile(history) // #nosec G304 -- Test-owned archived receipt.
