@@ -3,7 +3,7 @@
   "id": "NARU-014",
   "previous": "NARU-013",
   "base": "3e138565368df250130a7f01303b6d32f3b89477",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Add input-bound human relay packets and validated local evidence submission",
     "profile": "code-v1",
@@ -43,6 +43,6 @@
       "Task start requires predecessor close and task-gate begin; completion requires fresh targeted tests, full static analysis, current-file naru check and task verify/close evidence. This preparation is not implementation or completion evidence."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "a9cd6ef8439cc4b3764bcf3813f260341888958c",
+  "evidence": "8a847964adfec7853d8b6b9427d9db604d277d45b1012a3f0fa9a67386ca93ed"
 }
