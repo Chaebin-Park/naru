@@ -3,7 +3,7 @@
   "id": "NARU-016",
   "previous": "NARU-014",
   "base": "3a02162d10e0cc29d7f739e0bf1c28fd8b34934f",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Add a bounded Android pack with real merged-manifest and resolved-dependency exports",
     "profile": "code-v1",
@@ -33,6 +33,6 @@
       "Existing toolchains may be selected per command. Initial AGP artifact downloads may be required after task begin under the applicable user authorization. No emulator/SDK license acceptance, global settings edits, push, tag or release is implicit."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "240caf450bc0b900355e65783dc8f3324472f78f",
+  "evidence": "8fe2203fa44c04b971ffaffe418aa3227f65a890ad33fec9266c18c24f2821b5"
 }
