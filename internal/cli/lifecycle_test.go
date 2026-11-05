@@ -17,6 +17,40 @@ import (
 	"github.com/Chaebin-Park/naru/internal/status"
 )
 
+// TestCLIExecutionCheckProcess is the single process used by the lifecycle
+// fixture. It announces readiness after exec, without spawning polling children.
+func TestCLIExecutionCheckProcess(t *testing.T) {
+	if os.Getenv("NARU_LIFECYCLE_HELPER") != "1" {
+		return
+	}
+	if _, err := os.Stat(".naru/wait"); err == nil {
+		parent := os.Getppid()
+		if err := os.WriteFile(".naru/ready", []byte("ready"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		deadline := time.NewTimer(15 * time.Second)
+		defer deadline.Stop()
+		tick := time.NewTicker(10 * time.Millisecond)
+		defer tick.Stop()
+		for {
+			select {
+			case <-deadline.C:
+				t.Fatal("fixture was not cancelled before its deadline")
+			case <-tick.C:
+				if os.Getppid() != parent {
+					t.Fatal("owning CLI exited without cancelling the fixture")
+				}
+			}
+		}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile("src/value.txt")
+	if err != nil || !bytes.Contains(data, []byte("ok")) {
+		t.Fatalf("fixture input: %q %v", data, err)
+	}
+}
+
 func TestCLIExecutionLifecycle(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Unix SIGINT process-group integration")
@@ -27,7 +61,10 @@ func TestCLIExecutionLifecycle(t *testing.T) {
 		t.Fatalf("build: %v %s", err, out)
 	}
 	root := newProject(t, false)
-	command := "if [ -f .naru/wait ]; then touch .naru/ready; while [ ! -f .naru/release ]; do sleep 0.01; done; fi; grep -q ok src/value.txt"
+	// exec leaves one process in the check group. The helper owns the barrier,
+	// so cancellation cannot race a polling shell's creation of a sleep child.
+	quotedHelper := "'" + strings.ReplaceAll(os.Args[0], "'", "'\\''") + "'"
+	command := "NARU_LIFECYCLE_HELPER=1 exec " + quotedHelper + " -test.run=^TestCLIExecutionCheckProcess$"
 	quoted, err := json.Marshal(command)
 	if err != nil {
 		t.Fatal(err)
@@ -62,6 +99,7 @@ func TestCLIExecutionLifecycle(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	owner := exec.CommandContext(ctx, bin, "check") // #nosec G204 -- Test-built CLI for cancellation integration.
+	owner.WaitDelay = 2 * time.Second
 	owner.Dir = root
 	owner.Env = append(os.Environ(), "NARU_MODE=")
 	var out bytes.Buffer
@@ -73,7 +111,9 @@ func TestCLIExecutionLifecycle(t *testing.T) {
 	waited := false
 	t.Cleanup(func() {
 		if !waited {
-			_ = owner.Process.Kill()
+			// Let the CLI cancel and reap its check on assertion failures too.
+			// CommandContext still bounds this wait if the CLI cannot respond.
+			_ = owner.Process.Signal(os.Interrupt)
 			_ = owner.Wait()
 		}
 	})
