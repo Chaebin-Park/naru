@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "id": "NARU-017",
+  "previous": "NARU-016",
+  "base": "a180bb4219f60718452fb6ebfa71bf0f5e80c7f5",
+  "status": "active",
+  "plan": {
+    "title": "Add a bounded Node web pack for runtime routes, workspace dependency locks and environment key names",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "The web manifest loads routes/dependencies/env surfaces and a build check with explicit tool/platform requirements.",
+        "test": "github.com/Chaebin-Park/naru/internal/config/TestWebPack"
+      },
+      {
+        "id": "AC-2",
+        "description": "A built-in Node HTTP sample uses the same route registry as its deterministic export; fixture tests detect route removal, local workspace lock dependency changes and environment key changes, while environment value changes leave exported key data unchanged.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestWebFixtures"
+      },
+      {
+        "id": "AC-3",
+        "description": "Missing or stale exports, duplicate routes or environment keys, malformed or mismatched lockfiles, unsupported link targets, failed or cancelled builds and concurrent builds fail closed; private environment values and arbitrary resolved URLs do not enter snapshots or diagnostics. CLI execution tests verify missing declared tools produce not-run for the build check and failed/nonpassing extraction, without reusing prior passing evidence.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestWebInvalidOutput"
+      }
+    ],
+    "limitations": [
+      "Only the public Node 22.22.2/npm 10.9.7 example, npm lockfileVersion 3, explicit static route registry and local workspace dependency are supported. No universal framework, bundler, dynamic router or deployed-service scanner.",
+      "Core Go behavior and Go dependencies remain unchanged. Node and Python use standard libraries. No third-party runtime npm dependency is required; local npm workspace installation uses offline, ignore-scripts, no-audit and no-fund settings.",
+      "Environment extraction reads only the committed synthetic .env.example and publishes key names, never process environment values or private .env files. Supported grammar is explicit and rejects duplicate/ambiguous input.",
+      "Default gate tests use bounded fixtures. Task completion additionally requires actual npm workspace preparation, Node build/test, loopback HTTP registry agreement, repeated deterministic extraction and route/dependency/key mutation plus restoration evidence bound to the code revision.",
+      "A build/export pass does not enforce approved surface equality. Existing baseline commands remain the explicit review and approval path; no automatic approvals in the working project.",
+      "No deployment, package publication, registry credentials, global settings edits, push, tags or releases. Synthetic lockfile and example values are public; external URLs and local absolute paths are not exported."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
