@@ -213,6 +213,9 @@ def validate_exports(directory, request_id):
 
 def copy_sample(root, destination):
     source = root / "examples/android"
+    for directory in (root, root / "examples", source):
+        if directory.is_symlink() or not directory.is_dir():
+            raise ValueError("missing or symlink source directory")
     paths = [source / name for name in ROOT_FILES]
     for module in ("app", "library"):
         directory = source / module / "src"

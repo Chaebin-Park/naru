@@ -83,3 +83,15 @@ Baseline approvals used only a disposable synthetic project. A successful
 projection excludes labels, intent filters, enabled flags and arbitrary
 metadata; dependency projection excludes selectors, repositories, constraints
 and variant attributes. See the [pack contract](../packs/android/README.md).
+
+## Copy-path follow-up during NARU-017
+
+The Web adapter review exposed the same ancestor-symlink gap in Android's
+sample copy: checking only from `examples/android` downward missed an `examples`
+symlink. A regression failed before the fix. Copying now rejects symlinks from
+the project root through the sample root before writing any copied file.
+All 13 Android adapter fixtures passed, and the actual `contracts` pipeline was
+rerun successfully with the pinned toolchain. The earlier 37-step mutation run
+remains evidence for normal sample behavior; this follow-up adds the path
+boundary and fresh normal-build check rather than claiming that old source
+hashes include the later fix.

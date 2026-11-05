@@ -204,6 +204,18 @@ doc['request_id']=nonce
         path.symlink_to(self.root / "examples/android/library/src/main/AndroidManifest.xml")
         with self.assertRaises(ValueError): extract.build(self.root, timeout=1)
 
+    def test_sample_ancestor_symlink_rejected_before_copy(self):
+        self.sample()
+        examples = self.root / "examples"
+        external = self.root / "external-examples"
+        examples.rename(external)
+        examples.symlink_to(external, target_is_directory=True)
+        destination = self.root / "copy"
+        destination.mkdir()
+        with self.assertRaisesRegex(ValueError, "source directory"):
+            extract.copy_sample(self.root, destination)
+        self.assertEqual(list(destination.iterdir()), [])
+
     def test_timeout_reaps_owned_process(self):
         self.sample()
         pidfile = self.root / "pid"
