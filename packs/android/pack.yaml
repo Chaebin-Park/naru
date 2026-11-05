@@ -1,0 +1,28 @@
+schema: 1
+id: android
+version: 1.0.0
+requires:
+  os: [darwin, linux]
+  tools: [python3, java, gradle, sdkmanager]
+supported_tools:
+  agp: "8.9.2 public Java debug sample only"
+  gradle: "8.11.1"
+  java: "17"
+  android-sdk: "compileSdk 35, Build Tools 35.0.0; ANDROID_HOME required"
+  python3: "3.9+ standard library, POSIX flock"
+checks:
+  contracts:
+    run: python3 -B packs/android/extract.py contracts
+    inputs: [examples/android/settings.gradle, examples/android/build.gradle, examples/android/gradle.properties, examples/android/naru-export.gradle, examples/android/app/build.gradle, examples/android/library/build.gradle, "examples/android/app/src/**", "examples/android/library/src/**"]
+    timeout: 5m
+surfaces:
+  manifest:
+    run: python3 -B packs/android/extract.py manifest
+    inputs: [examples/android/settings.gradle, examples/android/build.gradle, examples/android/gradle.properties, examples/android/naru-export.gradle, examples/android/app/build.gradle, examples/android/library/build.gradle, "examples/android/app/src/**", "examples/android/library/src/**"]
+    timeout: 5m
+    extractor_version: android-v1
+  dependencies:
+    run: python3 -B packs/android/extract.py dependencies
+    inputs: [examples/android/settings.gradle, examples/android/build.gradle, examples/android/gradle.properties, examples/android/naru-export.gradle, examples/android/app/build.gradle, examples/android/library/build.gradle, "examples/android/app/src/**", "examples/android/library/src/**"]
+    timeout: 5m
+    extractor_version: android-v1

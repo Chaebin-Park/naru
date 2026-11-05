@@ -255,6 +255,8 @@ Run `naru baseline extract <surface>` to produce a verified local candidate, the
 
 A [Spring Boot public-example pack](packs/spring-boot/README.md) now demonstrates API probes, profile-specific routes, SQL file hashes and configuration keys. It requires Java/Maven/Python and manual activation. Its build check does not automatically enforce approved surface equality.
 
+An [Android public-example pack](packs/android/README.md) builds a Java app and local library, then exports the real debug merged manifest and resolved dependency graph. It requires the pinned Android/Gradle/JDK toolchain and manual activation. Permission, component exported-state and dependency changes can be reviewed with baseline commands; no emulator or device is used. See the [verification scope](docs/android-verification.md).
+
 ## Policy review
 
 `naru policy list` validates `.naru/policy.yml`; `naru policy test [rule-id]` runs bound pass/violation fixtures. `naru policy check` refreshes complete findings and separates known, new and resolved violations. Known violations warn; new violations block. Missing or incomplete tool output cannot count as resolved.

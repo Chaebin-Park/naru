@@ -12,3 +12,7 @@
 /.naru/relay/
 
 /examples/spring-boot/target/
+
+/examples/android/.gradle/
+/examples/android/**/build/
+/examples/android/local.properties

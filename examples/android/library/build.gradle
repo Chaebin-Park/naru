@@ -1,0 +1,17 @@
+plugins {
+    id 'com.android.library'
+}
+// Deliberately explicit: the dependency surface must observe version changes.
+version = '1.0.0'
+android {
+    namespace 'example.naru.library'
+    compileSdk 35
+    buildToolsVersion '35.0.0'
+    defaultConfig {
+        minSdk 23
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

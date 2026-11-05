@@ -1,0 +1,8 @@
+plugins {
+    id 'com.android.application' version '8.9.2' apply false
+    id 'com.android.library' version '8.9.2' apply false
+}
+allprojects {
+    group = 'example.naru'
+    version = '1.0.0'
+}

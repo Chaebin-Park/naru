@@ -194,6 +194,8 @@ checks:
 
 [Spring Boot 공개 예제 묶음](packs/spring-boot/README.md)은 API 응답, 프로필별 라우트, SQL 파일 해시, 설정 키의 변화를 보여줍니다. Java·Maven·Python이 필요하며 직접 활성화해야 합니다. 설정 값은 내보내지 않습니다. 빌드 검사만으로 승인된 외부 계약과의 일치를 자동 강제하지는 않습니다.
 
+[Android 공개 예제 묶음](packs/android/README.md)은 Java 앱과 로컬 라이브러리를 빌드하고 실제 debug 병합 매니페스트와 해석된 의존성 그래프를 추출합니다. 지정된 Android·Gradle·JDK 도구와 직접 활성화가 필요합니다. 권한·컴포넌트의 exported 상태·의존성 변경을 기준본 명령으로 검토하며, 에뮬레이터나 기기는 사용하지 않습니다. [검증 범위](docs/android-verification.md)를 참고하세요.
+
 ## 정책 검토
 
 `naru policy list`는 `.naru/policy.yml`을 검증하고, `naru policy test [rule-id]`는 규칙에 연결된 정상·위반 fixture를 실제로 실행합니다. `naru policy check`는 전체 검사 결과를 갱신해 기존·신규·해결 위반을 구분합니다. 기존 위반은 경고하고 신규 위반은 차단합니다. 도구 출력이 없거나 불완전하면 해결로 인정하지 않습니다.

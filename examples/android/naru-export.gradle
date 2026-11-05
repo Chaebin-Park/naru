@@ -1,0 +1,163 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.9.2'
+    }
+}
+
+import com.android.build.api.artifact.SingleArtifact
+import groovy.json.JsonOutput
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
+import java.security.MessageDigest
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.artifacts.result.ResolvedDependencyResult
+
+// This example deliberately does not claim configuration-cache compatibility.
+abstract class ExportNaruDebug extends DefaultTask {
+    @InputFile
+    @PathSensitive(PathSensitivity.NONE)
+    abstract RegularFileProperty getMergedManifest()
+
+    @OutputDirectory
+    abstract DirectoryProperty getExportDirectory()
+
+    @Input
+    abstract Property<String> getRequestId()
+
+    @TaskAction
+    void exportContract() {
+        if (project.gradle.gradleVersion != '8.11.1' || JavaVersion.current() != JavaVersion.VERSION_17) {
+            throw new GradleException('This example requires Gradle 8.11.1 and JDK 17')
+        }
+        if (!(requestId.get() ==~ /[0-9a-f]{32}/)) {
+            throw new GradleException('naruRequestId must be 32 lowercase hexadecimal characters')
+        }
+        File output = exportDirectory.get().asFile
+        if (Files.isSymbolicLink(output.toPath()) || (output.exists() && (!output.isDirectory() || output.list().length != 0))) {
+            throw new GradleException('naruOutput must be an empty plain directory')
+        }
+        Files.createDirectories(output.toPath())
+        File source = mergedManifest.get().asFile
+        if (!source.isFile() || source.length() > 1048576) {
+            throw new GradleException('Merged manifest is missing or oversized')
+        }
+        byte[] manifest = Files.readAllBytes(source.toPath())
+        if (manifest.length > 1048576) {
+            throw new GradleException('Merged manifest is oversized')
+        }
+        def resolution = project.configurations.getByName('debugRuntimeClasspath').incoming.resolutionResult
+        def root = resolution.rootComponent.get()
+        def nodes = new TreeMap<String, Map>()
+        def identities = [:]
+        def visited = new HashSet()
+        def edges = new TreeMap<String, Map>()
+        def pending = new ArrayDeque()
+        pending.add(root)
+        while (!pending.isEmpty()) {
+            def component = pending.removeFirst()
+            if (!visited.add(component.id)) {
+                continue
+            }
+            Map node = componentValue(component)
+            if (identities.containsKey(node.id) && identities[node.id] != component.id) {
+                throw new GradleException('Resolved components have ambiguous identities')
+            }
+            identities[node.id] = component.id
+            nodes[node.id] = node
+            if (nodes.size() > 4096) {
+                throw new GradleException('Dependency graph is oversized')
+            }
+            component.dependencies.each { dependency ->
+                if (!(dependency instanceof ResolvedDependencyResult)) {
+                    throw new GradleException('Unresolved dependency in debugRuntimeClasspath')
+                }
+                def target = dependency.selected
+                Map selected = componentValue(target)
+                String edgeKey = node.id + '\u0000' + selected.id
+                edges[edgeKey] = [from: node.id, to: selected.id]
+                if (edges.size() > 16384) {
+                    throw new GradleException('Dependency graph is oversized')
+                }
+                pending.add(target)
+            }
+        }
+        Map rootValue = componentValue(root)
+        nodes.remove(rootValue.id)
+        def android = project.extensions.getByName('android')
+        Map envelope = [
+            schema: 1,
+            sample: 'naru-android',
+            variant: 'debug',
+            request_id: requestId.get(),
+            tools: [gradle: project.gradle.gradleVersion, agp: com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION,
+                    java_major: JavaVersion.current().majorVersion.toInteger(), compile_sdk: android.compileSdk, build_tools: android.buildToolsVersion],
+            manifest: [file: 'debug-merged-manifest.xml',
+                       sha256: 'sha256:' + MessageDigest.getInstance('SHA-256').digest(manifest).encodeHex().toString()],
+            dependencies: [configuration: 'debugRuntimeClasspath', root: rootValue,
+                           components: nodes.values().toList(), edges: edges.values().toList()]
+        ]
+        byte[] data = JsonOutput.toJson(envelope).getBytes(StandardCharsets.UTF_8)
+        if (data.length > 1048576) {
+            throw new GradleException('Dependency export is oversized')
+        }
+        Files.write(output.toPath().resolve('debug-merged-manifest.xml'), manifest, StandardOpenOption.CREATE_NEW)
+        Files.write(output.toPath().resolve('debug-export.json'), data, StandardOpenOption.CREATE_NEW)
+    }
+
+    Map componentValue(component) {
+        def id = component.id
+        String kind
+        String path = null
+        String key
+        if (id instanceof ProjectComponentIdentifier) {
+            if (!id.build.currentBuild) {
+                throw new GradleException('Composite build components are outside this example')
+            }
+            kind = 'project'
+            path = id.projectPath
+            key = 'project:' + path
+        } else if (id instanceof ModuleComponentIdentifier) {
+            kind = 'module'
+            key = 'module:' + id.group + ':' + id.module
+        } else {
+            throw new GradleException('Unsupported dependency component identity')
+        }
+        def selected = component.moduleVersion
+        String origin = 'resolution'
+        Map module
+        if (selected != null) {
+            module = [group: selected.group, name: selected.name, version: selected.version]
+        } else if (kind == 'project') {
+            def local = project.rootProject.findProject(path)
+            if (local == null) {
+                throw new GradleException('Missing local project metadata')
+            }
+            module = [group: local.group.toString(), name: local.name, version: local.version.toString()]
+            origin = 'declared-project'
+        } else {
+            throw new GradleException('Missing selected module metadata')
+        }
+        module.values().each { value ->
+            if (value == null || value.isEmpty() || value == 'unspecified' || value.getBytes(StandardCharsets.UTF_8).length > 256 || value.any { Character.isISOControl((char) it) }) {
+                throw new GradleException('Unsupported module identity or version')
+            }
+        }
+        return [id: key, kind: kind, project_path: path, module: module, module_origin: origin]
+    }
+}
+
+androidComponents.onVariants(androidComponents.selector().withBuildType('debug')) { variant ->
+    tasks.register('exportNaruDebug', ExportNaruDebug) {
+        mergedManifest.set(variant.artifacts.get(SingleArtifact.MERGED_MANIFEST.INSTANCE))
+        requestId.set(providers.gradleProperty('naruRequestId'))
+        exportDirectory.set(layout.dir(providers.gradleProperty('naruOutput').map { new File(it) }))
+        dependsOn 'assembleDebug'
+        outputs.upToDateWhen { false }
+    }
+}

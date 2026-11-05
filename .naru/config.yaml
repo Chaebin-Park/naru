@@ -13,7 +13,7 @@ checks:
     inputs: ["**/*.go", "go.mod", "go.sum"]
   test:
     run: "go test -race -count=1 ./..."
-    inputs: ["**/*.go", "**/testdata/**", "packs/**", "examples/spring-boot/**", "examples/agent-hooks/**", "go.mod", "go.sum"]
+    inputs: ["**/*.go", "**/testdata/**", "packs/**", "examples/spring-boot/**", "examples/agent-hooks/**", "examples/android/**", "go.mod", "go.sum"]
     timeout: 5m
   analysis:
     run: "sh scripts/devcheck.sh"

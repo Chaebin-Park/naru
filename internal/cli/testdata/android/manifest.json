@@ -1,0 +1,1 @@
+{"schema":1,"items":[{"id":"debug:permission:android.permission.INTERNET","value":{"variant":"debug","name":"android.permission.INTERNET","max_sdk_version":null}},{"id":"debug:activity:example.naru.MainActivity","value":{"variant":"debug","kind":"activity","name":"example.naru.MainActivity","exported":true,"permission":null}}]}
