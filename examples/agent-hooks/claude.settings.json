@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": ["Bash(naru check:*)", "Bash(naru status:*)"]
+  },
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": "Write|Edit|NotebookEdit|Bash",
+      "hooks": [{"type": "command", "command": "naru gate pre-tool"}]
+    }],
+    "Stop": [{
+      "hooks": [{"type": "command", "command": "naru gate stop"}]
+    }]
+  }
+}

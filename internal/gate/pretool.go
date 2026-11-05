@@ -110,9 +110,21 @@ func PreTool(stdin io.Reader, stderr io.Writer, fallbackDir string) int {
 		return Allow
 	}
 	var in PreToolInput
+	malformedPatch := false
 	data, _ := io.ReadAll(stdin)
 	if err := json.Unmarshal(data, &in); err != nil {
-		return Allow // not a tool payload naru understands
+		var envelope struct {
+			ToolName string          `json:"tool_name"`
+			Cwd      json.RawMessage `json:"cwd"`
+		}
+		if json.Unmarshal(data, &envelope) == nil && envelope.ToolName == "apply_patch" {
+			in.ToolName = envelope.ToolName
+			in.Cwd = ""
+			_ = json.Unmarshal(envelope.Cwd, &in.Cwd)
+			malformedPatch = true
+		} else {
+			return Allow // not a tool payload naru understands
+		}
 	}
 	cwd := in.Cwd
 	if cwd == "" {
@@ -122,8 +134,24 @@ func PreTool(stdin io.Reader, stderr io.Writer, fallbackDir string) int {
 	if errors.Is(err, config.ErrNotFound) || err != nil {
 		return Allow
 	}
+	if malformedPatch {
+		_, _ = fmt.Fprintln(stderr, "naru: blocked apply_patch — malformed hook payload; expected tool_input.command containing a patch.")
+		return Block
+	}
 
 	switch {
+	case in.ToolName == "apply_patch":
+		targets, err := patchTargets(in.ToolInput.Command)
+		if err != nil {
+			_, _ = fmt.Fprintf(stderr, "naru: blocked apply_patch — cannot determine patch targets: %v. Use a complete supported patch.\n", err)
+			return Block
+		}
+		for _, target := range targets {
+			if insideNaruDir(root, cwd, target) {
+				_, _ = fmt.Fprintf(stderr, "naru: blocked apply_patch on %s — .naru/ holds the config and the evidence the Stop gate trusts. Run `naru check` to produce receipts; tell the user if the config needs to change.\n", target)
+				return Block
+			}
+		}
 	case fileTools[in.ToolName]:
 		target := in.ToolInput.FilePath
 		if target == "" {

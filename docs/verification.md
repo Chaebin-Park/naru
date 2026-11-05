@@ -33,3 +33,15 @@ Changes made because of these runs:
 - Every check log now starts with the command and ends with the result, and fail messages include the command, from run 5.
 
 Not yet verified with a live agent: Codex integration, long-running checks, and how the `systemMessage` is displayed in the interactive UI (the headless stream shows the hook emitted it with exit 0).
+
+## NARU-013 connection preparation (2026-11-05)
+
+Current local CLIs are Claude Code 2.1.318 and Codex 0.166.0. The historical Claude runs above retain their original version and results. New [connection examples](../examples/agent-hooks/README.md) are inactive templates; local payload replay and template tests do not prove that an agent loaded or trusted them.
+
+Codex exposes native Stop and PreToolUse hooks, including `apply_patch` input in `tool_input.command`. Matching `Edit|Write` does not convert that input into a file path. NARU therefore parses patch target headers explicitly. See the [official Codex hook contract](https://learn.chatgpt.com/docs/hooks).
+
+Required live evidence remains pending for each tool: missing → check → pass; edit after pass → stale → rerun; repeated inability to proceed → NOT VERIFIED. Record the implementation revision, CLI version, isolated project setup, observed hook decisions and final status before marking NARU-013 complete. Do not replace these requirements with replay tests or the historical Claude observations.
+
+No new paid/subscription session, global/project hook activation, trust change, push or installation was performed during preparation.
+
+Local preparation evidence: Go 1.27.3/macOS arm64 passed the shared hook payload, patch protection and template acceptance tests, the full race suite, native and Windows/Linux vet, build, and all four built-binary self-checks. Development analysis completed with zero findings. Independent code review has no outstanding blocking finding. A pre-existing clean-cancellation fixture was changed to a child-free helper after a full-suite run correctly detected uncertain child cleanup; its strict cancellation/history/restart checks passed 15 repetitions. These checks do not establish Go 1.23 or other OS runtime support and do not replace the required live sessions. Opt-in push tests were not run.

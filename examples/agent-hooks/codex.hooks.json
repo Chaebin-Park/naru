@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": "Bash|apply_patch",
+      "hooks": [{"type": "command", "command": "naru gate pre-tool"}]
+    }],
+    "Stop": [{
+      "hooks": [{"type": "command", "command": "naru gate stop"}]
+    }]
+  }
+}
