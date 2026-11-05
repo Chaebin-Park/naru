@@ -1,0 +1,9 @@
+{
+  "name": "naru-web-example",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/message"],
+  "dependencies": {"naru-web-message": "*"},
+  "engines": {"node": "22.22.2", "npm": "10.9.7"}
+}

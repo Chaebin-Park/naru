@@ -257,6 +257,8 @@ A [Spring Boot public-example pack](packs/spring-boot/README.md) now demonstrate
 
 An [Android public-example pack](packs/android/README.md) builds a Java app and local library, then exports the real debug merged manifest and resolved dependency graph. It requires the pinned Android/Gradle/JDK toolchain and manual activation. Permission, component exported-state and dependency changes can be reviewed with baseline commands; no emulator or device is used. See the [verification scope](docs/android-verification.md).
 
+A [Web public-example pack](packs/web/README.md) exports a shared Node HTTP route registry, a local workspace dependency and environment key names. It uses offline npm preparation with isolated configuration. It reads only the synthetic `.env.example` for key inventory and does not publish values. See the [verification scope](docs/web-verification.md).
+
 ## Policy review
 
 `naru policy list` validates `.naru/policy.yml`; `naru policy test [rule-id]` runs bound pass/violation fixtures. `naru policy check` refreshes complete findings and separates known, new and resolved violations. Known violations warn; new violations block. Missing or incomplete tool output cannot count as resolved.

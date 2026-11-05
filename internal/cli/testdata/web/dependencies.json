@@ -1,0 +1,1 @@
+{"schema":1,"items":[{"id":"root","value":{"kind":"root","name":"naru-web-example","version":"1.0.0","dependencies":["workspace:naru-web-message"]}},{"id":"workspace:naru-web-message","value":{"kind":"workspace","name":"naru-web-message","version":"1.0.0","path":"packages/message","dependencies":[]}}]}

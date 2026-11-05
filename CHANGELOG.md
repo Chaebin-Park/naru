@@ -13,6 +13,7 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 - Interrupted owners and unaccounted-for background children block automatic restart pending manual recovery. Windows runtime/process-tree support and physical power-loss durability remain unverified.
 
 ### Fixed
+- Reject symlink ancestors before copying Android and Web sample sources into fresh build directories.
 
 - Block check and extractor restart when a Unix process group remains after cancellation, timeout or other exit, including when an exit error hides the output wait limit. Preserve cancellation exit 130 and require manual recovery when cleanup cannot be confirmed.
 
@@ -31,6 +32,7 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 - Add a shared glossary and align Korean terminology across current feature and design documents.
 
 ### Added
+- Bounded Node Web pack for shared runtime routes, local workspace lock dependencies and environment key names, with offline isolated npm preparation and strict failure handling. No registry runtime dependency or core Go behavior change.
 - Bounded Android public-example pack for debug merged-manifest and resolved-dependency changes, with fresh isolated builds, strict exports and explicit tool/SDK requirements. No emulator, device operation or core Go behavior change.
 - Input-bound human relay requests and strict artifact-backed submissions with separate schema 3 provenance, expiring single-check authority, replay rejection and independent CI reruns. Request issuance supersedes previous evidence; no remote command or transfer is performed.
 - Codex `apply_patch` protection for policy/config/evidence paths, shared hook payload acceptance tests, and inactive Claude Code/Codex connection templates with installation/removal guidance. Recorded Claude Code and Codex live missing/pass, stale/recheck and NOT VERIFIED paths, including headless workspace-trust limitations.

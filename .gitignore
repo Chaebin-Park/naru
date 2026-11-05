@@ -16,3 +16,7 @@
 /examples/android/.gradle/
 /examples/android/**/build/
 /examples/android/local.properties
+
+/examples/web/node_modules/
+/examples/web/dist/
+/examples/web/.npm-cache/

@@ -1,0 +1,31 @@
+schema: 1
+id: web
+version: 1.0.0
+requires:
+  os: [darwin, linux]
+  tools: [python3, node, npm]
+supported_tools:
+  node: "22.22.2 public local-workspace HTTP sample only"
+  npm: "10.9.7; generated lockfileVersion 3; offline local workspace"
+  python3: "3.9+ standard library, POSIX flock"
+checks:
+  contracts:
+    run: python3 -B packs/web/extract.py contracts
+    inputs: [examples/web/package.json, examples/web/package-lock.json, examples/web/.env.example, "examples/web/scripts/*.mjs", "examples/web/src/*.mjs", "examples/web/test/*.mjs", examples/web/packages/message/package.json, "examples/web/packages/message/*.mjs"]
+    timeout: 90s
+surfaces:
+  routes:
+    run: python3 -B packs/web/extract.py routes
+    inputs: [examples/web/package.json, examples/web/package-lock.json, examples/web/.env.example, "examples/web/scripts/*.mjs", "examples/web/src/*.mjs", "examples/web/test/*.mjs", examples/web/packages/message/package.json, "examples/web/packages/message/*.mjs"]
+    timeout: 90s
+    extractor_version: web-v1
+  dependencies:
+    run: python3 -B packs/web/extract.py dependencies
+    inputs: [examples/web/package.json, examples/web/package-lock.json, examples/web/.env.example, "examples/web/scripts/*.mjs", "examples/web/src/*.mjs", "examples/web/test/*.mjs", examples/web/packages/message/package.json, "examples/web/packages/message/*.mjs"]
+    timeout: 90s
+    extractor_version: web-v1
+  env:
+    run: python3 -B packs/web/extract.py env
+    inputs: [examples/web/package.json, examples/web/package-lock.json, examples/web/.env.example, "examples/web/scripts/*.mjs", "examples/web/src/*.mjs", "examples/web/test/*.mjs", examples/web/packages/message/package.json, "examples/web/packages/message/*.mjs"]
+    timeout: 90s
+    extractor_version: web-v1

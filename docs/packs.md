@@ -67,3 +67,16 @@ Each real pack should publish a table with actual evidence; the dummy pack is on
 | `<version>` | `<exact tool version>` | `<OS/version>` | `<command, fixture and date>` | `<unsupported behavior>` |
 
 Tests: `TestPackLoading`, `TestPackRejections`, `TestPackChangesInvalidateEvidence`, and `TestRepositoryPackCLI`. Runtime evidence here is macOS with the approved temporary Go toolchain. Windows/Linux vet is not runtime validation. Automatic upgrades, registries and all-language extraction remain out of scope.
+
+## Public examples
+
+| Pack | Observed surfaces | Runtime evidence and limits |
+| --- | --- | --- |
+| [Spring Boot](../packs/spring-boot/README.md) | API, routes, SQL hashes, configuration keys | Bounded Java 21/Spring MVC example; pack README records actual Maven smoke |
+| [Android](../packs/android/README.md) | Debug merged manifest, resolved dependency graph | [Pinned Java/Gradle/SDK build and mutation checks](android-verification.md); no emulator or device |
+| [Web](../packs/web/README.md) | Shared HTTP routes, local workspace lock, environment key names | [Pinned Node/npm offline build and mutation checks](web-verification.md); no universal framework discovery |
+
+Each example requires its matching sample sources and explicit pack selection.
+A build check proves extraction can run; it does not enforce equality with an
+approved baseline. Tool prerequisites check executable availability, while the
+adapter validates its narrower supported tool and input contract.
