@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "id": "NARU-016",
+  "previous": "NARU-014",
+  "base": "3a02162d10e0cc29d7f739e0bf1c28fd8b34934f",
+  "status": "active",
+  "plan": {
+    "title": "Add a bounded Android pack with real merged-manifest and resolved-dependency exports",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "The Android manifest loads namespaced manifest/dependencies surfaces and build check with explicit tool/platform requirements.",
+        "test": "github.com/Chaebin-Park/naru/internal/config/TestAndroidPack"
+      },
+      {
+        "id": "AC-2",
+        "description": "Public fixtures and adapter tests detect permission, component exported-state and resolved dependency changes; stable identifiers and deterministic sorting preserve equivalent output.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestAndroidFixtures"
+      },
+      {
+        "id": "AC-3",
+        "description": "Missing, stale, duplicate, malformed, oversized, wrong-variant and unresolved exports, failed or cancelled builds, and concurrent builds cannot publish a successful candidate or reuse an older artifact. Missing declared tools produce not-run for the build check and failed/nonpassing surface extraction. Failed extraction invalidates the current candidate and preserves approved baseline bytes.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestAndroidInvalidOutput"
+      }
+    ],
+    "limitations": [
+      "Only the public Java Android app/library example, debug variant, AGP 8.9.2, Gradle 8.11.1, JDK 17, compile/target SDK 35 and Build Tools 35.0.0 are in scope. No emulator, UI, device installation, signing or production project inspection.",
+      "Core Go behavior and Go dependencies remain unchanged. Python standard-library adapter supports macOS/Linux; Windows runtime support is not claimed.",
+      "requires detects missing declared executables or unsupported OS, not SDK contents or version compatibility. Missing sdkmanager produces not-run; an invalid SDK path, missing SDK package or incompatible version with executables present fails extraction. These outcomes must never become pass.",
+      "Default gate tests use bounded fixtures and do not download Android artifacts. Task completion additionally requires actual clean Android build/export, unchanged-repeat, permission/exported/dependency mutation detection, restoration and failure-no-reuse evidence with code revision, versions, commands and exits.",
+      "A successful build check proves build/export completion, not equality with an approved baseline. Baseline extract/diff/approve remain separate existing operations; no surface-to-mode integration.",
+      "Existing toolchains may be selected per command. Initial AGP artifact downloads may be required after task begin under the applicable user authorization. No emulator/SDK license acceptance, global settings edits, push, tag or release is implicit."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
