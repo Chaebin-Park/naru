@@ -45,3 +45,20 @@ Required live evidence remains pending for each tool: missing → check → pass
 No new paid/subscription session, global/project hook activation, trust change, push or installation was performed during preparation.
 
 Local preparation evidence: Go 1.27.3/macOS arm64 passed the shared hook payload, patch protection and template acceptance tests, the full race suite, native and Windows/Linux vet, build, and all four built-binary self-checks. Development analysis completed with zero findings. Independent code review has no outstanding blocking finding. A pre-existing clean-cancellation fixture was changed to a child-free helper after a full-suite run correctly detected uncertain child cleanup; its strict cancellation/history/restart checks passed 15 repetitions. These checks do not establish Go 1.23 or other OS runtime support and do not replace the required live sessions. Opt-in push tests were not run.
+
+## NARU-013 live runs (2026-11-05, revision 4417414)
+
+Six authorized sessions used disposable projects, the reviewed binary, and a logging wrapper that preserved hook stdin/stdout/stderr and exit status. Each session had a 180-second bound. Codex used a dedicated configuration home and normal hook inventory/hash trust registration; no trust bypass or personal configuration changes were used. Claude used project settings, Sonnet, and a $0.30 per-session API-price budget (subscription consumption is not equivalent to that price).
+
+| Agent / scenario | Observed decisions | Final result |
+| --- | --- | --- |
+| Codex 0.166.0 / missing | Stop blocked missing evidence; agent ran the check; next Stop allowed | Satisfied, no unverified marker; 14.73 s |
+| Codex 0.166.0 / stale | Agent checked, then created notes; Stop blocked stale evidence; agent reran; next Stop allowed | Satisfied, no unverified marker; 20.92 s |
+| Codex 0.166.0 / conflicting input | Missing then failed check blocked; repeated unchanged failure reached the no-progress limit | Unsatisfied with NOT VERIFIED; 48.54 s |
+| Claude Code 2.1.318 / missing | File write and check were denied by the host permission configuration; three identical missing blocks then NOT VERIFIED | Missing-to-pass remains unverified; 12.87 s |
+| Claude Code 2.1.318 / stale | Initial check was denied by permission configuration; three identical missing blocks then NOT VERIFIED | Pass-to-stale remains unverified; 12.51 s |
+| Claude Code 2.1.318 / conflicting input | Write/check permission requests were denied; three identical missing blocks then NOT VERIFIED | Permission-denied no-progress path verified; 17.63 s |
+
+Claude's three runs reported $0.1552595 total API-price estimates. A process exit of zero did not imply that NARU was satisfied. The unsuccessful Claude scenarios are not counted as passing acceptance. NARU-013 remains open until the two missing Claude paths are verified; downstream task implementation remains gated.
+
+The Claude cause was identified from stderr: the untrusted workspace's five project `permissions.allow` entries were ignored, while project hooks still ran. This is documented [Claude trust behavior](https://code.claude.com/docs/en/permissions#project-allow-rules-and-workspace-trust). A follow-up can use narrowly scoped command-line allow rules for the two fixture files and NARU check/status, retaining default permission mode and the hooks. Two corrective sessions are prepared but not run because the approved three Claude launches were already used. No permission rejection was treated as a successful check.
