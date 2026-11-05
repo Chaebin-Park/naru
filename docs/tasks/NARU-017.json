@@ -3,7 +3,7 @@
   "id": "NARU-017",
   "previous": "NARU-016",
   "base": "a180bb4219f60718452fb6ebfa71bf0f5e80c7f5",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Add a bounded Node web pack for runtime routes, workspace dependency locks and environment key names",
     "profile": "code-v1",
@@ -33,6 +33,6 @@
       "No deployment, package publication, registry credentials, global settings edits, push, tags or releases. Synthetic lockfile and example values are public; external URLs and local absolute paths are not exported."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "a9a41ba186d43027139f293b57481f39b9dbb6f0",
+  "evidence": "1b20f6dd33d77296f78422af74cf3bcbaa6a6f0424c9102928c59b4d415c3229"
 }
