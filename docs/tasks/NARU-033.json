@@ -3,7 +3,7 @@
   "id": "NARU-033",
   "previous": "NARU-011",
   "base": "24762d4ae7d067095c01f1ca845a3511a4e0b1e7",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Block restart when cancelled subprocess cleanup cannot be confirmed",
     "profile": "code-v1",
@@ -36,6 +36,6 @@
       "No push integration tests, deployment, tool installation or new dependencies."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "d22010e1e6e273e54c8a705f29943f1303735210",
+  "evidence": "c48c7ea89829385732a0374b5fa6b35e7aba5242d4557d2a84fdfeeff3b3b0f7"
 }
