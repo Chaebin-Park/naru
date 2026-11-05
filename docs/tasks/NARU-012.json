@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "id": "NARU-012",
+  "previous": "NARU-033",
+  "base": "3054b05cadeda8041810a47c29e80d4305cec75c",
+  "status": "active",
+  "plan": {
+    "title": "Add a thin policy index and human-approved violation reduction",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Policy index rejects missing rule configuration, invalid source references, unsafe paths and unbound fixtures.",
+        "test": "github.com/Chaebin-Park/naru/internal/policy/TestPolicyIndexValidation"
+      },
+      {
+        "id": "AC-2",
+        "description": "Only complete per-rule findings are classified; invalid or incomplete output cannot appear resolved.",
+        "test": "github.com/Chaebin-Park/naru/internal/policy/TestPolicyFindingCompleteness"
+      },
+      {
+        "id": "AC-3",
+        "description": "Explicit bootstrap establishes known findings; approved reduction is shrink-only and removed findings become new if reintroduced.",
+        "test": "github.com/Chaebin-Park/naru/internal/policy/TestPolicyReductionLifecycle"
+      },
+      {
+        "id": "AC-4",
+        "description": "Normal source fixes remain comparable while changed definitions, scope, inputs, candidate or baseline reject stale approval.",
+        "test": "github.com/Chaebin-Park/naru/internal/policy/TestPolicyFreshness"
+      },
+      {
+        "id": "AC-5",
+        "description": "Failure, cancellation and concurrent publication preserve the approved baseline and never manufacture reduction.",
+        "test": "github.com/Chaebin-Park/naru/internal/policy/TestPolicyPublicationFailure"
+      },
+      {
+        "id": "AC-6",
+        "description": "Bound rule fixtures execute the selected adapter and distinguish expected violations from errors or unavailable environments.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestPolicyFixtures"
+      },
+      {
+        "id": "AC-7",
+        "description": "Policy commands report deterministic states and exit codes and require explicit terminal review without changing contract baselines.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestPolicyCLI"
+      }
+    ],
+    "limitations": [
+      "One policy index and one configured findings surface per repository; trusted local adapters supply complete per-rule results.",
+      "Explicit initial bootstrap and subsequent shrink-only approval; no automated definition migration, reset, waiver or growth approval.",
+      "Review identity is self-reported; same-user file tampering and dishonest adapter completeness are outside the trust boundary.",
+      "No new lint language, dependencies, tool installation, remote execution or implicit integration with Stop/pre-push modes.",
+      "Minimum Go and other OS runtimes are only claimed when actually executed; cross-vet is static evidence."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
