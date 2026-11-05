@@ -23,6 +23,10 @@ var ErrSurfaceOutput = errors.New("extractor stdout exceeds 1 MiB")
 // Extract publishes a candidate only after successful execution and matching
 // before/after inputs. It never writes an approved baseline.
 func Extract(root, name string, parent context.Context) (snapshot *surface.Snapshot, retErr error) {
+	return extractWithRun(root, name, parent, (*exec.Cmd).Run)
+}
+
+func extractWithRun(root, name string, parent context.Context, run func(*exec.Cmd) error) (snapshot *surface.Snapshot, retErr error) {
 	if parent == nil {
 		parent = context.Background()
 	}
@@ -99,9 +103,13 @@ func Extract(root, name string, parent context.Context) (snapshot *surface.Snaps
 	cmd.Stderr = &stderr
 	cmd.WaitDelay = waitDelay
 	setProcessGroup(cmd)
-	runErr := cmd.Run()
-	if errors.Is(runErr, exec.ErrWaitDelay) || (runtime.GOOS == "windows" && ctx.Err() != nil) {
-		return fail("owner_lost", errors.Join(ErrRecovery, runErr))
+	runErr := run(cmd)
+	if processGroupUnresolved(cmd) || errors.Is(runErr, exec.ErrWaitDelay) || (runtime.GOOS == "windows" && ctx.Err() != nil) {
+		cause := errors.Join(ErrRecovery, runErr)
+		if parent.Err() != nil {
+			cause = errors.Join(cause, ErrInterrupted)
+		}
+		return fail("owner_lost", cause)
 	}
 	if parent.Err() != nil {
 		return fail("cancelled", ErrInterrupted)

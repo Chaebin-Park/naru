@@ -184,13 +184,13 @@ Humans can bypass the hook with `git push --no-verify`. This gate evaluates the 
 | Command | 0 | 1 | 2 | 64 | 70 |
 | --- | --- | --- | --- | --- | --- |
 | `check`, `status` | done | not done | – | usage or config error | internal error |
-
-Log write, sync, or close errors prevent a terminal success and return an internal error; an already-published running state remains unsatisfied. New private state directories use mode 0700 and files use 0600; existing permissions are not migrated. Otherwise successful CLI commands return an error if output cannot be written.
-
-`check` exits 130 when interrupted. A started execution records `cancelled`; earlier success stays in history and cannot satisfy the gate. On macOS/Linux, Ctrl-C stops the check process group. A crashed owner with leftover running state requires manual recovery before a new run; a free lock alone does not prove its children have exited.
 | `gate stop` | allow | – | block | usage error | – |
 | `gate pre-push` | allow | block | – | usage error | – |
 | `hooks install` | installed | refused or failed | – | usage/config error | internal error |
+
+Log write, sync, or close errors prevent a terminal success and return an internal error; an already-published running state remains unsatisfied. New private state directories use mode 0700 and files use 0600; existing permissions are not migrated. Otherwise successful CLI commands return an error if output cannot be written.
+
+`check` exits 130 when interrupted. A started execution records `cancelled`; earlier success stays in history and cannot satisfy the gate. On macOS/Linux, Ctrl-C sends a termination signal to the check process group. After the shell exits, naru briefly checks whether the group is absent. If children remain or the check is inconclusive, it records `owner_lost` and blocks restart pending manual recovery; interruption still exits 130. A crashed owner with leftover running state requires manual recovery before a new run; a free lock alone does not prove its children have exited.
 
 ## Known limitations (P0)
 

@@ -14,6 +14,8 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 
 ### Fixed
 
+- Block check and extractor restart when a Unix process group remains after cancellation, timeout or other exit, including when an exit error hides the output wait limit. Preserve cancellation exit 130 and require manual recovery when cleanup cannot be confirmed.
+
 - Block Stop when NOT VERIFIED state cannot be saved or cleared, and reject failed allowance notices.
 - Reject log write/sync/close failures before publishing a receipt; remove temporary receipts after failed replacements.
 - Report output failures on otherwise successful CLI commands and create private execution state with owner-only permissions.

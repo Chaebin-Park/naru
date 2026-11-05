@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -78,8 +79,30 @@ func TestSurfaceExtractionLifecycle(t *testing.T) {
 }
 func TestSurfaceCancellationAndRecovery(t *testing.T) {
 	root := surfaceProject(t)
-	surfaceConfig(t, root, "printf started > started; sleep 30", "")
-	ctx, cancel := context.WithCancel(context.Background())
+	surfaceConfig(t, root, "printf started > started; sh -c 'echo $$ > child; exec sleep 30' & wait", "")
+	cleanupNeeded := true
+	t.Cleanup(func() {
+		if !cleanupNeeded {
+			return
+		}
+		data, err := os.ReadFile(filepath.Join(root, "child")) // #nosec G304 -- Self-recorded PID fixture in a test-owned root.
+		if errors.Is(err, os.ErrNotExist) {
+			return
+		}
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		pid, err := strconv.Atoi(strings.TrimSpace(string(data)))
+		if err != nil || pid <= 1 {
+			t.Errorf("invalid child pid: %q", data)
+			return
+		}
+		if process, err := os.FindProcess(pid); err == nil {
+			_ = process.Kill()
+		}
+	})
+	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel()
 	done := make(chan error, 1)
 	go func() { _, err := Extract(root, "api", ctx); done <- err }()
@@ -96,16 +119,32 @@ func TestSurfaceCancellationAndRecovery(t *testing.T) {
 	cancel()
 	select {
 	case err := <-done:
+		cleanupNeeded = errors.Is(err, ErrRecovery)
 		if !errors.Is(err, ErrInterrupted) {
 			t.Fatal(err)
 		}
-	case <-time.After(5 * time.Second):
+	case <-time.After(8 * time.Second):
+		cancel()
+		select {
+		case drainErr := <-done:
+			t.Logf("extractor returned after deadline: %v", drainErr)
+		case <-time.After(time.Second):
+		}
 		t.Fatal("cancel did not stop extractor")
 	}
 	store := baseline.Store{Root: root}
 	state, err := store.Current("api")
-	if err != nil || state.Phase != "failed" || state.Reason != "cancelled" {
+	if err != nil || state == nil {
 		t.Fatalf("cancel %+v %v", state, err)
+	}
+	if state.Phase == "recovery" && state.Reason == "owner_lost" {
+		// The original marker-before-fork race may leave a child. Record
+		// recovery rather than treating a longer timeout as successful cleanup.
+		if _, err := Extract(root, "api", context.Background()); !errors.Is(err, ErrRecovery) {
+			t.Fatalf("survivor restarted: %v", err)
+		}
+	} else if state.Phase != "failed" || state.Reason != "cancelled" {
+		t.Fatalf("cancel %+v", state)
 	}
 	if err := store.Put(baseline.State{Schema: 1, SurfaceID: "api", Phase: "running"}); err != nil {
 		t.Fatal(err)

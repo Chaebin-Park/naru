@@ -101,3 +101,7 @@ Baseline extract/diff commands now create guarded candidates and compare them ag
 ## NARU-011 Spring Boot example
 
 The repository now includes a limited Spring MVC public sample and local pack with four surfaces. The adapter uses fresh locked Maven exports for API/routes and bounded resource reads for SQL hashes/configuration keys. It does not alter the core evaluator or automatically connect surfaces to check modes. Fixture tests run through Go; actual Maven/CLI smoke is separate evidence. See [support scope](../packs/spring-boot/README.md).
+
+## NARU-033: unresolved process groups
+
+Checks and extractors inspect their Unix process group after the shell exits. Remaining members or inspection errors require manual recovery even when `exec.ExitError` hides `exec.ErrWaitDelay`. Check results retain cancellation/timeout/failure while input evidence becomes unreadable with `owner_lost`; extractor candidates become `recovery/owner_lost`. Caller cancellation retains exit 130. Inspection is bounded and read-only: it does not repeatedly signal a potentially reused group ID. This is not a process sandbox or automatic orphan cleanup.

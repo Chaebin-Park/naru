@@ -68,3 +68,7 @@ A candidate alone does not satisfy existing check modes or hooks. There is no im
 Evidence: `TestSurfaceExtractionLifecycle`, `TestSurfaceCancellationAndRecovery`, `TestSurfaceCaptureLimit`, `TestSurfaceWorkdirRejectsSymlink`, `TestCandidateDiffLifecycle`, `TestCandidatePublicationFailure`, `TestBaselineCLI`, and `TestSnapshotValidation`.
 
 Approval evidence: `TestApprovalLifecycle`, `TestApprovalPreviewChanges`, `TestApprovalPublicationFailure`, `TestApprovalMalformedRecords`, `TestApprovalRequiresTTY`, and `TestApprovalReviewFlow`.
+
+## Unresolved extractor cleanup
+
+After a Unix extractor exits, a bounded read-only process-group check detects remaining members even when an exit error hides the output wait limit. Remaining members or inspection errors publish `recovery/owner_lost`, never a reusable candidate. Caller interruption still returns exit 130. A subsequent extraction is refused until manual recovery. The runner does not repeatedly kill a numeric group ID after wait; the ID could belong to another group. Deliberately detached processes remain outside the process-group boundary.

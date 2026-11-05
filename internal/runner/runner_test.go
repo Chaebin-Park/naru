@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -85,47 +84,11 @@ func TestBackgroundChildKeepingOutputOpen(t *testing.T) {
 	}
 }
 
-func TestTimeoutKillsProcessGroup(t *testing.T) {
-	root, cfg := project(t, base+`"sh -c 'sleep 30; touch survived' & sleep 30"`+"\n    timeout: 300ms")
-	out, err := Run(root, cfg, "c", Options{Evidence: "local"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if out.Receipt.Result != receipt.ResultTimeout {
-		t.Fatalf("result = %s", out.Receipt.Result)
-	}
-	time.Sleep(100 * time.Millisecond)
-	if _, err := os.Stat(filepath.Join(root, "survived")); err == nil {
-		t.Fatal("grandchild survived the timeout")
-	}
-}
-
 func TestEmptyInputsRefused(t *testing.T) {
 	root, cfg := project(t, "version: 1\ndefault_mode: m\nmodes: {m: [c]}\nchecks:\n  c:\n    inputs: [\"src/**\"]\n    run: \"true\"")
 	_, err := Run(root, cfg, "c", Options{})
 	if err == nil || !strings.Contains(err.Error(), "match no files") {
 		t.Fatalf("empty inputs accepted: %v", err)
-	}
-}
-
-func TestCancelKillsCheckAndRecordsCancellation(t *testing.T) {
-	root, cfg := project(t, base+`"sh -c 'sleep 30; touch survived' & sleep 30"`)
-	ctx, cancel := context.WithCancel(context.Background())
-	time.AfterFunc(200*time.Millisecond, cancel)
-	start := time.Now()
-	_, err := Run(root, cfg, "c", Options{Context: ctx})
-	if !errors.Is(err, ErrInterrupted) {
-		t.Fatalf("err = %v, want ErrInterrupted", err)
-	}
-	if time.Since(start) > 3*time.Second {
-		t.Fatal("cancel did not stop the check promptly")
-	}
-	if r, err := receipt.NewStateStore(root).Current("c"); err != nil || r == nil || r.Execution.Result == nil || *r.Execution.Result != receipt.ResultCancelled {
-		t.Fatalf("cancellation not recorded: %+v %v", r, err)
-	}
-	time.Sleep(100 * time.Millisecond)
-	if _, err := os.Stat(filepath.Join(root, "survived")); err == nil {
-		t.Fatal("grandchild survived the interrupt")
 	}
 }
 

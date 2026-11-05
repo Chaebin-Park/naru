@@ -184,7 +184,12 @@ func runState(root string, cfg *config.Config, name string, opt Options, openLog
 	cmd.WaitDelay = waitDelay
 	setProcessGroup(cmd)
 	result, exitCode := receipt.ResultPass, 0
-	runErr := cmd.Run()
+	run := opt.runCommand
+	if run == nil {
+		run = (*exec.Cmd).Run
+	}
+	runErr := run(cmd)
+	unresolved := processGroupUnresolved(cmd)
 	switch {
 	case parent.Err() != nil:
 		result, exitCode = receipt.ResultCancelled, -1
@@ -218,11 +223,12 @@ func runState(root string, cfg *config.Config, name string, opt Options, openLog
 	r.Execution.ExitCode = &exitCode
 	r.Execution.DurationMS = &duration
 	r.Inputs = afterInputs(root, name, cfg, r.Inputs.Before)
-	if errors.Is(runErr, exec.ErrWaitDelay) || (runtime.GOOS == "windows" && (result == receipt.ResultCancelled || result == receipt.ResultTimeout)) {
+	if unresolved || errors.Is(runErr, exec.ErrWaitDelay) || (runtime.GOOS == "windows" && (result == receipt.ResultCancelled || result == receipt.ResultTimeout)) {
 		reason := "owner_lost"
 		r.Inputs.After = nil
 		r.Inputs.Validity = receipt.InputsUnreadable
 		r.Inputs.Reason = &reason
+		_, _ = fmt.Fprintf(out, "\nnaru: check %q process cleanup could not be confirmed; manual recovery required\n", name)
 	}
 	_, writeErr := fmt.Fprintf(logFile, "\nnaru: result %s, exit %d, inputs %s\n", result, exitCode, r.Inputs.Validity)
 	syncErr := logFile.Sync()

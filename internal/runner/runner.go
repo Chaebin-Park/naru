@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -21,8 +22,9 @@ type Options struct {
 	Stream   io.Writer // when non-nil, command output is also streamed here
 	Now      func() time.Time
 	// Context cancels the run (e.g. on Ctrl-C); nil means context.Background().
-	Context context.Context
-	store   func(string) executionStore
+	Context    context.Context
+	store      func(string) executionStore
+	runCommand func(*exec.Cmd) error
 }
 
 // waitDelay bounds how long to wait for output after the command exits or is killed.
