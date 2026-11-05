@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "id": "NARU-033",
+  "previous": "NARU-011",
+  "base": "24762d4ae7d067095c01f1ca845a3511a4e0b1e7",
+  "status": "active",
+  "plan": {
+    "title": "Block restart when cancelled subprocess cleanup cannot be confirmed",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Surface cancellation with a surviving child preserves interruption and blocks restart pending recovery.",
+        "test": "github.com/Chaebin-Park/naru/internal/runner/TestSurfaceCancellationRecovery"
+      },
+      {
+        "id": "AC-2",
+        "description": "Check cancellation and timeout preserve their results while unresolved children invalidate evidence.",
+        "test": "github.com/Chaebin-Park/naru/internal/runner/TestCheckCancellationRecovery"
+      },
+      {
+        "id": "AC-3",
+        "description": "Process-group inspection fails closed on errors and never sends another destructive signal after wait.",
+        "test": "github.com/Chaebin-Park/naru/internal/runner/TestProcessCleanupUncertainty"
+      },
+      {
+        "id": "AC-4",
+        "description": "A fresh process refuses executions with unresolved prior ownership.",
+        "test": "github.com/Chaebin-Park/naru/internal/runner/TestCancellationRecoveryAcrossProcess"
+      }
+    ],
+    "limitations": [
+      "Unix process groups only; deliberate process-group escape is outside this boundary.",
+      "No repeated post-wait destructive signals; unresolved descendants require manual recovery.",
+      "Go 1.23 and Linux/Windows runtime validation require available environments; cross-vet is static evidence only.",
+      "No push integration tests, deployment, tool installation or new dependencies."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
