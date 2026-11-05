@@ -4,6 +4,10 @@ Updated for NARU-006 on 2026-11-04. This describes the NARU-006 implementation, 
 
 Terms: [glossary](glossary.md). Live agent evidence: [verification](verification.md).
 
+## Policy addition (NARU-012)
+
+The [policy contract](policy.md) adds strict rule indexing, executable fixtures, complete findings, explicit bootstrap and reduction-only approval. Policy authority is separate from contract baselines and ordinary check receipts. Missing coverage, stale candidates and changed definitions block approval; this task does not integrate policy commands into Stop/pre-push automatically. The older command table below remains historical for non-policy commands.
+
 ## Commands and exit codes
 
 Flags precede positional arguments. Subcommand flag parsing uses Go's `flag` package. Invalid flags return 64; top-level `help`, `-h`, and `--help` return 0. Subcommand help currently returns 64.

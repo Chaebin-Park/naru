@@ -76,6 +76,7 @@ Usage:
   naru gate pre-push                  require fresh default_mode receipts and no NOT VERIFIED record
   naru hooks install [--force]        install a Git pre-push hook (preserve existing hooks by default)
   naru baseline extract|diff|approve [--json] <surface>  extract a candidate or compare it to a baseline
+  naru policy list|test|check|bootstrap|approve [--json]  inspect policies and approve violation reductions
   naru version
 
 Exit codes: 0 done, 1 not done, 64 usage/config error, 70 internal error, 130 interrupted.
@@ -115,6 +116,8 @@ func Run(args []string, env Env) (code int) {
 		return cmdHooks(args[1:], env)
 	case "baseline":
 		return cmdBaseline(args[1:], env)
+	case "policy":
+		return cmdPolicy(args[1:], env)
 	case "version", "--version":
 		_, _ = fmt.Fprintln(env.Stdout, "naru", version())
 		return exitOK

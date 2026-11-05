@@ -20,6 +20,19 @@ type Lock struct {
 
 // Acquire canonicalizes root and takes a nonblocking exclusive lock.
 func Acquire(root, check string) (*Lock, error) {
+	return acquire(root, "", check)
+}
+
+// AcquireScoped uses a separate lock directory so internal operations cannot
+// collide with a user-defined check name. Root still identifies the project.
+func AcquireScoped(root, scope, name string) (*Lock, error) {
+	if !config.NamePattern.MatchString(scope) {
+		return nil, errors.New("invalid lock scope")
+	}
+	return acquire(root, scope, name)
+}
+
+func acquire(root, scope, check string) (*Lock, error) {
 	if !config.NamePattern.MatchString(check) {
 		return nil, errors.New("invalid check name")
 	}
@@ -32,7 +45,12 @@ func Acquire(root, check string) (*Lock, error) {
 		return nil, err
 	}
 	dir := filepath.Join(root, ".naru", "state", "locks")
-	for _, p := range []string{filepath.Join(root, ".naru"), filepath.Join(root, ".naru/state"), dir} {
+	dirs := []string{filepath.Join(root, ".naru"), filepath.Join(root, ".naru/state"), dir}
+	if scope != "" {
+		dir = filepath.Join(dir, scope)
+		dirs = append(dirs, dir)
+	}
+	for _, p := range dirs {
 		info, err := os.Lstat(p) // #nosec G703 -- Caller selects the local repository root; this is not an external path confinement API.
 		if err == nil && !info.IsDir() {
 			return nil, fmt.Errorf("lock directory is not a plain directory: %s", p)

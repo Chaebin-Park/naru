@@ -8,7 +8,7 @@
 
 [English README](README.md)
 
-> 상태: 초기 개발(P0). `init`, `check`, `status`, `mode`, Claude Code Stop 진행 판정이 동작합니다. 기준본, 정책, 사용자 중계, 플랫폼 묶음은 이후 단계입니다.
+> 상태: 초기 개발(P0). `init`, `check`, `status`, `mode`, Claude Code Stop 진행 판정이 동작합니다. 계약 기준본, 정책 검토, 로컬 묶음과 Spring Boot 예제를 사용할 수 있습니다. 사용자 중계와 추가 플랫폼 묶음은 이후 단계입니다.
 
 ## 왜 필요한가
 
@@ -191,3 +191,9 @@ checks:
 `naru baseline approve <surface>`는 macOS/Linux 터미널에서 검토자·사유·전체 digest 확인을 받아 후보를 승인합니다. 저장 직전에 입력과 검토한 후보·기존 기준본을 다시 확인하고 snapshot과 승인 기록을 함께 저장합니다. 빈 후보는 별도 확인이 필요합니다. 구형 단독 snapshot은 새 승인 전까지 완료로 인정하지 않습니다. 터미널 확인은 사람의 신원을 인증하는 기능이 아닙니다. [승인 동작과 한계](docs/baselines.md#interactive-approval)를 참고하세요.
 
 [Spring Boot 공개 예제 묶음](packs/spring-boot/README.md)은 API 응답, 프로필별 라우트, SQL 파일 해시, 설정 키의 변화를 보여줍니다. Java·Maven·Python이 필요하며 직접 활성화해야 합니다. 설정 값은 내보내지 않습니다. 빌드 검사만으로 승인된 외부 계약과의 일치를 자동 강제하지는 않습니다.
+
+## 정책 검토
+
+`naru policy list`는 `.naru/policy.yml`을 검증하고, `naru policy test [rule-id]`는 규칙에 연결된 정상·위반 fixture를 실제로 실행합니다. `naru policy check`는 전체 검사 결과를 갱신해 기존·신규·해결 위반을 구분합니다. 기존 위반은 경고하고 신규 위반은 차단합니다. 도구 출력이 없거나 불완전하면 해결로 인정하지 않습니다.
+
+터미널에서 `naru policy bootstrap`으로 처음 알려진 위반을 승인하고, 이후 `naru policy approve`로 줄어든 목록만 승인합니다. 저장 전에 검토한 후보와 현재 입력을 다시 확인합니다. 위반 추가나 규칙 정의 변경에 따른 이전은 승인할 수 없습니다. 정책 저장소는 계약 기준본과 분리되며 Stop/pre-push 요구사항에 자동으로 추가되지 않습니다. [형식·명령·제한사항](docs/policy.md)을 참고하세요.

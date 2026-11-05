@@ -8,7 +8,7 @@ Terms: [NARU glossary](docs/glossary.md). Command names and quoted session outpu
 
 [한국어 README](README.ko.md)
 
-> Status: early development (P0). The core loop works: `init`, `check`, `status`, `mode`, and the Claude Code Stop gate. Baselines, policies, relay, and platform packs are planned.
+> Status: early development (P0). The core loop works: `init`, `check`, `status`, `mode`, and the Claude Code Stop gate. Contract baselines, policy review, local packs and a Spring Boot example are available. Relay and further platform packs are planned.
 
 ## Why
 
@@ -199,7 +199,7 @@ For the MVP, validation prioritizes macOS and Linux. Windows has limited support
 - Receipts and config are local files. `naru gate pre-tool` blocks the obvious ways an agent could edit them, but its shell detection is a heuristic; rely on CI to re-run checks from a clean checkout.
 - Checks run sequentially with `sh -c`. Windows needs a POSIX shell (for example Git Bash), and a timeout there kills only the shell, not its children.
 - If a check leaves a background process holding its output open, naru records the exit status and stops waiting after 5 seconds.
-- No baselines, policy index, relay, or platform packs yet.
+- Policy review is explicit; Stop/pre-push integration is pending. Relay and Android/Web packs are not implemented.
 
 ## Roadmap
 
@@ -252,3 +252,9 @@ Run `naru baseline extract <surface>` to produce a verified local candidate, the
 `naru baseline approve <surface>` reviews and publishes a candidate through terminal prompts on macOS/Linux. It rechecks inputs and the exact preview before saving the snapshot and review metadata together. Empty candidates require explicit confirmation. Legacy bare snapshots require approval before an unchanged result. See [approval and limits](docs/baselines.md#interactive-approval).
 
 A [Spring Boot public-example pack](packs/spring-boot/README.md) now demonstrates API probes, profile-specific routes, SQL file hashes and configuration keys. It requires Java/Maven/Python and manual activation. Its build check does not automatically enforce approved surface equality.
+
+## Policy review
+
+`naru policy list` validates `.naru/policy.yml`; `naru policy test [rule-id]` runs bound pass/violation fixtures. `naru policy check` refreshes complete findings and separates known, new and resolved violations. Known violations warn; new violations block. Missing or incomplete tool output cannot count as resolved.
+
+Use terminal-only `naru policy bootstrap` once to approve the initial known set, then `naru policy approve` for reductions. Both recheck the reviewed candidate and current inputs. Approval cannot add violations or migrate changed rule definitions. Policy storage is separate from contract baselines, and these commands do not implicitly add Stop/pre-push requirements. See [policy format, commands and limitations](docs/policy.md).
