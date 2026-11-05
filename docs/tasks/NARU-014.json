@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "id": "NARU-014",
+  "previous": "NARU-013",
+  "base": "3e138565368df250130a7f01303b6d32f3b89477",
+  "status": "active",
+  "plan": {
+    "title": "Add input-bound human relay packets and validated local evidence submission",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Relay request issuance binds check definition and current input digest, uses unique bounded-expiry packet identity, publishes pending single-check authority and never executes the requested command. The hashed packet includes command, workdir, timeout, requirements, inputs and excludes from config loaded under the check lock.",
+        "test": "github.com/Chaebin-Park/naru/internal/relay/TestRelayNew"
+      },
+      {
+        "id": "AC-2",
+        "description": "Submission validates identity, strict format, declared execution times/results and exact required artifact bytes/hashes; rejects missing, altered, oversized, unsafe-path and symlink artifacts without producing pass; preserves human-relayed provenance.",
+        "test": "github.com/Chaebin-Park/naru/internal/relay/TestRelaySubmit"
+      },
+      {
+        "id": "AC-3",
+        "description": "Expired, replayed, superseded or input/definition-changed submissions cannot pass; concurrent submission/local execution and storage failures preserve one authoritative state and never fall back to older successful relay evidence. Fault injection covers pending archival followed by failed new-request publication, successful original submission and distinct immutable terminal archival; artifact retries use isolated attempt paths.",
+        "test": "github.com/Chaebin-Park/naru/internal/relay/TestRelayFreshness"
+      },
+      {
+        "id": "AC-4",
+        "description": "Valid relay pass satisfies its local check despite unavailable local tools, but stale/expired/corrupt-artifact/nonpassing evidence and other unmet checks block; existing schema2 local and conditional schema1 compatibility remain unchanged. Evaluation rejects now before accepted_at and checks actual stored artifact hashes; unsupported current authority never becomes absence.",
+        "test": "github.com/Chaebin-Park/naru/internal/status/TestRelayStatus"
+      },
+      {
+        "id": "AC-5",
+        "description": "CLI issue/submit and status preserve provenance and exit contracts; valid relay supports Stop and pre-push only with other conditions met; submit does not clear NOT VERIFIED and CI-labeled check independently executes and records its actual failure or not-run result.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestRelayWorkflow"
+      }
+    ],
+    "limitations": [
+      "Human-relayed evidence is a human claim checked for local identity, input, time and artifact consistency; it is not authenticated remote execution or cryptographic proof of remote input bytes. No SSH, device or remote command is executed.",
+      "Relay applies to configured checks. Surface/baseline aggregation is deferred to the later common-report task; real CI environment/templates and observed CI runs are separate work. CI never reuses relay success as an executed result. No separate CI evaluation CLI is introduced; CI uses the actual check --evidence ci exit result, never status/pre-push as a substitute.",
+      "Pending issuance supersedes earlier authority for that check. Requests and accepted evidence expire; renewal or a different result requires a fresh packet. Default TTL24h, maximum7d; no waiver feature is added.",
+      "Schema2 local before/after semantics and legacy conditional compatibility remain intact; relay uses an explicit separate schema/meaning in the same authoritative check-state slot. Same-user tampering and hostile filesystem races remain outside the security guarantee.",
+      "Packet and artifact originals remain local ignored sensitive files. Public examples are synthetic; output excludes raw artifacts and no environment credentials are collected. No installation, settings change, push, tag or release is performed.",
+      "Task start requires predecessor close and task-gate begin; completion requires fresh targeted tests, full static analysis, current-file naru check and task verify/close evidence. This preparation is not implementation or completion evidence."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
