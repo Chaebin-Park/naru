@@ -95,7 +95,7 @@ naru status        # check별 pass / fail / stale / missing
 - 에이전트가 진행할 수 없는 상태(예: `naru check` 권한 없음)에서 같은 차단이 한 Stop 흐름 안에서 `gate.max_repeats`번(기본 3) 반복되면, 종료를 허용하되 사용자에게 NOT VERIFIED를 알리고(`systemMessage`), `naru status`에도 다음 검증된 종료 전까지 경고가 남습니다. 파일 수정이나 새 실행처럼 진행이 생기면 횟수를 다시 셉니다. `gate: {max_repeats: 0}`이면 절대 포기하지 않습니다. 미검증 기록 저장·해제 또는 허용 안내 출력에 실패하면 Stop을 차단합니다.
 - 실제 Claude Code 세션 검증 기록: [docs/verification.md](docs/verification.md)
 
-Codex 0.166.0은 Stop·PreToolUse 네이티브 훅을 제공합니다. [연결 예제와 설치/해제 안내](examples/agent-hooks/README.md)에서 설정 형식과 신뢰 확인 절차를 확인하세요. NARU는 Codex `apply_patch`의 경로를 Claude 파일 도구와 별도로 검사합니다. `Edit|Write` matcher만 지정해도 패치 입력이 변환되지는 않습니다. Begin/End Patch 형식의 패치를 검사하며 알 수 없는 wrapper 문법은 추측하지 않고 차단합니다. 실제 Codex 연결은 [검증 기록](docs/verification.md)에 결과가 남기 전까지 미검증입니다.
+Codex 0.166.0은 Stop·PreToolUse 네이티브 훅을 제공합니다. [연결 예제와 설치/해제 안내](examples/agent-hooks/README.md)에서 설정 형식과 신뢰 확인 절차를 확인하세요. NARU는 Codex `apply_patch`의 경로를 Claude 파일 도구와 별도로 검사합니다. `Edit|Write` matcher만 지정해도 패치 입력이 변환되지는 않습니다. Begin/End Patch 형식의 패치를 검사하며 알 수 없는 wrapper 문법은 추측하지 않고 차단합니다. 두 도구의 missing/pass·stale/재검사·NOT VERIFIED 실제 관찰은 [검증 기록](docs/verification.md)에 있습니다. Claude는 미신뢰 폴더에서 훅을 실행하면서도 프로젝트 허용 규칙은 무시할 수 있으므로 신뢰 절차를 확인하세요.
 
 훅을 활성화하지 않은 도구는 `AGENTS.md`에 "완료 보고 전에 `naru status`를 실행하고, 0이 아니면 `naru check`로 고친 뒤 반복한다"는 지침을 넣을 수 있습니다. 지침만으로 훅 실행을 강제하지는 않습니다.
 

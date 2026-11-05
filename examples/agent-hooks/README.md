@@ -25,6 +25,8 @@ See the [Codex hook reference](https://learn.chatgpt.com/docs/hooks).
 ## Prepare the command
 
 Use a reviewed NARU binary available as `naru` on the agent process's `PATH`.
+Claude ignores project-level allow rules in untrusted workspaces even when hooks run. Use the normal workspace trust review, or explicit, narrowly scoped command-line allow rules for an authorized headless session; do not interpret a loaded hook as proof that check permissions are active. See [workspace trust and allow rules](https://code.claude.com/docs/en/permissions#project-allow-rules-and-workspace-trust).
+
 Check `command -v naru` in that environment, then run `naru status` from the
 intended project. A missing receipt is expected before the first `naru check`.
 An interactive terminal and a desktop app may inherit different paths.

@@ -129,7 +129,7 @@ See [docs/verification.md](docs/verification.md) for recorded runs against real 
 
 ### Codex and others
 
-Codex 0.166.0 exposes native Stop and PreToolUse hooks. [Connection templates and installation/removal guidance](examples/agent-hooks/README.md) describe the current hook contract and trust requirements. NARU handles Codex `apply_patch` paths separately from Claude file tools; matching `Edit|Write` alone does not translate patch input. The guard accepts plain Begin/End Patch commands; unknown wrapper syntax is blocked instead of guessed. Live Codex integration remains unverified until recorded in [verification](docs/verification.md).
+Codex 0.166.0 exposes native Stop and PreToolUse hooks. [Connection templates and installation/removal guidance](examples/agent-hooks/README.md) describe the current hook contract and trust requirements. NARU handles Codex `apply_patch` paths separately from Claude file tools; matching `Edit|Write` alone does not translate patch input. The guard accepts plain Begin/End Patch commands; unknown wrapper syntax is blocked instead of guessed. Both tools have recorded missing/pass, stale/recheck and NOT VERIFIED observations in [verification](docs/verification.md). Review workspace trust: Claude can run project hooks while ignoring project allow rules in an untrusted directory.
 
 For hosts without enabled hooks, add this instruction to `AGENTS.md` (instructions alone do not enforce a hook):
 

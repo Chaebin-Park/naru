@@ -32,7 +32,7 @@ Changes made because of these runs:
 - The PreToolUse guard decides per write target (redirect targets, `rm`/`mv`/`cp` destinations, `sed -i`, interpreters) instead of matching any `>` in the command, from run 5.
 - Every check log now starts with the command and ends with the result, and fail messages include the command, from run 5.
 
-Not yet verified with a live agent: Codex integration, long-running checks, and how the `systemMessage` is displayed in the interactive UI (the headless stream shows the hook emitted it with exit 0).
+At the time of the 2026-11-03 runs, not yet verified with a live agent: Codex integration, long-running checks, and how the `systemMessage` is displayed in the interactive UI (the headless stream shows the hook emitted it with exit 0).
 
 ## NARU-013 connection preparation (2026-11-05)
 
@@ -46,7 +46,9 @@ No new paid/subscription session, global/project hook activation, trust change, 
 
 Local preparation evidence: Go 1.27.3/macOS arm64 passed the shared hook payload, patch protection and template acceptance tests, the full race suite, native and Windows/Linux vet, build, and all four built-binary self-checks. Development analysis completed with zero findings. Independent code review has no outstanding blocking finding. A pre-existing clean-cancellation fixture was changed to a child-free helper after a full-suite run correctly detected uncertain child cleanup; its strict cancellation/history/restart checks passed 15 repetitions. These checks do not establish Go 1.23 or other OS runtime support and do not replace the required live sessions. Opt-in push tests were not run.
 
-## NARU-013 live runs (2026-11-05, revision 4417414)
+## NARU-013 live runs (2026-11-05, implementation committed as 4417414)
+
+The preparation binary was built from the implementation later committed as `4417414`; its embedded build label is `1dfa87a2ebbc+dirty`. This is recorded as working-tree build provenance, not a clean-commit binary claim. The tested product source was unchanged between that build and the implementation commit.
 
 Six authorized sessions used disposable projects, the reviewed binary, and a logging wrapper that preserved hook stdin/stdout/stderr and exit status. Each session had a 180-second bound. Codex used a dedicated configuration home and normal hook inventory/hash trust registration; no trust bypass or personal configuration changes were used. Claude used project settings, Sonnet, and a $0.30 per-session API-price budget (subscription consumption is not equivalent to that price).
 
@@ -59,6 +61,17 @@ Six authorized sessions used disposable projects, the reviewed binary, and a log
 | Claude Code 2.1.318 / stale | Initial check was denied by permission configuration; three identical missing blocks then NOT VERIFIED | Pass-to-stale remains unverified; 12.51 s |
 | Claude Code 2.1.318 / conflicting input | Write/check permission requests were denied; three identical missing blocks then NOT VERIFIED | Permission-denied no-progress path verified; 17.63 s |
 
-Claude's three runs reported $0.1552595 total API-price estimates. A process exit of zero did not imply that NARU was satisfied. The unsuccessful Claude scenarios are not counted as passing acceptance. NARU-013 remains open until the two missing Claude paths are verified; downstream task implementation remains gated.
+Claude's three runs reported $0.1552595 total API-price estimates. A process exit of zero did not imply that NARU was satisfied. The unsuccessful Claude scenarios are not counted as passing acceptance. At this stage NARU-013 remained open pending the two missing Claude paths; the corrective runs below provide the remaining evidence.
 
-The Claude cause was identified from stderr: the untrusted workspace's five project `permissions.allow` entries were ignored, while project hooks still ran. This is documented [Claude trust behavior](https://code.claude.com/docs/en/permissions#project-allow-rules-and-workspace-trust). A follow-up can use narrowly scoped command-line allow rules for the two fixture files and NARU check/status, retaining default permission mode and the hooks. Two corrective sessions are prepared but not run because the approved three Claude launches were already used. No permission rejection was treated as a successful check.
+The Claude cause was identified from stderr: the untrusted workspace's five project `permissions.allow` entries were ignored, while project hooks still ran. This is documented [Claude trust behavior](https://code.claude.com/docs/en/permissions#project-allow-rules-and-workspace-trust). A follow-up can use narrowly scoped command-line allow rules for the two fixture files and NARU check/status, retaining default permission mode and the hooks. Two corrective sessions required additional authorization because the original three Claude launches had been used. No permission rejection was treated as a successful check.
+
+### Authorized Claude corrective runs
+
+After approval for two additional sessions, the same default permission mode and project hooks were retained. Command-line `--tools Read,Write,Edit,Bash` and narrowly scoped `--allowedTools` entries for `Edit(/answer.txt)`, `Edit(/notes.txt)`, `Bash(naru check)`, `Bash(naru check answer)` and `Bash(naru status)` supplied the authorized permissions. No global trust change or permission bypass was used.
+
+| Scenario | Observed result | Duration / API-price estimate |
+| --- | --- | --- |
+| Fresh project without receipts | Agent wrote 42 and proactively ran the check before its first Stop; Stop allowed; final status satisfied with no unverified marker | 4.68 s / $0.013576 |
+| Edit after pass | Agent checked, created notes, Stop blocked stale evidence, agent reran, Stop allowed; final status satisfied with no unverified marker | 7.88 s / $0.0179286 |
+
+Combined Claude evidence now covers missing evidence, successful fresh verification, stale blocking/recheck and the permission-denied NOT VERIFIED path. The corrective fresh-project run did not itself produce a missing Stop block; that block was observed in the initial runs. The five Claude sessions totaled $0.1867641 in reported API-price estimates. Both tools' required live acceptance paths are now evidenced; code verification and the task completion gate remain required independently.
