@@ -3,7 +3,7 @@
   "id": "NARU-012",
   "previous": "NARU-033",
   "base": "3054b05cadeda8041810a47c29e80d4305cec75c",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Add a thin policy index and human-approved violation reduction",
     "profile": "code-v1",
@@ -52,6 +52,6 @@
       "Minimum Go and other OS runtimes are only claimed when actually executed; cross-vet is static evidence."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "ac5ff2e720fe960b8e18f023b8496ad24f2cb7e0",
+  "evidence": "6008e4b2f72ad77aab0511adbd9b8a3887059f32657d5022e11bd8d426941cdb"
 }
