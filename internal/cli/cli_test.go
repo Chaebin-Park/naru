@@ -205,8 +205,8 @@ func TestInitDetectsStackAndRefusesOverwrite(t *testing.T) {
 	if !strings.Contains(string(cfg), `"go test ./..."`) || !strings.Contains(string(cfg), `inputs: ["**"]`) {
 		t.Fatalf("go check missing:\n%s", cfg)
 	}
-	if gi, _ := os.ReadFile(filepath.Join(root, ".naru/.gitignore")); !strings.Contains(string(gi), "receipts/") { // #nosec G304 -- Reads a synthetic fixture or a file in the test-owned temporary directory.
-		t.Fatalf(".gitignore missing receipts: %q", gi)
+	if gi, _ := os.ReadFile(filepath.Join(root, ".naru/.gitignore")); !strings.Contains(string(gi), "receipts/") || !strings.Contains(string(gi), "relay/") { // #nosec G304 -- Reads a synthetic fixture or a file in the test-owned temporary directory.
+		t.Fatalf(".gitignore missing private evidence paths: %q", gi)
 	}
 	if r := run(t, root, "", "init"); r.code != 64 {
 		t.Fatalf("second init must refuse: %+v", r)

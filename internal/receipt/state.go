@@ -2,6 +2,7 @@ package receipt
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -32,6 +33,7 @@ func NewStateStore(root string) StateStore { return StateStore{root: root} }
 type Evidence struct {
 	Record *Record
 	Legacy *Receipt
+	Relay  *RelayRecord
 }
 
 func (s StateStore) path(check string) (string, error) {
@@ -99,8 +101,7 @@ func (s StateStore) Read(check string) (Evidence, error) {
 	}
 	data, err := s.read(path)
 	if err == nil {
-		r, err := DecodeRecord(data, check)
-		return Evidence{Record: r}, err
+		return decodeCurrentEvidence(data, check)
 	}
 	if !errors.Is(err, os.ErrNotExist) {
 		return Evidence{}, err
@@ -135,19 +136,122 @@ func (s StateStore) Begin(r Record) error {
 		return err
 	}
 	if err == nil {
-		old, err := DecodeRecord(data, r.Check)
-		if err != nil {
+		if err := s.archiveCurrent(r.Check, r.RunID, data); err != nil {
 			return err
-		}
-		if old.RunID == r.RunID {
-			return fmt.Errorf("%w: reused run ID", ErrInvalid)
-		}
-		archive := filepath.Join(s.root, ".naru", "state", "history", r.Check, old.RunID+".json")
-		if err := s.archive(archive, data); err != nil {
-			return fmt.Errorf("archive previous execution: %w", err)
 		}
 	}
 	return s.Put(r)
+}
+
+// CurrentEvidence reads the current authority without consulting legacy files.
+func (s StateStore) CurrentEvidence(check string) (Evidence, error) {
+	path, err := s.path(check)
+	if err != nil {
+		return Evidence{}, err
+	}
+	data, err := s.read(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return Evidence{}, nil
+	}
+	if err != nil {
+		return Evidence{}, err
+	}
+	return decodeCurrentEvidence(data, check)
+}
+
+func decodeCurrentEvidence(data []byte, check string) (Evidence, error) {
+	var header struct {
+		Schema int `json:"schema"`
+	}
+	if err := json.Unmarshal(data, &header); err != nil {
+		return Evidence{}, fmt.Errorf("%w: %v", ErrInvalid, err)
+	}
+	switch header.Schema {
+	case StateSchema:
+		r, err := DecodeRecord(data, check)
+		return Evidence{Record: r}, err
+	case RelaySchema:
+		r, err := DecodeRelayRecord(data, check)
+		return Evidence{Relay: r}, err
+	default:
+		return Evidence{}, ErrUnsupported
+	}
+}
+
+func (s StateStore) archiveCurrent(check, nextID string, data []byte) error {
+	old, err := decodeCurrentEvidence(data, check)
+	if err != nil {
+		return err
+	}
+	var archive string
+	if old.Record != nil {
+		if old.Record.RunID == nextID {
+			return fmt.Errorf("%w: reused run ID", ErrInvalid)
+		}
+		archive = filepath.Join(s.root, ".naru", "state", "history", check, old.Record.RunID+".json")
+	} else {
+		if old.Relay.RunID == nextID {
+			return fmt.Errorf("%w: reused packet ID", ErrInvalid)
+		}
+		name := fmt.Sprintf("%s-%x.json", old.Relay.Phase, sha256.Sum256(data))
+		archive = filepath.Join(s.root, ".naru", "state", "history", check, "relay", old.Relay.RunID, name)
+	}
+	if err := s.archive(archive, data); err != nil {
+		return fmt.Errorf("archive previous execution: %w", err)
+	}
+	return nil
+}
+
+// BeginRelay archives prior authority and publishes a pending request.
+func (s StateStore) BeginRelay(r RelayRecord) error {
+	if err := r.Validate(r.Check); err != nil {
+		return err
+	}
+	if r.Phase != PhasePending {
+		return ErrInvalid
+	}
+	path, err := s.path(r.Check)
+	if err != nil {
+		return err
+	}
+	data, err := s.read(path)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	if err == nil {
+		if err := s.archiveCurrent(r.Check, r.RunID, data); err != nil {
+			return err
+		}
+	}
+	return s.PutRelay(r)
+}
+
+// PutRelay atomically publishes a validated schema 3 record in the shared slot.
+func (s StateStore) PutRelay(r RelayRecord) error {
+	if err := r.Validate(r.Check); err != nil {
+		return err
+	}
+	path, err := s.path(r.Check)
+	if err != nil {
+		return err
+	}
+	data, err := json.MarshalIndent(r, "", "  ")
+	if err != nil {
+		return err
+	}
+	if len(data)+1 > RelayJSONLimit {
+		return fmt.Errorf("%w: relay record too large", ErrInvalid)
+	}
+	if err := s.atomic(path, append(data, '\n')); err != nil {
+		return err
+	}
+	// Publication may already be authoritative if this final durability step
+	// fails. Never roll it back or let a retry overwrite the consumed request.
+	syncDir := s.syncDir
+	if syncDir == nil {
+		syncDir = syncDirectory
+	}
+	return syncDir(filepath.Dir(path))
 }
 
 // Put atomically publishes a complete validated state file.

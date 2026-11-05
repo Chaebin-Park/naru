@@ -4,10 +4,30 @@ import (
 	"bytes"
 	"github.com/Chaebin-Park/naru/internal/config"
 	"github.com/Chaebin-Park/naru/internal/runner"
+	"github.com/Chaebin-Park/naru/internal/status"
 	"os"
 	"path/filepath"
 	"testing"
 )
+
+func TestRelayRequestResetsBreaker(t *testing.T) {
+	root := t.TempDir()
+	rep := status.Report{Mode: "m", Checks: []status.CheckStatus{{Check: "c", State: status.Missing, Reason: "relay_pending", Relay: &status.RelayStatus{PacketID: "first"}}}}
+	var stdout, stderr bytes.Buffer
+	if code := block(root, StopInput{}, 1, reportFingerprint(rep), "pending", &stdout, &stderr); code != Block {
+		t.Fatal(code)
+	}
+	rep.Checks[0].Relay.PacketID = "second"
+	if code := block(root, StopInput{StopHookActive: true}, 1, reportFingerprint(rep), "pending", &stdout, &stderr); code != Block {
+		t.Fatal("new request reused prior no-progress count", code)
+	}
+	if _, err := os.Stat(unverifiedPath(root)); !os.IsNotExist(err) {
+		t.Fatalf("new request created NOT VERIFIED marker: %v", err)
+	}
+	if code := block(root, StopInput{StopHookActive: true}, 1, reportFingerprint(rep), "pending", &stdout, &stderr); code != Allow {
+		t.Fatal("unchanged new request did not retain no-progress behavior", code)
+	}
+}
 
 func TestBreakerBlocksWhenUnverifiedCannotBeSaved(t *testing.T) {
 	root := t.TempDir()

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/Chaebin-Park/naru/internal/config"
 	"github.com/Chaebin-Park/naru/internal/environment"
@@ -98,6 +99,9 @@ func evaluateCheck(root string, cfg *config.Config, name string) (row CheckStatu
 	}
 	row.Record = e.Record
 	row.Receipt = e.Legacy
+	if e.Relay != nil {
+		return evaluateRelay(root, cfg, name, *e.Relay, time.Now().UTC())
+	}
 	if r := e.Record; r != nil {
 		row.RunID = &r.RunID
 		row.Provenance = &r.Provenance

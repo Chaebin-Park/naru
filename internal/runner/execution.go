@@ -25,7 +25,7 @@ import (
 var ErrRecovery = errors.New("interrupted execution needs manual recovery")
 
 type executionStore interface {
-	Current(string) (*receipt.Record, error)
+	CurrentEvidence(string) (receipt.Evidence, error)
 	Begin(receipt.Record) error
 	Put(receipt.Record) error
 }
@@ -68,11 +68,11 @@ func runState(root string, cfg *config.Config, name string, opt Options, openLog
 	if opt.store != nil {
 		store = opt.store(root)
 	}
-	old, err := store.Current(name)
+	current, err := store.CurrentEvidence(name)
 	if err != nil {
 		return Outcome{}, fmt.Errorf("read current execution: %w", err)
 	}
-	if old != nil && (old.Phase == receipt.PhaseRunning || (old.Inputs.Reason != nil && *old.Inputs.Reason == "owner_lost")) {
+	if old := current.Record; old != nil && (old.Phase == receipt.PhaseRunning || (old.Inputs.Reason != nil && *old.Inputs.Reason == "owner_lost")) {
 		return Outcome{}, fmt.Errorf("%w: %s run %s; inspect and stop surviving check processes, then preserve and move its current state before retrying", ErrRecovery, name, old.RunID)
 	}
 	// Read after acquiring the lock so a delayed request does not use stale config.

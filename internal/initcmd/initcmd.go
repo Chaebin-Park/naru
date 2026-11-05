@@ -67,7 +67,7 @@ func Run(root string, force bool) (Result, error) {
 	gi := filepath.Join(root, config.Dir, ".gitignore")
 	if _, err := os.Stat(gi); errors.Is(err, fs.ErrNotExist) {
 		// Receipts, logs and local mode are per-working-copy evidence, not source.
-		if err := os.WriteFile(gi, []byte("receipts/\nlogs/\nstate/\n"), 0o644); err != nil { // #nosec G306 -- Generated config and ignore rules are shareable source files, not private execution state.
+		if err := os.WriteFile(gi, []byte("receipts/\nlogs/\nstate/\nrelay/\n"), 0o644); err != nil { // #nosec G306 -- Generated config and ignore rules are shareable source files, not private execution state.
 			return res, err
 		}
 		res.Created = append(res.Created, filepath.Join(config.Dir, ".gitignore"))

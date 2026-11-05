@@ -52,10 +52,11 @@ const (
 
 // Env lets tests inject I/O and the working directory.
 type Env struct {
-	Stdin  io.Reader
-	Stdout io.Writer
-	Stderr io.Writer
-	Dir    string
+	Context context.Context // optional parent cancellation for relay commands
+	Stdin   io.Reader
+	Stdout  io.Writer
+	Stderr  io.Writer
+	Dir     string
 }
 
 // Main runs naru with os-level I/O.
@@ -77,6 +78,7 @@ Usage:
   naru hooks install [--force]        install a Git pre-push hook (preserve existing hooks by default)
   naru baseline extract|diff|approve [--json] <surface>  extract a candidate or compare it to a baseline
   naru policy list|test|check|bootstrap|approve [--json]  inspect policies and approve violation reductions
+  naru relay new|submit [--json]      request and submit human-executed check evidence
   naru version
 
 Exit codes: 0 done, 1 not done, 64 usage/config error, 70 internal error, 130 interrupted.
@@ -116,6 +118,8 @@ func Run(args []string, env Env) (code int) {
 		return cmdHooks(args[1:], env)
 	case "baseline":
 		return cmdBaseline(args[1:], env)
+	case "relay":
+		return cmdRelay(args[1:], env)
 	case "policy":
 		return cmdPolicy(args[1:], env)
 	case "version", "--version":

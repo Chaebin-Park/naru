@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "packet_id": "REPLACE_WITH_PACKET_ID",
+  "packet_hash": "REPLACE_WITH_PACKET_HASH",
+  "check": "example-check",
+  "submitted_by": "REPLACE_WITH_REVIEWER",
+  "started_at": "REPLACE_WITH_UTC_START",
+  "finished_at": "REPLACE_WITH_UTC_FINISH",
+  "before_input_digest": {
+    "hash": "REPLACE_WITH_OBSERVED_INPUT_HASH",
+    "file_count": 1,
+    "file_source": "walk"
+  },
+  "after_input_digest": {
+    "hash": "REPLACE_WITH_OBSERVED_INPUT_HASH",
+    "file_count": 1,
+    "file_source": "walk"
+  },
+  "result": "pass",
+  "exit_code": 0,
+  "tool_versions": [{"name": "example-tool", "version": "REPLACE_WITH_VERSION"}],
+  "artifacts": [{"name": "execution.log", "path": "execution.log", "sha256": "REPLACE_WITH_ARTIFACT_SHA256"}]
+}

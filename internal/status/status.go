@@ -2,6 +2,8 @@
 package status
 
 import (
+	"time"
+
 	"github.com/Chaebin-Park/naru/internal/config"
 	"github.com/Chaebin-Park/naru/internal/receipt"
 )
@@ -28,6 +30,14 @@ type CheckStatus struct {
 	State       State               `json:"state"`
 	CurrentHash string              `json:"current_hash"`
 	Receipt     *receipt.Receipt    `json:"receipt,omitempty"`
+	Relay       *RelayStatus        `json:"relay,omitempty"`
+}
+
+// RelayStatus exposes provenance and validity times, not submitted artifacts.
+type RelayStatus struct {
+	PacketID   string     `json:"packet_id"`
+	AcceptedAt *time.Time `json:"accepted_at,omitempty"`
+	ExpiresAt  time.Time  `json:"expires_at"`
 }
 
 // Report is the status of every check a mode requires.

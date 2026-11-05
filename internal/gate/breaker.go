@@ -75,6 +75,9 @@ func reportFingerprint(rep status.Report) string {
 		if c.Receipt != nil {
 			_, _ = fmt.Fprintf(h, "|%s|%s|%d", c.Receipt.FinishedAt, c.Receipt.Result, c.Receipt.ExitCode)
 		}
+		if c.Relay != nil {
+			_, _ = fmt.Fprintf(h, "|relay:%s|%s", c.Relay.PacketID, c.Reason)
+		}
 		h.Write([]byte{'\n'})
 	}
 	return hex.EncodeToString(h.Sum(nil))

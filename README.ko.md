@@ -199,3 +199,7 @@ checks:
 `naru policy list`는 `.naru/policy.yml`을 검증하고, `naru policy test [rule-id]`는 규칙에 연결된 정상·위반 fixture를 실제로 실행합니다. `naru policy check`는 전체 검사 결과를 갱신해 기존·신규·해결 위반을 구분합니다. 기존 위반은 경고하고 신규 위반은 차단합니다. 도구 출력이 없거나 불완전하면 해결로 인정하지 않습니다.
 
 터미널에서 `naru policy bootstrap`으로 처음 알려진 위반을 승인하고, 이후 `naru policy approve`로 줄어든 목록만 승인합니다. 저장 전에 검토한 후보와 현재 입력을 다시 확인합니다. 위반 추가나 규칙 정의 변경에 따른 이전은 승인할 수 없습니다. 정책 저장소는 계약 기준본과 분리되며 Stop/pre-push 요구사항에 자동으로 추가되지 않습니다. [형식·명령·제한사항](docs/policy.md)을 참고하세요.
+
+## 사용자 중계 검사
+
+사람이 다른 환경에서 검사해야 한다면 `naru relay new --target 'test workstation' --artifact execution.log CHECK`로 요청하고, `naru relay submit --file submission.json PACKET_ID`로 결과와 산출물 해시를 제출합니다. 요청을 만들면 해당 검사의 현재 증거가 대기 상태로 바뀝니다. 유효한 `human-relayed` 성공은 로컬 Stop/pre-push의 근거가 될 수 있지만, CI는 `naru check --evidence ci`를 별도로 실행해야 합니다. NARU는 원격 명령을 실행하거나 제출자의 진술을 인증하지 않습니다. [요청·제출·만료·신뢰 한계](docs/relay.md)를 참고하세요.

@@ -260,3 +260,7 @@ A [Spring Boot public-example pack](packs/spring-boot/README.md) now demonstrate
 `naru policy list` validates `.naru/policy.yml`; `naru policy test [rule-id]` runs bound pass/violation fixtures. `naru policy check` refreshes complete findings and separates known, new and resolved violations. Known violations warn; new violations block. Missing or incomplete tool output cannot count as resolved.
 
 Use terminal-only `naru policy bootstrap` once to approve the initial known set, then `naru policy approve` for reductions. Both recheck the reviewed candidate and current inputs. Approval cannot add violations or migrate changed rule definitions. Policy storage is separate from contract baselines, and these commands do not implicitly add Stop/pre-push requirements. See [policy format, commands and limitations](docs/policy.md).
+
+## Human-relayed checks
+
+Use `naru relay new --target 'test workstation' --artifact execution.log CHECK` when a person must run a check elsewhere, then `naru relay submit --file submission.json PACKET_ID` to validate the result and artifact hashes. Issuing a request replaces that check's current evidence with pending evidence. Valid `human-relayed` success can satisfy local Stop/pre-push; CI must execute `naru check --evidence ci` independently. NARU neither runs remote commands nor authenticates the person's claim. See [request, submission, expiry and trust limits](docs/relay.md).

@@ -31,6 +31,7 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 - Add a shared glossary and align Korean terminology across current feature and design documents.
 
 ### Added
+- Input-bound human relay requests and strict artifact-backed submissions with separate schema 3 provenance, expiring single-check authority, replay rejection and independent CI reruns. Request issuance supersedes previous evidence; no remote command or transfer is performed.
 - Codex `apply_patch` protection for policy/config/evidence paths, shared hook payload acceptance tests, and inactive Claude Code/Codex connection templates with installation/removal guidance. Recorded Claude Code and Codex live missing/pass, stale/recheck and NOT VERIFIED paths, including headless workspace-trust limitations.
 - Thin policy index linking existing rules, rationale and executable fixtures; complete known/new/resolved classification, terminal-only initial bootstrap and shrink-only approval, with independent policy storage and fresh candidate revalidation. No implicit Stop/pre-push integration.
 - Bounded Spring Boot 3.5.16 public-example pack with profile-specific API/routes, SQL hashes, configuration-key extraction, fresh build exports and synthetic failure fixtures. Requires external Java/Maven/Python; no new Go dependencies or automatic activation.

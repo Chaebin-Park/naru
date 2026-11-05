@@ -8,6 +8,10 @@ Terms: [glossary](glossary.md). Live agent evidence: [verification](verification
 
 The [policy contract](policy.md) adds strict rule indexing, executable fixtures, complete findings, explicit bootstrap and reduction-only approval. Policy authority is separate from contract baselines and ordinary check receipts. Missing coverage, stale candidates and changed definitions block approval; this task does not integrate policy commands into Stop/pre-push automatically. The older command table below remains historical for non-policy commands.
 
+## Relay addition (NARU-014)
+
+[Human relay](relay.md) uses schema 3 `human-relay-v1` evidence in the current check slot. Existing schema 2 local runs and legacy compatibility keep their meanings. Requests supersede current evidence with pending authority; accepted artifact-backed results remain subject to current input/definition, expiry and artifact hash checks. Provenance stays human-relayed; CI runs its own actual checks.
+
 ## Commands and exit codes
 
 Flags precede positional arguments. Subcommand flag parsing uses Go's `flag` package. Invalid flags return 64; top-level `help`, `-h`, and `--help` return 0. Subcommand help currently returns 64.
