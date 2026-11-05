@@ -3,7 +3,7 @@
   "id": "NARU-013",
   "previous": "NARU-012",
   "base": "6719ce63ead056f87b0b50a64d38c8e3fe63f947",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Package Claude Code and Codex hook integration with explicit support and verification boundaries",
     "profile": "code-v1",
@@ -33,6 +33,6 @@
       "Static analysis and task-gate tests are necessary but do not replace manual live-session acceptance. Do not close the task while a required live-session condition remains unverified."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "5179dee590cb2d4c23b56293a33087ec83b12608",
+  "evidence": "6f24e8ef0e251f0399e2aa75b18593fefc8bccf0e06a08b0a799bbc65ca97a24"
 }
