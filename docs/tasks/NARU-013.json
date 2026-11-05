@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "id": "NARU-013",
+  "previous": "NARU-012",
+  "base": "6719ce63ead056f87b0b50a64d38c8e3fe63f947",
+  "status": "active",
+  "plan": {
+    "title": "Package Claude Code and Codex hook integration with explicit support and verification boundaries",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Shared missing, pass, edited-input stale and NOT VERIFIED scenarios produce the documented hook decisions for validated Claude Code and Codex payload fixtures; malformed supported payloads cannot silently bypass protected mutations.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestAgentHookPayloads"
+      },
+      {
+        "id": "AC-2",
+        "description": "Codex apply_patch add, update, delete and move operations targeting protected state are rejected, including multi-file and relative-path patches, while ordinary source edits and read-only operations remain allowed.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCodexPatchGuard"
+      },
+      {
+        "id": "AC-3",
+        "description": "Version-scoped integration templates parse, select supported event and tool names, invoke the checked binary contract, and leave user/global settings untouched; installation and removal instructions preserve unrelated settings.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestAgentConnectionTemplates"
+      }
+    ],
+    "limitations": [
+      "Hook support is version-scoped to locally inspected agent schemas/runtime behavior; a replayed payload is not proof of a live agent integration.",
+      "NARU-013 remains incomplete until required Claude Code and Codex live missing/pass/stale/NOT VERIFIED evidence is recorded with agent version, code revision, isolation and observed decisions. Existing historical Claude evidence is not silently relabeled as current verification.",
+      "Prepare synthetic temporary test projects and launch instructions before requesting any still-required approval for paid/subscription agent sessions or persistent settings changes. No automatic paid agent invocation, user configuration overwrite, install, push, tag or release.",
+      "PreToolUse parsing is a guard rail rather than a filesystem security boundary. Agent-disabled hooks and direct same-user tampering remain outside the guarantee; CI reruns remain authoritative.",
+      "No policy-to-Stop integration, relay, orchestration product or expansion of platform runtime claims; these belong to later tasks.",
+      "Static analysis and task-gate tests are necessary but do not replace manual live-session acceptance. Do not close the task while a required live-session condition remains unverified."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
