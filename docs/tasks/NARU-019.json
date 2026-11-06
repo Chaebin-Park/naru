@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "id": "NARU-019",
+  "previous": "NARU-018",
+  "base": "00c423b3594a7a1c4e25b5a907311dc79e9dca59",
+  "status": "active",
+  "plan": {
+    "title": "Measure large-workspace status and validate reliability across available runtimes",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "A 10000-file 100MiB workspace passes current evidence, becomes stale after mutation and documents restoration semantics; a reusable benchmark measures the same workload.",
+        "test": "github.com/Chaebin-Park/naru/internal/status/TestLargeWorkspaceStatus"
+      },
+      {
+        "id": "AC-2",
+        "description": "Duplicate execution preserves the original owner and does not publish false success.",
+        "test": "github.com/Chaebin-Park/naru/internal/runner/TestDuplicateExecutionCannotChangeOwner"
+      },
+      {
+        "id": "AC-3",
+        "description": "Cancellation recovery remains blocked when child cleanup is uncertain across processes.",
+        "test": "github.com/Chaebin-Park/naru/internal/runner/TestCancellationRecoveryAcrossProcess"
+      },
+      {
+        "id": "AC-4",
+        "description": "Storage completion failure leaves unsatisfied running authority.",
+        "test": "github.com/Chaebin-Park/naru/internal/runner/TestCompletionFailureLeavesRunningAuthority"
+      }
+    ],
+    "limitations": [
+      "Record measured p95 latency and memory with workload, revision, environment and sample count; 2 seconds is an initial target, not an unmeasured guarantee.",
+      "Use installed toolchains and local container images only. Go 1.23 and Windows runtime may remain unverified; cross-vet is not runtime evidence.",
+      "Per-resource locking and before/after hashing do not guarantee global snapshots or detection of A-to-B-to-A changes.",
+      "No actual pushes, remote CI, releases, installations or settings changes."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
