@@ -3,7 +3,7 @@
   "id": "NARU-022",
   "previous": "NARU-021",
   "base": "6c4144bbb0d903844fe9612db8f98b325345c5a7",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Audit MVP acceptance evidence, reproduce public scenarios and obtain independent review",
     "profile": "code-v1",
@@ -30,6 +30,6 @@
       "No release, tags, main push, repository settings or system tool installation. User deadline is 2026-11-06 17:30 Asia/Seoul; preserve incomplete acceptance honestly."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "c1cf9990d12a5475e26f2aaf69e8e54c200dd391",
+  "evidence": "1e290bacb6ff5d95701f87420913f5c5ad8b0fd0f6423bf3d58b4ffb957e1485"
 }
