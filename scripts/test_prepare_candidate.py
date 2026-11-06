@@ -1,5 +1,6 @@
 """Regression checks for candidate source isolation; only temporary repositories."""
 import os
+import json
 from pathlib import Path
 import platform
 import shutil
@@ -18,6 +19,7 @@ class CandidateIsolation(unittest.TestCase):
         self.repo = self.base / 'repo'
         self.repo.mkdir()
         self.output = self.base / 'output'
+        self.expected = 'committed-source'
         self.env = dict(os.environ, GOWORK='off', GOFLAGS='', GOENV='off', GOTOOLCHAIN='local')
         self.git('init', '-q')
         (self.repo / 'go.mod').write_text('module github.com/Chaebin-Park/naru\n\ngo 1.23\n')
@@ -38,7 +40,7 @@ class CandidateIsolation(unittest.TestCase):
         osname = {'Darwin':'darwin','Linux':'linux'}[platform.system()]
         arch = {'arm64':'arm64','aarch64':'arm64','x86_64':'amd64'}[platform.machine()]
         actual = subprocess.check_output([str(self.output / f'naru-{osname}-{arch}')], text=True)
-        self.assertEqual(actual.strip(), 'committed-source')
+        self.assertEqual(actual.strip(), self.expected)
         self.assertEqual((self.output/'REVISION').read_text().strip(), self.git('rev-parse','HEAD').strip())
 
     def test_ignored_go_source_is_excluded(self):
@@ -51,6 +53,35 @@ class CandidateIsolation(unittest.TestCase):
         self.env.update(GOFLAGS='-overlay='+str(self.base/'missing-overlay.json'),
                         GOWORK=str(self.base/'missing-workspace.work'),
                         GOTOOLCHAIN='not-an-installed-toolchain')
+        self.build()
+
+    def test_valid_overlay_cannot_replace_source(self):
+        replacement = self.base/'replacement.go'
+        replacement.write_text('package main\nimport "fmt"\nfunc main(){fmt.Println("overlay-source")}\n')
+        overlay = self.base/'overlay.json'
+        overlay.write_text(json.dumps({'Replace': {str(self.main): str(replacement)}}))
+        self.env['GOFLAGS'] = '-overlay='+str(overlay)
+        self.build()
+
+    def test_ambient_attributes_cannot_omit_committed_source(self):
+        extra = self.repo/'cmd/naru/extra.go'
+        extra.write_text('package main\nimport "fmt"\nfunc init(){fmt.Println("committed-init")}\n')
+        self.git('add', '.')
+        self.git('-c','user.name=Test','-c','user.email=test@example.invalid','-c','commit.gpgsign=false','commit','-qm','extra source')
+        attributes = self.base/'attributes'
+        attributes.write_text('cmd/naru/extra.go export-ignore\n')
+        self.git('config','core.attributesFile',str(attributes))
+        self.expected = 'committed-init\ncommitted-source'
+        self.build()
+
+    def test_git_replacement_does_not_substitute_revision(self):
+        original = self.git('rev-parse','HEAD').strip()
+        self.main.write_text('package main\nimport "fmt"\nfunc main(){fmt.Println("replacement-source")}\n')
+        self.git('add','.')
+        self.git('-c','user.name=Test','-c','user.email=test@example.invalid','-c','commit.gpgsign=false','commit','-qm','replacement')
+        replacement = self.git('rev-parse','HEAD').strip()
+        self.git('checkout','--detach',original)
+        self.git('replace',original,replacement)
         self.build()
 
     def test_live_edit_after_snapshot_does_not_enter_build(self):

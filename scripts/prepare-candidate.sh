@@ -1,6 +1,8 @@
 #!/bin/sh
 # Build source-bound, unpublished candidates outside the checkout.
 set -eu
+GIT_NO_REPLACE_OBJECTS=1
+export GIT_NO_REPLACE_OBJECTS
 if [ "$#" -ne 1 ]; then
   echo 'usage: sh scripts/prepare-candidate.sh NEW_ABSOLUTE_OUTPUT_DIRECTORY' >&2
   exit 64
@@ -26,29 +28,44 @@ revision=$(git rev-parse HEAD)
 version="candidate-$(git rev-parse --short=12 "$revision")"
 source_dir=$(mktemp -d "${TMPDIR:-/tmp}/naru-candidate-source.XXXXXX")
 trap 'rm -rf "$source_dir"' 0
-# Export the resolved commit once; ignored files and later edits cannot enter builds.
-git archive --format=tar -o "$source_dir/source.tar" "$revision"
-python3 - "$source_dir" <<'PYCODE'
+# Read exact tree/blob objects; archive attributes must not omit/substitute source.
+python3 - "$source_dir" "$revision" <<'PYCODE'
+import io
+import os
+import subprocess
 import sys
-import tarfile
 from pathlib import Path, PurePosixPath
 root = Path(sys.argv[1]) / 'source'
 root.mkdir()
-with tarfile.open(Path(sys.argv[1]) / 'source.tar') as archive:
-    for entry in archive.getmembers():
-        path = PurePosixPath(entry.name)
-        if path.is_absolute() or '..' in path.parts or not (entry.isdir() or entry.isfile()):
-            raise SystemExit('candidate source must contain only safe directories and regular files')
-        target = root.joinpath(*path.parts)
-        if entry.isdir():
-            target.mkdir(parents=True, exist_ok=True)
-        else:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            content = archive.extractfile(entry)
-            if content is None:
-                raise SystemExit('missing archive member')
-            with content:
-                target.write_bytes(content.read())
+listing = subprocess.check_output(['git', 'ls-tree', '-rz', '--full-tree', sys.argv[2]])
+entries = []
+for record in listing.split(b'\0'):
+    if not record:
+        continue
+    metadata, name = record.split(b'\t', 1)
+    mode, kind, oid = metadata.split()
+    path = PurePosixPath(os.fsdecode(name))
+    if (mode not in (b'100644', b'100755') or kind != b'blob'
+            or path.is_absolute() or '..' in path.parts):
+        raise SystemExit('candidate source requires safe regular tracked files')
+    entries.append((mode, oid, path))
+objects = subprocess.check_output(['git', 'cat-file', '--batch'],
+    input=b''.join(oid+b'\n' for _, oid, _ in entries))
+stream = io.BytesIO(objects)
+for mode, oid, path in entries:
+    actual_oid, kind, size = stream.readline().strip().split()
+    if actual_oid != oid or kind != b'blob':
+        raise SystemExit('unexpected Git object response')
+    size = int(size)
+    data = stream.read(size)
+    if len(data) != size or stream.read(1) != b'\n':
+        raise SystemExit('incomplete Git object response')
+    target = root.joinpath(*path.parts)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(data)
+    target.chmod(0o755 if mode == b'100755' else 0o644)
+if stream.read():
+    raise SystemExit('unexpected trailing Git objects')
 PYCODE
 cd "$source_dir/source"
 # Disable source overlays, external workspaces, saved Go settings and auto-downloads.
