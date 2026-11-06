@@ -224,3 +224,5 @@ checks:
 [실행 환경·신뢰성 검증·판정 성능](docs/reliability-performance.md): 10,000개 파일·100MiB warm-cache 측정에서 초기 p95 2초 목표를 충족했습니다. Linux 검증 범위는 제한적이며 Windows 실행·최소 Go 버전의 전체 테스트는 미검증이며 Go 1.23 Web smoke 결과는 아래에 기록했습니다.
 
 [Web clean CI smoke](docs/ci-smoke.md)는 커밋된 소스만 사용하는 실행기와 고정된 GitHub Actions workflow를 제공합니다. Ubuntu·Go 1.23.12에서 실제 원격 실패·복구 검증을 마쳤으며 해당 문서에 리비전과 실행 링크를 기록했습니다.
+
+[MVP 수용 근거와 남은 조건](docs/mvp-acceptance.md)에서 검증된 동작과 미완료 통합 검증·환경 제한을 구분합니다.
