@@ -3,7 +3,7 @@
   "id": "NARU-019",
   "previous": "NARU-018",
   "base": "00c423b3594a7a1c4e25b5a907311dc79e9dca59",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Measure large-workspace status and validate reliability across available runtimes",
     "profile": "code-v1",
@@ -36,6 +36,6 @@
       "No actual pushes, remote CI, releases, installations or settings changes."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "3f537b122f9e1a853a8436cfff4b436eaa7c3a11",
+  "evidence": "3c6d58d48aacb79127a4bde4c9279f0208c6af9c7102c2bcb6f35bcf6a57b6fa"
 }
