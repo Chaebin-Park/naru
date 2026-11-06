@@ -70,7 +70,7 @@ const usage = `naru — verify that an AI agent's work is actually done.
 Usage:
   naru init [--force]                 create .naru/config.yaml for this repository
   naru check [--mode M] [check...]    run checks and record receipts
-  naru status [--mode M] [--json]     show whether required checks pass for the current files
+  naru status [--mode M] [--json | --markdown]     show whether required checks pass for the current files
   naru mode [name | --clear]          show or set the mode for this working copy
   naru gate stop                      agent Stop hook: exit 2 with reasons unless satisfied
   naru gate pre-tool                  agent PreToolUse hook: block edits to .naru/ and mode changes
@@ -289,7 +289,12 @@ func cmdStatus(args []string, env Env) int {
 	fs := newFlags("status", env)
 	modeFlag := fs.String("mode", "", "mode to evaluate (default: current mode)")
 	asJSON := fs.Bool("json", false, "print a JSON report")
+	asMarkdown := fs.Bool("markdown", false, "print a Markdown report")
 	if err := fs.Parse(args); err != nil {
+		return exitUsage
+	}
+	if *asJSON && *asMarkdown {
+		_, _ = fmt.Fprintln(env.Stderr, "naru: choose either --json or --markdown")
 		return exitUsage
 	}
 	root, cfg, code := project(env)
@@ -310,6 +315,10 @@ func cmdStatus(args []string, env Env) int {
 		enc := json.NewEncoder(env.Stdout)
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(rep); err != nil {
+			return exitInternal
+		}
+	} else if *asMarkdown {
+		if err := status.WriteMarkdown(env.Stdout, rep); err != nil {
 			return exitInternal
 		}
 	} else {

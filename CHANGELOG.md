@@ -8,6 +8,8 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 
 ### Changed
 
+- Add `status --markdown` to render the common status verdict, reasons, provenance and NOT VERIFIED warning as a shareable table.
+
 - Evaluate relay validity at one captured instant per status report.
 
 - New executions use strict schema 2 state with immutable history, per-check OS locks, recorded cancellation, and before/after input verification. Legacy receipts are preserved read-only and require rerunning before they can satisfy the new policy.

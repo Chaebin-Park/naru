@@ -26,6 +26,8 @@ Agents often report "tests pass" without running them, or run them and then keep
 
 `status --json` now reports schema 2, including explicit reason codes and NOT VERIFIED presence. Corrupt evidence produces an `invalid` row and exit 1; IO errors return 70. Before/after hashing is not a snapshot and can miss A→B→A changes.
 
+Use `naru status --markdown` for a shareable table of the same verdict, reason codes and evidence sources. `--json` and `--markdown` are mutually exclusive. NOT VERIFIED is shown separately and still blocks pre-push even when required checks pass.
+
 A gate decides whether an action can continue. It compares receipts with the current files. It does not run checks.
 
 ## How it fits together

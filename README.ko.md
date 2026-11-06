@@ -210,3 +210,5 @@ checks:
 ## 사용자 중계 검사
 
 사람이 다른 환경에서 검사해야 한다면 `naru relay new --target 'test workstation' --artifact execution.log CHECK`로 요청하고, `naru relay submit --file submission.json PACKET_ID`로 결과와 산출물 해시를 제출합니다. 요청을 만들면 해당 검사의 현재 증거가 대기 상태로 바뀝니다. 유효한 `human-relayed` 성공은 로컬 Stop/pre-push의 근거가 될 수 있지만, CI는 `naru check --evidence ci`를 별도로 실행해야 합니다. NARU는 원격 명령을 실행하거나 제출자의 진술을 인증하지 않습니다. [요청·제출·만료·신뢰 한계](docs/relay.md)를 참고하세요.
+
+`naru status --markdown`은 같은 판정·사유 코드·증거 출처를 Markdown 표로 출력합니다. `--json`과 동시에 사용할 수 없습니다. NOT VERIFIED는 별도 표시하며, 필수 검사가 통과해도 pre-push를 계속 차단합니다.
