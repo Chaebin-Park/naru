@@ -53,13 +53,19 @@ func unverifiedState(root string) UnverifiedState {
 // EvaluateState holds each check's lock while reading its state and inputs.
 // Busy checks are never inferred to pass from an older record.
 func EvaluateState(root string, cfg *config.Config, mode string) (Report, error) {
+	return EvaluateAt(root, cfg, mode, time.Now().UTC())
+}
+
+// EvaluateAt evaluates current files and evidence at one instant for the entire
+// report. It does not reconstruct historical files or evidence.
+func EvaluateAt(root string, cfg *config.Config, mode string, now time.Time) (Report, error) {
 	names, err := cfg.ModeChecks(mode)
 	if err != nil {
 		return Report{}, err
 	}
 	rep := Report{Schema: 2, Mode: mode, Satisfied: true, Unverified: unverifiedState(root)}
 	for _, name := range names {
-		row, err := evaluateCheck(root, cfg, name)
+		row, err := evaluateCheck(root, cfg, name, now)
 		if err != nil {
 			return Report{}, fmt.Errorf("check %q: %w", name, err)
 		}
@@ -70,7 +76,7 @@ func EvaluateState(root string, cfg *config.Config, mode string) (Report, error)
 	}
 	return rep, nil
 }
-func evaluateCheck(root string, cfg *config.Config, name string) (row CheckStatus, retErr error) {
+func evaluateCheck(root string, cfg *config.Config, name string, now time.Time) (row CheckStatus, retErr error) {
 	row.Check = name
 	set := func(state State, reason, message string) (CheckStatus, error) {
 		row.State = state
@@ -100,7 +106,7 @@ func evaluateCheck(root string, cfg *config.Config, name string) (row CheckStatu
 	row.Record = e.Record
 	row.Receipt = e.Legacy
 	if e.Relay != nil {
-		return evaluateRelay(root, cfg, name, *e.Relay, time.Now().UTC())
+		return evaluateRelay(root, cfg, name, *e.Relay, now)
 	}
 	if r := e.Record; r != nil {
 		row.RunID = &r.RunID

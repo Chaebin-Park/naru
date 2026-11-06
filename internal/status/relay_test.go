@@ -193,3 +193,31 @@ func TestRelayStatus(t *testing.T) {
 		})
 	}
 }
+
+func TestReportEvaluationTime(t *testing.T) {
+	root, cfg, record := relayFixture(t, true)
+	cases := []struct {
+		name   string
+		at     time.Time
+		state  State
+		reason string
+	}{
+		{"before_acceptance", record.Acceptance.AcceptedAt.Add(-time.Nanosecond), Invalid, "relay_clock_invalid"},
+		{"accepted", record.Acceptance.AcceptedAt, Pass, "relay_verified"},
+		{"before_expiry", record.Packet.ExpiresAt.Add(-time.Nanosecond), Pass, "relay_verified"},
+		{"expired", record.Packet.ExpiresAt, Stale, "relay_expired"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			for i := 0; i < 2; i++ {
+				rep, err := EvaluateAt(root, cfg, "m", tc.at)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if len(rep.Checks) != 1 || rep.Checks[0].State != tc.state || rep.Checks[0].Reason != tc.reason || rep.Satisfied != (tc.state == Pass) {
+					t.Fatalf("unexpected report: %+v", rep)
+				}
+			}
+		})
+	}
+}

@@ -113,3 +113,7 @@ The repository now includes a limited Spring MVC public sample and local pack wi
 ## NARU-033: unresolved process groups
 
 Checks and extractors inspect their Unix process group after the shell exits. Remaining members or inspection errors require manual recovery even when `exec.ExitError` hides `exec.ErrWaitDelay`. Check results retain cancellation/timeout/failure while input evidence becomes unreadable with `owner_lost`; extractor candidates become `recovery/owner_lost`. Caller cancellation retains exit 130. Inspection is bounded and read-only: it does not repeatedly signal a potentially reused group ID. This is not a process sandbox or automatic orphan cleanup.
+
+## NARU-018.1: report evaluation time
+
+Each status evaluation captures one UTC instant and applies it to every relay check in that report. Internal callers can supply the instant with `status.EvaluateAt` to compare reports at acceptance and expiry boundaries. Files and stored evidence are still read from the current workspace; this is not historical replay or an atomic filesystem snapshot. Surface/policy aggregation and Markdown reporting remain pending under NARU-018.
