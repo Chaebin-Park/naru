@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "id": "NARU-018.3",
+  "previous": "NARU-018.2",
+  "base": "204575a9ba555a0ba1d9e9453e0c9212094474c3",
+  "status": "active",
+  "plan": {
+    "title": "Require explicitly selected surface baselines in common mode decisions",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Mode surface mappings reject unknown modes, unknown surfaces and duplicate entries while preserving existing check modes.",
+        "test": "github.com/Chaebin-Park/naru/internal/config/TestModeSurfaces"
+      },
+      {
+        "id": "AC-2",
+        "description": "CLI, Stop and pre-push reject missing, unapproved, stale and changed surfaces and accept approved unchanged surfaces; narrowed mode does not weaken pre-push.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestSurfaceDecisionIntegration"
+      },
+      {
+        "id": "AC-3",
+        "description": "Surface evidence changes reset the Stop repetition fingerprint.",
+        "test": "github.com/Chaebin-Park/naru/internal/gate/TestSurfaceReportFingerprint"
+      }
+    ],
+    "limitations": [
+      "Explicit mode_surfaces opt-in; checks remain required in every mode. No automatic extraction or approval.",
+      "Policy shrink-only aggregation is a later NARU-018 slice.",
+      "Per-resource locking is not an atomic filesystem snapshot.",
+      "No pushes, releases, tool installation or repository settings changes."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
