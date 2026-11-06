@@ -8,6 +8,8 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 
 ### Changed
 
+- Add opt-in `mode_surfaces` requirements shared by status, Stop and pre-push. Extended reports use schema 3; check-only reports retain schema 2.
+
 - Add `status --markdown` to render the common status verdict, reasons, provenance and NOT VERIFIED warning as a shareable table.
 
 - Evaluate relay validity at one captured instant per status report.

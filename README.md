@@ -271,3 +271,5 @@ Use terminal-only `naru policy bootstrap` once to approve the initial known set,
 ## Human-relayed checks
 
 Use `naru relay new --target 'test workstation' --artifact execution.log CHECK` when a person must run a check elsewhere, then `naru relay submit --file submission.json PACKET_ID` to validate the result and artifact hashes. Issuing a request replaces that check's current evidence with pending evidence. Valid `human-relayed` success can satisfy local Stop/pre-push; CI must execute `naru check --evidence ci` independently. NARU neither runs remote commands nor authenticates the person's claim. See [request, submission, expiry and trust limits](docs/relay.md).
+
+Require selected contract baselines with `mode_surfaces: {code: [api]}`. CLI status, Stop and pre-push then require fresh, approved, unchanged surface evidence. Reports with selected surfaces use schema 3; check-only reports remain schema 2. See [required baselines](docs/baselines.md#required-baselines-in-a-mode).

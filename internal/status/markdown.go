@@ -14,7 +14,7 @@ func WriteMarkdown(w io.Writer, rep Report) error {
 	if rep.Satisfied {
 		outcome = "satisfied"
 	}
-	fmt.Fprintf(&b, "# NARU status\n\nMode: %s\n\nRequired checks: **%s**\n\n", markdownCell(rep.Mode), outcome)
+	fmt.Fprintf(&b, "# NARU status\n\nMode: %s\n\nRequired evidence: **%s**\n\n", markdownCell(rep.Mode), outcome)
 	if rep.Unverified.Present {
 		b.WriteString("**NOT VERIFIED:** an unverified record exists or cannot be inspected. Pre-push remains blocked.\n\n")
 	}
@@ -25,6 +25,12 @@ func WriteMarkdown(w io.Writer, rep Report) error {
 			evidence = string(row.Provenance.Kind)
 		}
 		fmt.Fprintf(&b, "| %s | %s | %s | %s |\n", markdownCell(row.Check), markdownCell(string(row.State)), markdownCell(evidence), markdownCell(row.Reason))
+	}
+	if len(rep.Surfaces) > 0 {
+		b.WriteString("\n| Surface | Baseline state |\n| --- | --- |\n")
+		for _, row := range rep.Surfaces {
+			fmt.Fprintf(&b, "| %s | %s |\n", markdownCell(row.Surface), markdownCell(row.State))
+		}
 	}
 	_, err := io.WriteString(w, b.String())
 	return err

@@ -28,12 +28,13 @@ const DefaultTimeout = 10 * time.Minute
 
 // Config is the parsed .naru/config.yaml.
 type Config struct {
-	Packs       []string            `yaml:"packs"`
-	Surfaces    map[string]Surface  `yaml:"surfaces"`
-	Version     int                 `yaml:"version"`
-	DefaultMode string              `yaml:"default_mode"`
-	Modes       map[string][]string `yaml:"modes"`
-	Checks      map[string]Check    `yaml:"checks"`
+	ModeSurfaces map[string][]string `yaml:"mode_surfaces"`
+	Packs        []string            `yaml:"packs"`
+	Surfaces     map[string]Surface  `yaml:"surfaces"`
+	Version      int                 `yaml:"version"`
+	DefaultMode  string              `yaml:"default_mode"`
+	Modes        map[string][]string `yaml:"modes"`
+	Checks       map[string]Check    `yaml:"checks"`
 	// Exclude lists glob patterns removed from every check's inputs.
 	Exclude []string `yaml:"exclude"`
 	Gate    Gate     `yaml:"gate"`
@@ -221,6 +222,21 @@ func (c *Config) Validate() error {
 			if _, ok := c.Checks[name]; !ok {
 				errs = append(errs, fmt.Errorf("mode %q references unknown check %q", mode, name))
 			}
+		}
+	}
+	for _, mode := range sortedKeys(c.ModeSurfaces) {
+		if _, ok := c.Modes[mode]; !ok {
+			errs = append(errs, fmt.Errorf("mode_surfaces references unknown mode %q", mode))
+		}
+		seen := map[string]bool{}
+		for _, name := range c.ModeSurfaces[mode] {
+			if _, ok := c.Surfaces[name]; !ok {
+				errs = append(errs, fmt.Errorf("mode %q references unknown surface %q", mode, name))
+			}
+			if seen[name] {
+				errs = append(errs, fmt.Errorf("mode %q repeats surface %q", mode, name))
+			}
+			seen[name] = true
 		}
 	}
 	if c.DefaultMode == "" {

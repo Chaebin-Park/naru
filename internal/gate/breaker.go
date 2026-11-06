@@ -80,6 +80,9 @@ func reportFingerprint(rep status.Report) string {
 		}
 		h.Write([]byte{'\n'})
 	}
+	for _, row := range rep.Surfaces {
+		_, _ = fmt.Fprintf(h, "surface:%s|%s|%s|%s|%s\n", row.Surface, row.State, row.InputDigest, row.CandidateDigest, row.BaselineRevision)
+	}
 	return hex.EncodeToString(h.Sum(nil))
 }
 

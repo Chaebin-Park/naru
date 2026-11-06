@@ -74,6 +74,9 @@ func EvaluateAt(root string, cfg *config.Config, mode string, now time.Time) (Re
 		}
 		rep.Checks = append(rep.Checks, row)
 	}
+	if err := evaluateSurfaces(root, cfg, &rep); err != nil {
+		return Report{}, err
+	}
 	return rep, nil
 }
 func evaluateCheck(root string, cfg *config.Config, name string, now time.Time) (row CheckStatus, retErr error) {

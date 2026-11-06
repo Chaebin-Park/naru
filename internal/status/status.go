@@ -42,6 +42,7 @@ type RelayStatus struct {
 
 // Report is the status of every check a mode requires.
 type Report struct {
+	Surfaces   []SurfaceStatus `json:"surfaces,omitempty"`
 	Schema     int             `json:"schema"`
 	Unverified UnverifiedState `json:"unverified"`
 	Mode       string          `json:"mode"`
@@ -52,4 +53,13 @@ type Report struct {
 // Evaluate computes the report for mode without running anything.
 func Evaluate(root string, cfg *config.Config, mode string) (Report, error) {
 	return EvaluateState(root, cfg, mode)
+}
+
+// SurfaceStatus is a required contract baseline evaluated against current inputs.
+type SurfaceStatus struct {
+	Surface          string `json:"surface"`
+	State            string `json:"state"`
+	InputDigest      string `json:"input_digest"`
+	CandidateDigest  string `json:"candidate_digest"`
+	BaselineRevision string `json:"baseline_revision"`
 }

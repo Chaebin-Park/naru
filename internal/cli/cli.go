@@ -336,13 +336,16 @@ func cmdStatus(args []string, env Env) int {
 			}
 			_, _ = fmt.Fprintln(env.Stdout, line)
 		}
+		for _, row := range rep.Surfaces {
+			_, _ = fmt.Fprintf(env.Stdout, "  surface %s: %s\n", row.Surface, row.State)
+		}
 		if rep.Unverified.Present {
 			_, _ = fmt.Fprintln(env.Stdout, "warning: NOT VERIFIED record exists or cannot be read; completion was allowed WITHOUT verification")
 		}
 		if rep.Satisfied {
-			_, _ = fmt.Fprintln(env.Stdout, "done: every required check passes for the current files")
+			_, _ = fmt.Fprintln(env.Stdout, "done: every required check and selected baseline passes for the current files")
 		} else {
-			_, _ = fmt.Fprintln(env.Stdout, "not done: run `naru check` for the checks above that are not pass")
+			_, _ = fmt.Fprintln(env.Stdout, "not done: rerun failing checks; extract and review required surface baselines")
 		}
 	}
 	if !rep.Satisfied {

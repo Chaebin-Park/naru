@@ -124,5 +124,10 @@ func BlockMessage(rep status.Report) string {
 	}
 	_, _ = fmt.Fprintf(&b, "Run `naru check %s`, fix any failures, and finish only after it passes. Do not edit .naru/ to get past this.\n",
 		strings.Join(pending, " "))
+	for _, row := range rep.Surfaces {
+		if row.State != "unchanged" {
+			fmt.Fprintf(&b, "Surface %s: %s. Run `naru baseline extract %s`, then `naru baseline diff %s`; review changes before explicit approval.\n", row.Surface, row.State, row.Surface, row.Surface)
+		}
+	}
 	return b.String()
 }

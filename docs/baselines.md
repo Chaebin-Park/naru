@@ -72,3 +72,11 @@ Approval evidence: `TestApprovalLifecycle`, `TestApprovalPreviewChanges`, `TestA
 ## Unresolved extractor cleanup
 
 After a Unix extractor exits, a bounded read-only process-group check detects remaining members even when an exit error hides the output wait limit. Remaining members or inspection errors publish `recovery/owner_lost`, never a reusable candidate. Caller interruption still returns exit 130. A subsequent extraction is refused until manual recovery. The runner does not repeatedly kill a numeric group ID after wait; the ID could belong to another group. Deliberately detached processes remain outside the process-group boundary.
+
+## Required baselines in a mode
+
+Opt in with `mode_surfaces: {code: [api]}` alongside the existing `modes` check lists. Referenced modes and surfaces must exist; duplicate surface entries are rejected. Each mode still requires at least one check. Merely declaring a surface or selecting a pack does not make approval mandatory.
+
+`status`, Stop and pre-push require each selected surface to have a fresh candidate and an approved, unchanged baseline. Missing, stale, busy, malformed and unapproved evidence cannot pass. These commands neither run extraction nor approve changes. Run `naru baseline extract api`, inspect `naru baseline diff api`, then explicitly review and approve the intended change.
+
+Reports with required surfaces use schema 3 and add `surfaces` rows containing state, input digest, candidate digest and baseline revision; check-only reports retain schema 2. JSON, text and Markdown use the same evaluation. Stop retains its documented NOT VERIFIED escape and selected mode; pre-push always evaluates the default mode and blocks on NOT VERIFIED. Surface progress changes the Stop repetition fingerprint. Locks protect individual resources, not a global filesystem snapshot. Policy violation reduction remains a separate workflow.
