@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "id": "NARU-018.4",
+  "previous": "NARU-018.3",
+  "base": "18b15a5114b0fba978d9460f52930d17b24215eb",
+  "status": "active",
+  "plan": {
+    "title": "Include opt-in policy evidence in shared completion decisions",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Policy mode mapping rejects undefined modes and preserves existing configurations.",
+        "test": "github.com/Chaebin-Park/naru/internal/config/TestModePolicy"
+      },
+      {
+        "id": "AC-2",
+        "description": "Status, Stop and pre-push share bootstrap/stale/new blocking and known/resolved/clean acceptance while preserving explicit shrink-only human approval.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestPolicyDecisionIntegration"
+      }
+    ],
+    "limitations": [
+      "mode_policy explicitly selects policy enforcement; no implicit execution or approval.",
+      "Known findings warn; resolved findings do not shrink the approved baseline without human approval, matching policy check.",
+      "Reports expose counts and digests without finding messages.",
+      "No push, release, installation or settings changes."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
