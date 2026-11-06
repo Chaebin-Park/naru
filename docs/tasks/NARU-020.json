@@ -3,7 +3,7 @@
   "id": "NARU-020",
   "previous": "NARU-019",
   "base": "7c592068e95921592fb013065f7e7b67192b22d7",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Prepare and execute clean-checkout CI smoke for the public Web example",
     "profile": "code-v1",
@@ -31,6 +31,6 @@
       "Pin action commits and explicit Go/Node versions; no local tool installation."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "b97669985eb030bfdc769226b715127c1e9fe7e7",
+  "evidence": "9279669a895fa5f3fd6921ca24897d134038f660ef5fdb081e0e41c2608de215"
 }
