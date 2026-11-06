@@ -3,7 +3,7 @@
   "id": "NARU-021",
   "previous": "NARU-020",
   "base": "fababf344c132dbc2a5ef2a074cbdaa184921f6a",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Prepare a reproducible local release candidate and document installation and migration evidence",
     "profile": "code-v1",
@@ -30,6 +30,6 @@
       "Review English and Korean installation guidance, migration, changelog and public artifact contents; record independent-review status separately in NARU-022."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "4a6fc3cab62240fdb985df2257acc450e957b390",
+  "evidence": "c2139f520f8a9c070ce4a53ef0bd1c74a740b3b461e00d807ff79bbc516bece7"
 }
