@@ -3,7 +3,7 @@
   "id": "NARU-018.1",
   "previous": "NARU-034",
   "base": "534639f482f2a57db97841d82d7ffbcc1bad12ff",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Evaluate every check in a report at one explicit instant",
     "profile": "code-v1",
@@ -25,6 +25,6 @@
       "No push, release, installation or repository setting changes."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "802150d9acbeddc2e41d0696597aae47d40cb944",
+  "evidence": "41528c4f46ddc27fe7e335cfc4d4b2907c40dcf9b5e61d4d86a43cbca859a5dd"
 }
