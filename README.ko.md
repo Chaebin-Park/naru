@@ -218,3 +218,5 @@ checks:
 `mode_policy: {code: true}`로 정책 근거를 필수로 지정합니다. 공통 status와 gate는 근거 누락·stale·미승인·신규 위반을 차단합니다. 기존 위반은 경고하며, 기준 축소에는 사람 승인이 필요합니다. 정책을 선택한 보고서는 schema 3입니다. [정책 판정 안내](docs/policy.md#required-policy-evidence)를 참고하세요.
 
 [공통 보고서 계약과 adapter 판정 비교](docs/common-report.md).
+
+[실행 환경·신뢰성 검증·판정 성능](docs/reliability-performance.md): 10,000개 파일·100MiB warm-cache 측정에서 초기 p95 2초 목표를 충족했습니다. Linux 검증 범위는 제한적이며 Windows·최소 Go 버전 실행은 미검증입니다.

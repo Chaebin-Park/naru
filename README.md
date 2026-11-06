@@ -277,3 +277,5 @@ Require selected contract baselines with `mode_surfaces: {code: [api]}`. CLI sta
 Require policy evidence with `mode_policy: {code: true}`. Shared status and gates block missing, stale, unapproved or new findings. Known findings warn; reductions require human approval to shrink the baseline. Reports selecting policy use schema 3. See [policy enforcement](docs/policy.md#required-policy-evidence).
 
 [Common report contract and adapter matrix](docs/common-report.md).
+
+[Runtime support, reliability evidence and status performance](docs/reliability-performance.md): the measured 10,000-file/100MiB warm-cache workload met the initial 2-second p95 target; Linux coverage is bounded, and Windows/minimum-Go runtime remain unverified.
