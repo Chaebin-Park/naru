@@ -58,3 +58,24 @@ Back up configuration and any reviewed baseline before upgrading. Read [executio
 Before asking to publish, record source revision, toolchain, artifact hashes, runtime results and missing platforms; inspect the candidate file list and public diff for credentials, private paths and company/project identifiers. Candidates contain binaries, LICENSE, revision/toolchain metadata and checksums only: no receipts, logs, private planning, diagram sources or workspace files. Review binary build metadata as well as source paths (`-trimpath` reduces local-path disclosure but is not a general secret scanner).
 
 MVP acceptance and independent review are tracked separately in NARU-022. Candidate preparation is not permission to publish or evidence that all acceptance conditions have passed.
+
+## Observed candidate verification (2026-11-06)
+
+Source `089cbd36dcb10c1e335f0e22ed64cd5698c03a40`, Go 1.27.3, `candidate-089cbd36dcb1`: all five target builds completed and every manifest entry verified. The native macOS arm64 temporary installation passed all 13 CLI invocations in the smoke sequence above, including missing/stale/failed blocking and successful restoration. Existing output and a destination inside the source checkout were rejected without replacement/creation. This is a local source candidate, not a published module or release.
+
+`go version -m` reported the expected revision, `vcs.modified=false`, CGO disabled and `-trimpath=true`. All five binary byte streams were scanned for the known local account/vault path prefixes with no matches. Candidate contents were limited to the documented files. This bounded check is not a general proof that arbitrary future source cannot contain secrets; review the public diff before each release.
+
+Verified manifest:
+
+```text
+21cbeae17f6e942ad57b057897c1d33ed847976e8610db6300d7257bebe0576e  LICENSE
+58a4f6f6ddf4e2e8cbd8448075a8a5c12b1f9b50c426834a8191bce9bd84b059  REVISION
+70f94d37a097ca424ec1a1c0d5a81288ec60b4ceeae67edc3a75aeb6ce378600  TOOLCHAIN
+7bdc10c2cf718a9635e980249b6371bd4dffd726d942ddefd6d484be81044010  naru-darwin-amd64
+c18e111e101a2f3f077a2a67ac16c3326d7f0f4cddbf647c0915fc220b42c2de  naru-darwin-arm64
+f87c1e3863e10e8f34b8c6169e95eb01bacaad840eb988c3f3f1b4e90e810aae  naru-linux-amd64
+2f0afe18173af3c543d2ec4bff7ae374dd0bf428b9cfe0ca9e7038d9d23ee5a0  naru-linux-arm64
+a160c72c9983d08a9daba1005d7383643406e1142949f2545d425f5871eee29e  naru-windows-amd64.exe
+```
+
+Subsequent documentation/task-metadata commits do not retroactively change this candidate's source revision. Prepare and verify a new candidate if its source changes.
