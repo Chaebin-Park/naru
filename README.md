@@ -284,4 +284,4 @@ Require policy evidence with `mode_policy: {code: true}`. Shared status and gate
 
 [Clean Web CI smoke](docs/ci-smoke.md) includes a source-only archive runner and pinned GitHub Actions workflow. Actual remote failure/recovery passed on Ubuntu with Go 1.23.12; exact revisions and run links are recorded there.
 
-[MVP acceptance evidence and remaining conditions](docs/mvp-acceptance.md) distinguish verified behavior from pending integration and runtime gaps.
+[MVP acceptance evidence and remaining conditions](docs/mvp-acceptance.md) record the approved local push integration and distinguish verified behavior from remaining runtime gaps.

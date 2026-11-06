@@ -225,4 +225,4 @@ checks:
 
 [Web clean CI smoke](docs/ci-smoke.md)는 커밋된 소스만 사용하는 실행기와 고정된 GitHub Actions workflow를 제공합니다. Ubuntu·Go 1.23.12에서 실제 원격 실패·복구 검증을 마쳤으며 해당 문서에 리비전과 실행 링크를 기록했습니다.
 
-[MVP 수용 근거와 남은 조건](docs/mvp-acceptance.md)에서 검증된 동작과 미완료 통합 검증·환경 제한을 구분합니다.
+[MVP 수용 근거와 남은 조건](docs/mvp-acceptance.md)에서 승인 후 실행한 실제 로컬 push 검증과 남은 환경 제한을 확인할 수 있습니다.
