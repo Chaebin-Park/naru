@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "id": "NARU-034",
+  "previous": "NARU-017",
+  "base": "f38cde2b79094bb05345097aa92f16ae40fc6fdd",
+  "status": "active",
+  "plan": {
+    "title": "Reconcile README and glossary status with implemented relay, packs and not-run results",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "README and README.ko status and limitation text describe human relay as available, matching the tested relay workflow; Stop/pre-push integration for policy review remains described as not automatic.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestRelayWorkflow"
+      },
+      {
+        "id": "AC-2",
+        "description": "README and README.ko no longer state that the Android pack is unimplemented.",
+        "test": "github.com/Chaebin-Park/naru/internal/config/TestAndroidPack"
+      },
+      {
+        "id": "AC-3",
+        "description": "README and README.ko no longer state that the Web pack is unimplemented.",
+        "test": "github.com/Chaebin-Park/naru/internal/config/TestWebPack"
+      },
+      {
+        "id": "AC-4",
+        "description": "The glossary describes not-run and human-relayed as implemented terms and keeps waivers deferred beyond the MVP.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestUnavailableRequirementsCLI"
+      }
+    ],
+    "limitations": [
+      "Documentation-only correction; no product code, receipt format, CLI output or test changes.",
+      "Criterion tests show the documented features exist; they do not parse documentation prose. Review remains responsible for wording accuracy.",
+      "Historical records (CHANGELOG entries, task records, verification logs) are not rewritten.",
+      "No push, tags, releases or repository-setting changes."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
