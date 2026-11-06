@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "id": "NARU-018.2",
+  "previous": "NARU-018.1",
+  "base": "bef71081e837ada97603828f1c0a721035ec4d07",
+  "status": "active",
+  "plan": {
+    "title": "Render the common status report as Markdown without changing verdicts",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Markdown status preserves missing, pass and stale exit decisions and reports NOT VERIFIED; conflicting output flags are rejected.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestStatusMarkdown"
+      },
+      {
+        "id": "AC-2",
+        "description": "Markdown rendering escapes untrusted table content, retains relay provenance and propagates output failures.",
+        "test": "github.com/Chaebin-Park/naru/internal/status/TestMarkdownReport"
+      }
+    ],
+    "limitations": [
+      "NARU-018 report presentation slice; baseline and policy aggregation and the final adapter matrix remain pending.",
+      "No push, deployment, installation or settings changes."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
