@@ -279,3 +279,5 @@ Require policy evidence with `mode_policy: {code: true}`. Shared status and gate
 [Common report contract and adapter matrix](docs/common-report.md).
 
 [Runtime support, reliability evidence and status performance](docs/reliability-performance.md): the measured 10,000-file/100MiB warm-cache workload met the initial 2-second p95 target; Linux coverage is bounded, and Windows/minimum-Go runtime remain unverified.
+
+[Clean Web CI smoke](docs/ci-smoke.md) includes a source-only archive runner and pinned GitHub Actions workflow. Local positive/negative checks pass; actual remote failure/recovery acceptance is pending.

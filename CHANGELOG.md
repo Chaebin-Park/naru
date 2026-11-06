@@ -8,6 +8,8 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 
 ### Changed
 
+- Prepare a clean-source public Web CI smoke runner and pinned GitHub Actions workflow; actual remote acceptance remains pending.
+
 - Add a reproducible 10,000-file/100MiB status workload and macOS CLI latency/RSS measurement tool; document bounded Linux execution evidence and remaining runtime gaps.
 
 - Add opt-in `mode_policy` requirements to shared status and gate decisions, with private findings reduced to counts and evidence digests.

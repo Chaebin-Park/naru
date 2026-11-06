@@ -1,0 +1,36 @@
+name: Clean Web CI smoke
+on:
+  push:
+    branches: [main, 'ci/naru-020-*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  web:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: '1.23.x'
+          cache: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22.22.2'
+          package-manager-cache: false
+      - name: Record environment and build
+        run: |
+          git rev-parse HEAD
+          go version
+          node --version
+          npm --version
+          python3 --version
+          go build -o "$RUNNER_TEMP/naru" ./cmd/naru
+      - name: Run committed public sample with fresh CI evidence
+        run: python3 scripts/ci-web-smoke.py "$RUNNER_TEMP/naru" --revision "$GITHUB_SHA"

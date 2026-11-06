@@ -220,3 +220,5 @@ checks:
 [공통 보고서 계약과 adapter 판정 비교](docs/common-report.md).
 
 [실행 환경·신뢰성 검증·판정 성능](docs/reliability-performance.md): 10,000개 파일·100MiB warm-cache 측정에서 초기 p95 2초 목표를 충족했습니다. Linux 검증 범위는 제한적이며 Windows·최소 Go 버전 실행은 미검증입니다.
+
+[Web clean CI smoke](docs/ci-smoke.md)는 커밋된 소스만 사용하는 실행기와 고정된 GitHub Actions workflow를 제공합니다. 로컬 정상·실패 검증은 통과했으며 실제 원격 실패·복구 검증은 대기 중입니다.
