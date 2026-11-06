@@ -3,7 +3,7 @@
   "id": "NARU-034",
   "previous": "NARU-017",
   "base": "f38cde2b79094bb05345097aa92f16ae40fc6fdd",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Reconcile README and glossary status with implemented relay, packs and not-run results",
     "profile": "code-v1",
@@ -36,6 +36,6 @@
       "No push, tags, releases or repository-setting changes."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "fe588c9c5e1bbe268af74aa25d2143cad0713327",
+  "evidence": "5454b0b9dc7d51bd3599845eb1b15c396db4046acc48287e72c09dfde707947c"
 }
