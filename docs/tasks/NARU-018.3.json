@@ -3,7 +3,7 @@
   "id": "NARU-018.3",
   "previous": "NARU-018.2",
   "base": "204575a9ba555a0ba1d9e9453e0c9212094474c3",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Require explicitly selected surface baselines in common mode decisions",
     "profile": "code-v1",
@@ -31,6 +31,6 @@
       "No pushes, releases, tool installation or repository settings changes."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "38e9ed48f0700e07770186b7021796a92f01672b",
+  "evidence": "a78fa42b1f6b34ec234e46a4adfbf83a7a41e8300da8ba5b44bed367ee471fbd"
 }
