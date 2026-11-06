@@ -3,7 +3,7 @@
   "id": "NARU-035",
   "previous": "NARU-022",
   "base": "fd7f1b86d2b41f9bc21b83fae3477795181c5ebc",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Publish the approved v0.2.0 MVP release with source-bound artifacts",
     "profile": "code-v1",
@@ -25,6 +25,6 @@
       "Verify the local task before close, then publish the completed source revision and record remote URLs and hashes in the private work log. Stop new work and document state by 17:30 Asia/Seoul."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "87b6f10747cbd3804bcd89ae8f83c6b8b5474783",
+  "evidence": "d3284a75213367607af2100bb2fcec9221545e927a0a6a702668e4bb4c97c6fc"
 }
