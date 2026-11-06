@@ -3,7 +3,7 @@
   "id": "NARU-018.4",
   "previous": "NARU-018.3",
   "base": "18b15a5114b0fba978d9460f52930d17b24215eb",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Include opt-in policy evidence in shared completion decisions",
     "profile": "code-v1",
@@ -26,6 +26,6 @@
       "No push, release, installation or settings changes."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "0547aae7b6b0285e2c3823021426ff24d47684fc",
+  "evidence": "a88641379b447181ee89c9895d00a7c6285bfe1a045735decdb53c0addfd25ac"
 }
