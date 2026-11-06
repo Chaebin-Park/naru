@@ -8,7 +8,7 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 
 ### Changed
 
-- Prepare a clean-source public Web CI smoke runner and pinned GitHub Actions workflow; actual remote acceptance remains pending.
+- Add a clean-source public Web CI smoke runner and pinned GitHub Actions workflow; verify actual remote failure/recovery on Ubuntu with Go 1.23.12.
 
 - Add a reproducible 10,000-file/100MiB status workload and macOS CLI latency/RSS measurement tool; document bounded Linux execution evidence and remaining runtime gaps.
 
