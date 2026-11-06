@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "id": "NARU-020",
+  "previous": "NARU-019",
+  "base": "7c592068e95921592fb013065f7e7b67192b22d7",
+  "status": "active",
+  "plan": {
+    "title": "Prepare and execute clean-checkout CI smoke for the public Web example",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "CI execution reruns the command even when matching local success exists, preserving actual failure and subsequent recovery.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCIExecutionFreshness"
+      },
+      {
+        "id": "AC-2",
+        "description": "CI executes independently of human-relayed evidence.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestRelayWorkflow"
+      },
+      {
+        "id": "AC-3",
+        "description": "The committed public Web sample remains covered by its contract fixtures; actual remote failing and corrected revision runs must also be recorded before task closure.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestWebFixtures"
+      }
+    ],
+    "limitations": [
+      "Local tests and smoke do not establish real CI completion. Remote push and workflow execution require separate maintainer approval.",
+      "Use GitHub Actions for the minimum sample; no multi-provider templates, deployment, release or settings changes.",
+      "Clean sample archives include only committed pack and example sources, never local receipts or relay artifacts.",
+      "Pin action commits and explicit Go/Node versions; no local tool installation."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
