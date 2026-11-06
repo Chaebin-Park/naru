@@ -2,7 +2,7 @@
 
 Policy links existing tool rules to their configuration, rationale and executable fixtures. It does not define a new lint language. A project adapter returns complete findings through one configured surface. Existing violations warn, new violations block, and resolved violations remain in the approved known set until a person approves a reduction.
 
-Contract baselines and policy baselines have separate authority. `baseline approve` approves an external contract; it cannot approve new policy violations. Policy commands do not implicitly change Stop/pre-push requirements. Common gate integration is a separate task.
+Contract baselines and policy baselines have separate authority. `baseline approve` approves an external contract; it cannot approve new policy violations. Policy commands do not implicitly change Stop/pre-push requirements. Use `mode_policy` to explicitly require policy evidence in the common gate report.
 
 ## Index
 
@@ -84,3 +84,9 @@ NARU-012 acceptance covers strict index references, complete findings, a 10-to-7
 On 2026-11-05, Go 1.27.3 on macOS arm64 passed format, native vet, the full race suite, Windows/Linux cross-vet, build and the built binary's four self-checks. Development analysis completed with zero findings. Six real terminal-review scenarios covered rejection, interruption, exact bootstrap, input mutation during review, empty reduction and reintroduced findings. These are terminal CLI tests, not live AI-agent connection evidence. Go 1.23 and other OS runtimes were not executed; opt-in push integration was not run.
 
 The first isolated task verification caught an unrelated lifecycle fixture race: a shell polling loop could leave a child during cancellation, correctly producing `owner_lost` rather than the test's expected clean cancellation. The fixture now uses a single exec'd helper that announces readiness after exec. Cancellation, history preservation, gate rejection and successful clean restart assertions remain required; uncertain cleanup is still covered separately.
+
+## Required policy evidence
+
+Opt in with `mode_policy: {code: true}` for an existing check mode. The common status report, Stop and pre-push inspect current policy evidence without executing adapters or approving changes. Missing, stale, busy, invalid, bootstrap-required or new findings block. Compatible clean, known and resolved results follow `policy check` semantics: known findings warn, and resolved findings still require explicit human approval before shrinking the stored baseline. Reintroduction after approved reduction is new and blocks.
+
+Extended reports use schema 3 and expose only policy state, finding counts and evidence digests, not finding messages or source locations. Existing check-only reports remain schema 2. Stop retains its documented selected-mode and NOT VERIFIED behavior; pre-push enforces the default mode and rejects NOT VERIFIED markers. Locks are per resource, not a global filesystem snapshot. Policy enforcement does not imply surface equality approval for the findings surface; configure those requirements independently only when both meanings are intended.

@@ -42,6 +42,7 @@ type RelayStatus struct {
 
 // Report is the status of every check a mode requires.
 type Report struct {
+	Policy     *PolicyStatus   `json:"policy,omitempty"`
 	Surfaces   []SurfaceStatus `json:"surfaces,omitempty"`
 	Schema     int             `json:"schema"`
 	Unverified UnverifiedState `json:"unverified"`
@@ -59,6 +60,17 @@ func Evaluate(root string, cfg *config.Config, mode string) (Report, error) {
 type SurfaceStatus struct {
 	Surface          string `json:"surface"`
 	State            string `json:"state"`
+	InputDigest      string `json:"input_digest"`
+	CandidateDigest  string `json:"candidate_digest"`
+	BaselineRevision string `json:"baseline_revision"`
+}
+
+// PolicyStatus exposes aggregate policy evidence without private finding content.
+type PolicyStatus struct {
+	State            string `json:"state"`
+	Known            int    `json:"known"`
+	New              int    `json:"new"`
+	Resolved         int    `json:"resolved"`
 	InputDigest      string `json:"input_digest"`
 	CandidateDigest  string `json:"candidate_digest"`
 	BaselineRevision string `json:"baseline_revision"`

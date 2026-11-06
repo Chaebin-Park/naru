@@ -146,7 +146,7 @@ MVP에서는 macOS·Linux를 우선 검증하고 Windows는 제한 지원합니�
 - 검증 기록과 설정이 로컬 파일입니다. `naru gate pre-tool`이 흔한 수정 경로를 막지만 셸 판별은 휴리스틱이므로, CI에서 다시 검증해야 합니다.
 - 검사는 `sh -c`로 하나씩 순서대로 실행합니다. Windows에서는 POSIX 셸이 필요하고, timeout 때 자식 프로세스까지 종료하지 못합니다.
 - 검사가 남긴 백그라운드 프로세스가 출력을 열어 두면, naru는 종료 상태를 기록하고 5초 뒤 대기를 멈춥니다.
-- 정책 검토는 명시적으로 실행합니다. Stop/pre-push 연동은 아직 없습니다.
+- 정책 검토는 명시적으로 실행합니다. `mode_policy`로 Stop/pre-push 판정에 포함할 수 있습니다.
 - 사용자 중계는 증거를 제출한 사람을 인증하지 않으며, CI는 검사를 따로 실행해야 합니다. Android·Web 묶음은 공개 예제와 고정된 도구 버전만 다룹니다.
 
 기한부 예외는 MVP에서 제외하고 추후 검토합니다. 검증 미완료 종료는 기존 NOT VERIFIED 정책을 유지합니다.
@@ -214,3 +214,5 @@ checks:
 `naru status --markdown`은 같은 판정·사유 코드·증거 출처를 Markdown 표로 출력합니다. `--json`과 동시에 사용할 수 없습니다. NOT VERIFIED는 별도 표시하며, 필수 검사가 통과해도 pre-push를 계속 차단합니다.
 
 `mode_surfaces: {code: [api]}`로 모드에 필수 기준본을 지정할 수 있습니다. CLI status·Stop·pre-push는 최신 입력과 일치하고 승인된 기준본에 변경이 없을 때만 통과합니다. 필수 surface가 있는 보고서는 schema 3, 검사만 있는 보고서는 schema 2입니다. [필수 기준본 안내](docs/baselines.md#required-baselines-in-a-mode)를 참고하세요.
+
+`mode_policy: {code: true}`로 정책 근거를 필수로 지정합니다. 공통 status와 gate는 근거 누락·stale·미승인·신규 위반을 차단합니다. 기존 위반은 경고하며, 기준 축소에는 사람 승인이 필요합니다. 정책을 선택한 보고서는 schema 3입니다. [정책 판정 안내](docs/policy.md#required-policy-evidence)를 참고하세요.

@@ -129,5 +129,8 @@ func BlockMessage(rep status.Report) string {
 			fmt.Fprintf(&b, "Surface %s: %s. Run `naru baseline extract %s`, then `naru baseline diff %s`; review changes before explicit approval.\n", row.Surface, row.State, row.Surface, row.Surface)
 		}
 	}
+	if rep.Policy != nil {
+		fmt.Fprintf(&b, "Policy: %s (known=%d new=%d resolved=%d). Run `naru policy check`, fix new findings and review required approvals.\n", rep.Policy.State, rep.Policy.Known, rep.Policy.New, rep.Policy.Resolved)
+	}
 	return b.String()
 }

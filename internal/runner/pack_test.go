@@ -1,4 +1,4 @@
-package runner
+package runner_test
 
 import (
 	"os"
@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/Chaebin-Park/naru/internal/config"
+	"github.com/Chaebin-Park/naru/internal/runner"
 	"github.com/Chaebin-Park/naru/internal/status"
 )
 
@@ -23,7 +24,7 @@ func TestPackChangesInvalidateEvidence(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, err := Run(root, cfg, "demo.c", Options{}); err != nil {
+		if _, err := runner.Run(root, cfg, "demo.c", runner.Options{}); err != nil {
 			t.Fatal(err)
 		}
 		rep, err := status.Evaluate(root, cfg, "m")

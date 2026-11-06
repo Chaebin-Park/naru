@@ -203,7 +203,7 @@ For the MVP, validation prioritizes macOS and Linux. Windows has limited support
 - Receipts and config are local files. `naru gate pre-tool` blocks the obvious ways an agent could edit them, but its shell detection is a heuristic; rely on CI to re-run checks from a clean checkout.
 - Checks run sequentially with `sh -c`. Windows needs a POSIX shell (for example Git Bash), and a timeout there kills only the shell, not its children.
 - If a check leaves a background process holding its output open, naru records the exit status and stops waiting after 5 seconds.
-- Policy review is explicit; Stop/pre-push integration is pending.
+- Policy review is explicit; opt in to Stop/pre-push enforcement with `mode_policy`.
 - Relay does not authenticate the person who submits evidence, and CI must run its own checks. Android and Web packs cover only their public examples and pinned toolchains.
 
 ## Roadmap
@@ -273,3 +273,5 @@ Use terminal-only `naru policy bootstrap` once to approve the initial known set,
 Use `naru relay new --target 'test workstation' --artifact execution.log CHECK` when a person must run a check elsewhere, then `naru relay submit --file submission.json PACKET_ID` to validate the result and artifact hashes. Issuing a request replaces that check's current evidence with pending evidence. Valid `human-relayed` success can satisfy local Stop/pre-push; CI must execute `naru check --evidence ci` independently. NARU neither runs remote commands nor authenticates the person's claim. See [request, submission, expiry and trust limits](docs/relay.md).
 
 Require selected contract baselines with `mode_surfaces: {code: [api]}`. CLI status, Stop and pre-push then require fresh, approved, unchanged surface evidence. Reports with selected surfaces use schema 3; check-only reports remain schema 2. See [required baselines](docs/baselines.md#required-baselines-in-a-mode).
+
+Require policy evidence with `mode_policy: {code: true}`. Shared status and gates block missing, stale, unapproved or new findings. Known findings warn; reductions require human approval to shrink the baseline. Reports selecting policy use schema 3. See [policy enforcement](docs/policy.md#required-policy-evidence).

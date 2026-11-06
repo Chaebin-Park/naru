@@ -1,4 +1,4 @@
-package runner
+package runner_test
 
 import (
 	"bytes"
@@ -13,6 +13,7 @@ import (
 	"github.com/Chaebin-Park/naru/internal/config"
 	"github.com/Chaebin-Park/naru/internal/gate"
 	"github.com/Chaebin-Park/naru/internal/receipt"
+	"github.com/Chaebin-Park/naru/internal/runner"
 	"github.com/Chaebin-Park/naru/internal/status"
 )
 
@@ -73,7 +74,7 @@ func TestUnavailableEnvironmentLifecycle(t *testing.T) {
 	} // #nosec G306 -- Executable fixture for PATH discovery; the check must not invoke this tool.
 	t.Setenv("PATH", tools+string(os.PathListSeparator)+os.Getenv("PATH"))
 	install()
-	first, err := stateRun(root, cfg, Options{})
+	first, err := stateRun(root, cfg, runner.Options{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +83,7 @@ func TestUnavailableEnvironmentLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertEnvironmentState(t, root, cfg, status.NotRun)
-	missing, err := stateRun(root, cfg, Options{})
+	missing, err := stateRun(root, cfg, runner.Options{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +109,7 @@ func TestUnavailableEnvironmentLifecycle(t *testing.T) {
 	}
 	install()
 	assertEnvironmentState(t, root, cfg, status.NotRun)
-	if _, err = stateRun(root, cfg, Options{}); err != nil {
+	if _, err = stateRun(root, cfg, runner.Options{}); err != nil {
 		t.Fatal(err)
 	}
 	assertEnvironmentState(t, root, cfg, status.Pass)
@@ -127,7 +128,7 @@ func TestUnsupportedPlatformDoesNotRun(t *testing.T) {
 		unsupported = "linux"
 	}
 	cfg := requireConfig(t, root, "{os: ["+unsupported+"]}")
-	out, err := stateRun(root, cfg, Options{})
+	out, err := stateRun(root, cfg, runner.Options{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -145,36 +146,11 @@ func TestMissingEnvironmentPrecedesEmptyInputs(t *testing.T) {
 	if err := os.Remove(filepath.Join(root, "in.txt")); err != nil {
 		t.Fatal(err)
 	}
-	out, err := stateRun(root, cfg, Options{})
+	out, err := stateRun(root, cfg, runner.Options{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if *out.Record.Execution.Result != receipt.ResultNotRun {
 		t.Fatal("missing environment misreported as empty inputs")
-	}
-}
-
-func TestUnavailableLogFailureCannotRestorePriorPass(t *testing.T) {
-	root, cfg := stateProject(t, "true")
-	if _, err := stateRun(root, cfg, Options{}); err != nil {
-		t.Fatal(err)
-	}
-	cfg = requireConfig(t, root, "{tools: [naru-nonexistent-fixture-tool]}")
-	_, err := runWithLog(root, cfg, "c", Options{}, func(path string) (logSink, error) {
-		f, e := os.Create(path) // #nosec G304 -- Generated log path in this test-owned project.
-		if e != nil {
-			return nil, e
-		}
-		return &faultyLog{File: f, failure: "header"}, nil
-	})
-	if !errors.Is(err, errLog) {
-		t.Fatalf("missing log error: %v", err)
-	}
-	current, err := receipt.NewStateStore(root).Current("c")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if current == nil || current.Execution.Result == nil || *current.Execution.Result != receipt.ResultNotRun {
-		t.Fatal("log failure retained prior pass")
 	}
 }

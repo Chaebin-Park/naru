@@ -28,6 +28,7 @@ const DefaultTimeout = 10 * time.Minute
 
 // Config is the parsed .naru/config.yaml.
 type Config struct {
+	ModePolicy   map[string]bool     `yaml:"mode_policy"`
 	ModeSurfaces map[string][]string `yaml:"mode_surfaces"`
 	Packs        []string            `yaml:"packs"`
 	Surfaces     map[string]Surface  `yaml:"surfaces"`
@@ -222,6 +223,11 @@ func (c *Config) Validate() error {
 			if _, ok := c.Checks[name]; !ok {
 				errs = append(errs, fmt.Errorf("mode %q references unknown check %q", mode, name))
 			}
+		}
+	}
+	for _, mode := range sortedKeys(c.ModePolicy) {
+		if _, ok := c.Modes[mode]; !ok {
+			errs = append(errs, fmt.Errorf("mode_policy references unknown mode %q", mode))
 		}
 	}
 	for _, mode := range sortedKeys(c.ModeSurfaces) {

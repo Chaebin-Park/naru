@@ -32,6 +32,12 @@ func WriteMarkdown(w io.Writer, rep Report) error {
 			fmt.Fprintf(&b, "| %s | %s |\n", markdownCell(row.Surface), markdownCell(row.State))
 		}
 	}
+	if rep.Policy != nil {
+		fmt.Fprintf(&b, "\nPolicy: **%s**; known=%d, new=%d, resolved=%d.\n", markdownCell(rep.Policy.State), rep.Policy.Known, rep.Policy.New, rep.Policy.Resolved)
+		if rep.Policy.Known > 0 || rep.Policy.Resolved > 0 {
+			b.WriteString("\nKnown findings remain warning evidence; shrinking the baseline requires explicit human approval.\n")
+		}
+	}
 	_, err := io.WriteString(w, b.String())
 	return err
 }

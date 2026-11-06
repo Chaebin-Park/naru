@@ -336,6 +336,9 @@ func cmdStatus(args []string, env Env) int {
 			}
 			_, _ = fmt.Fprintln(env.Stdout, line)
 		}
+		if rep.Policy != nil {
+			_, _ = fmt.Fprintf(env.Stdout, "policy %s: known=%d new=%d resolved=%d; baseline reduction requires human approval\n", rep.Policy.State, rep.Policy.Known, rep.Policy.New, rep.Policy.Resolved)
+		}
 		for _, row := range rep.Surfaces {
 			_, _ = fmt.Fprintf(env.Stdout, "  surface %s: %s\n", row.Surface, row.State)
 		}
@@ -343,9 +346,9 @@ func cmdStatus(args []string, env Env) int {
 			_, _ = fmt.Fprintln(env.Stdout, "warning: NOT VERIFIED record exists or cannot be read; completion was allowed WITHOUT verification")
 		}
 		if rep.Satisfied {
-			_, _ = fmt.Fprintln(env.Stdout, "done: every required check and selected baseline passes for the current files")
+			_, _ = fmt.Fprintln(env.Stdout, "done: every required check, baseline and policy requirement passes for the current files")
 		} else {
-			_, _ = fmt.Fprintln(env.Stdout, "not done: rerun failing checks; extract and review required surface baselines")
+			_, _ = fmt.Fprintln(env.Stdout, "not done: rerun failing checks; extract and review required surface baselines; refresh required policy evidence")
 		}
 	}
 	if !rep.Satisfied {
