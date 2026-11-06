@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "id": "NARU-035",
+  "previous": "NARU-022",
+  "base": "fd7f1b86d2b41f9bc21b83fae3477795181c5ebc",
+  "status": "active",
+  "plan": {
+    "title": "Publish the approved v0.2.0 MVP release with source-bound artifacts",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Candidate preparation supports an explicit validated release version while preserving exact-source isolation; validate regression suite and actual v0.2.0 binary smoke before publication.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestInitDetectsStackAndRefusesOverwrite"
+      },
+      {
+        "id": "AC-2",
+        "description": "CLI lifecycle remains verified; publish main, an exact-source v0.2.0 tag, release notes, five platform archives and SHA256 checksums with explicit runtime limits.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIExecutionLifecycle"
+      }
+    ],
+    "limitations": [
+      "User explicitly authorized needed push and release publication on 2026-11-06. Do not force-update refs or alter repository settings.",
+      "Keep system tools unchanged. Windows and cross-only architectures remain runtime-unverified; release binaries are unsigned.",
+      "Verify the local task before close, then publish the completed source revision and record remote URLs and hashes in the private work log. Stop new work and document state by 17:30 Asia/Seoul."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
