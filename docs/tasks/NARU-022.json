@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "id": "NARU-022",
+  "previous": "NARU-021",
+  "base": "6c4144bbb0d903844fe9612db8f98b325345c5a7",
+  "status": "active",
+  "plan": {
+    "title": "Audit MVP acceptance evidence, reproduce public scenarios and obtain independent review",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Common requirements and adapter-specific exceptions match the acceptance evidence matrix.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCommonReportIntegration"
+      },
+      {
+        "id": "AC-2",
+        "description": "Public platform fixture contracts remain reproducible; supplement with installed-tool public scenarios and record any gaps.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestWebFixtures"
+      },
+      {
+        "id": "AC-3",
+        "description": "Large input correctness holds; supplement performance evidence with the originally planned three-check, thirty-sample workload.",
+        "test": "github.com/Chaebin-Park/naru/internal/status/TestLargeWorkspaceStatus"
+      }
+    ],
+    "limitations": [
+      "Do not close until required acceptance evidence, including approved actual local pre-push integration, is obtained; skips are not passes.",
+      "Independent code-reviewer and architect verdicts are required. Record defects, regression evidence, remaining risks and explicit support gaps.",
+      "No release, tags, main push, repository settings or system tool installation. User deadline is 2026-11-06 17:30 Asia/Seoul; preserve incomplete acceptance honestly."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
