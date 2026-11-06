@@ -3,7 +3,7 @@
   "id": "NARU-018.2",
   "previous": "NARU-018.1",
   "base": "bef71081e837ada97603828f1c0a721035ec4d07",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Render the common status report as Markdown without changing verdicts",
     "profile": "code-v1",
@@ -24,6 +24,6 @@
       "No push, deployment, installation or settings changes."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "b8b32e4c78c42e49b77c79d13b89ec2a9177b5c6",
+  "evidence": "bfc65bf3e08ff7bb29dbe03ada93e702970b0cfd6c6d3e55e1beacb8c37f50a6"
 }
