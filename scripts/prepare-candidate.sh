@@ -3,9 +3,17 @@
 set -eu
 GIT_NO_REPLACE_OBJECTS=1
 export GIT_NO_REPLACE_OBJECTS
-if [ "$#" -ne 1 ]; then
-  echo 'usage: sh scripts/prepare-candidate.sh NEW_ABSOLUTE_OUTPUT_DIRECTORY' >&2
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+  echo 'usage: sh scripts/prepare-candidate.sh NEW_ABSOLUTE_OUTPUT_DIRECTORY [vMAJOR.MINOR.PATCH]' >&2
   exit 64
+fi
+if [ "$#" -eq 2 ]; then
+  python3 - "$2" <<'PYCODE'
+import re
+import sys
+if not re.fullmatch(r'v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', sys.argv[1]):
+    raise SystemExit('release version must be vMAJOR.MINOR.PATCH')
+PYCODE
 fi
 case "$1" in /*) ;; *) echo 'output directory must be absolute' >&2; exit 64 ;; esac
 root=$(git rev-parse --show-toplevel)
@@ -25,7 +33,7 @@ fi
 mkdir "$1"
 out=$(cd "$1" && pwd -P)
 revision=$(git rev-parse HEAD)
-version="candidate-$(git rev-parse --short=12 "$revision")"
+version="${2:-candidate-$(git rev-parse --short=12 "$revision")}"
 source_dir=$(mktemp -d "${TMPDIR:-/tmp}/naru-candidate-source.XXXXXX")
 trap 'rm -rf "$source_dir"' 0
 # Read exact tree/blob objects; archive attributes must not omit/substitute source.
@@ -72,6 +80,7 @@ cd "$source_dir/source"
 GOENV=off GOWORK=off GOFLAGS= GOTOOLCHAIN=local
 export GOENV GOWORK GOFLAGS GOTOOLCHAIN
 printf '%s\n' "$revision" > "$out/REVISION"
+printf '%s\n' "$version" > "$out/VERSION"
 go version > "$out/TOOLCHAIN"
 printf '%s\n' 'GOENV=off GOWORK=off GOFLAGS= GOTOOLCHAIN=local CGO_ENABLED=0' > "$out/BUILD_SETTINGS"
 for platform in darwin/arm64 darwin/amd64 linux/amd64 linux/arm64 windows/amd64; do

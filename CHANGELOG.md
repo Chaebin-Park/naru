@@ -6,6 +6,8 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-06
+
 ### Changed
 
 - Isolate candidate builds from ignored source, live edits, archive attributes, Git replacement objects and ambient Go overlays/workspaces; add regression coverage for revision attribution.

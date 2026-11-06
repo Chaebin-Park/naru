@@ -20,6 +20,7 @@ class CandidateIsolation(unittest.TestCase):
         self.repo.mkdir()
         self.output = self.base / 'output'
         self.expected = 'committed-source'
+        self.version = None
         self.env = dict(os.environ, GOWORK='off', GOFLAGS='', GOENV='off', GOTOOLCHAIN='local')
         self.git('init', '-q')
         (self.repo / 'go.mod').write_text('module github.com/Chaebin-Park/naru\n\ngo 1.23\n')
@@ -34,7 +35,10 @@ class CandidateIsolation(unittest.TestCase):
         return subprocess.check_output(['git', *args], cwd=self.repo, text=True)
 
     def build(self):
-        r = subprocess.run(['sh', str(SCRIPT), str(self.output)], cwd=self.repo,
+        args = ['sh', str(SCRIPT), str(self.output)]
+        if self.version:
+            args.append(self.version)
+        r = subprocess.run(args, cwd=self.repo,
                            env=self.env, capture_output=True, text=True, timeout=120)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         osname = {'Darwin':'darwin','Linux':'linux'}[platform.system()]
@@ -42,6 +46,17 @@ class CandidateIsolation(unittest.TestCase):
         actual = subprocess.check_output([str(self.output / f'naru-{osname}-{arch}')], text=True)
         self.assertEqual(actual.strip(), self.expected)
         self.assertEqual((self.output/'REVISION').read_text().strip(), self.git('rev-parse','HEAD').strip())
+
+    def test_explicit_release_version(self):
+        self.version = 'v0.2.0'
+        self.build()
+        self.assertEqual((self.output/'VERSION').read_text().strip(), self.version)
+
+    def test_invalid_release_version_creates_no_output(self):
+        r = subprocess.run(['sh',str(SCRIPT),str(self.output),'v0.2.0 -X injected'],
+                           cwd=self.repo,env=self.env,capture_output=True,text=True,timeout=10)
+        self.assertNotEqual(r.returncode,0)
+        self.assertFalse(self.output.exists())
 
     def test_ignored_go_source_is_excluded(self):
         (self.repo/'.git/info/exclude').write_text('cmd/naru/ignored.go\n')

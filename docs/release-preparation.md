@@ -1,6 +1,6 @@
 # Installation and release preparation
 
-This document describes unpublished candidates from the current repository. `go install ...@latest` installs the latest published module version, which may not contain these changes. No new tag or release is created by this workflow.
+This document describes unpublished candidates from the current repository. `go install ...@latest` installs the latest published module version, which may not contain these changes. The preparation script creates no tag or release; publication is a separate approved step.
 
 ## Candidate preparation
 
@@ -12,6 +12,8 @@ cd /tmp/naru-candidate-UNIQUE
 shasum -a 256 -c SHA256SUMS
 ./naru-darwin-arm64 version  # choose the binary for your actual host
 ```
+
+For an approved release, pass an explicit version as the second argument, for example `sh scripts/prepare-candidate.sh /tmp/naru-v020-UNIQUE v0.2.0`. Only `vMAJOR.MINOR.PATCH` is accepted; `VERSION` records the selected value. Without it the candidate revision label remains the default.
 
 The output directory must be new and absolute. The script refuses a dirty checkout or existing destination. It reads the resolved commit’s exact tree/blob objects into a temporary source directory, bypasses archive attributes and Git replacement objects, rejects symlinks/submodules/non-regular entries, disables ambient Go overlays/workspaces/saved settings and automatic toolchain selection, then builds CGO-disabled macOS arm64/amd64, Linux amd64/arm64 and Windows amd64 executables with a `candidate-<revision>` version, records the full source revision, build toolchain and effective source-isolation settings, includes LICENSE, and hashes every artifact/metadata file. These are raw executable candidates, not signed installers. Output stays outside the repository; retain failed preparation output for diagnosis and use a new directory on retry.
 
