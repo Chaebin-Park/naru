@@ -3,7 +3,7 @@
   "id": "NARU-018",
   "previous": "NARU-018.4",
   "base": "187cb429d4f311806a98886ab229d5a8240d8437",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Complete common-report adapter acceptance and compatibility documentation",
     "profile": "code-v1",
@@ -35,6 +35,6 @@
       "No independent review claimed; MVP independent acceptance remains NARU-022."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "13f8ad69f9d6794cb5459822c64ea56e4f3ea8e0",
+  "evidence": "8e588bfd2ff6d8560334e80946a478469ed086ef4f25f3566094d71566691718"
 }
