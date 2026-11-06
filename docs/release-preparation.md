@@ -13,7 +13,7 @@ shasum -a 256 -c SHA256SUMS
 ./naru-darwin-arm64 version  # choose the binary for your actual host
 ```
 
-The output directory must be new and absolute. The script refuses a dirty checkout or existing destination. It builds CGO-disabled macOS arm64/amd64, Linux amd64/arm64 and Windows amd64 executables with a `candidate-<revision>` version, records the full source revision and build toolchain, includes LICENSE, and hashes every artifact/metadata file. These are raw executable candidates, not signed installers. Output stays outside the repository; retain failed preparation output for diagnosis and use a new directory on retry.
+The output directory must be new and absolute. The script refuses a dirty checkout or existing destination. It exports the resolved commit into a temporary source directory, rejects symlinks/non-regular archive members, disables ambient Go overlays/workspaces/saved settings and automatic toolchain selection, then builds CGO-disabled macOS arm64/amd64, Linux amd64/arm64 and Windows amd64 executables with a `candidate-<revision>` version, records the full source revision, build toolchain and effective source-isolation settings, includes LICENSE, and hashes every artifact/metadata file. These are raw executable candidates, not signed installers. Output stays outside the repository; retain failed preparation output for diagnosis and use a new directory on retry.
 
 A SHA256 sum detects changed bytes; it does not authenticate the publisher. Check the trusted source revision separately. Do not sign, tag, push or publish a release without maintainer approval. The checksum file does not hash itself.
 
@@ -55,7 +55,7 @@ Back up configuration and any reviewed baseline before upgrading. Read [executio
 
 ## Publication review checklist
 
-Before asking to publish, record source revision, toolchain, artifact hashes, runtime results and missing platforms; inspect the candidate file list and public diff for credentials, private paths and company/project identifiers. Candidates contain binaries, LICENSE, revision/toolchain metadata and checksums only: no receipts, logs, private planning, diagram sources or workspace files. Review binary build metadata as well as source paths (`-trimpath` reduces local-path disclosure but is not a general secret scanner).
+Before asking to publish, record source revision, toolchain, artifact hashes, runtime results and missing platforms; inspect the candidate file list and public diff for credentials, private paths and company/project identifiers. Candidates contain binaries, LICENSE, revision/toolchain/build-settings metadata and checksums only: no receipts, logs, private planning, diagram sources or workspace files. Review binary build metadata as well as source paths (`-trimpath` reduces local-path disclosure but is not a general secret scanner).
 
 MVP acceptance and independent review are tracked separately in NARU-022. Candidate preparation is not permission to publish or evidence that all acceptance conditions have passed.
 
@@ -79,3 +79,7 @@ a160c72c9983d08a9daba1005d7383643406e1142949f2545d425f5871eee29e  naru-windows-a
 ```
 
 Subsequent documentation/task-metadata commits do not retroactively change this candidate's source revision. Prepare and verify a new candidate if its source changes.
+
+## Independent review correction
+
+NARU-022 independent code and architecture reviews identified that the original preparation script built the live checkout: ignored Go source or an ambient overlay could enter a revision-labeled candidate. The ignored-source regression was reproduced before the fix (the candidate printed the injected marker). Source export and explicit Go environment isolation now prevent that input substitution. The three tests in `python3 scripts/test_prepare_candidate.py` verify ignored-source exclusion, ambient override isolation and a live edit after snapshot capture. All passed after the fix. The historical candidate above was not proven contaminated, but is superseded for publication readiness by the corrected preparation workflow. New candidates have `BUILD_SETTINGS`; their archive build deliberately disables VCS auto-detection and binds the version/REVISION to the exported commit.

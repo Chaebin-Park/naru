@@ -8,6 +8,8 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 
 ### Changed
 
+- Isolate candidate builds from ignored source, live edits and ambient Go overlays/workspaces; add regression coverage for revision attribution.
+
 - Document isolated candidate installation, migration and explicit platform limits; add source-bound cross-builds and SHA256 manifests without publishing.
 
 - Add a clean-source public Web CI smoke runner and pinned GitHub Actions workflow; verify actual remote failure/recovery on Ubuntu with Go 1.23.12.
