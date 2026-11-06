@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "id": "NARU-021",
+  "previous": "NARU-020",
+  "base": "fababf344c132dbc2a5ef2a074cbdaa184921f6a",
+  "status": "active",
+  "plan": {
+    "title": "Prepare a reproducible local release candidate and document installation and migration evidence",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Detected-stack initialization starts with missing evidence and refuses accidental overwrite; execute an isolated candidate installation, init, check, status and stale smoke and record exact results.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestInitDetectsStackAndRefusesOverwrite"
+      },
+      {
+        "id": "AC-2",
+        "description": "Unknown stacks cannot create passing placeholder checks.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestInitWithoutStackFailsClosed"
+      },
+      {
+        "id": "AC-3",
+        "description": "The executable lifecycle preserves actual execution results; candidate artifacts have verified SHA256 sums, explicit source revision and truthful platform support documentation.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIExecutionLifecycle"
+      }
+    ],
+    "limitations": [
+      "Prepare candidates in a temporary directory only; no system installation, push, tags, publishing or settings changes.",
+      "Cross-compilation is not runtime validation; Windows runtime and full Go 1.23 suite remain unverified.",
+      "Review English and Korean installation guidance, migration, changelog and public artifact contents; record independent-review status separately in NARU-022."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
