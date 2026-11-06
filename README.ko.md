@@ -46,6 +46,8 @@ Go 1.23 이상이 필요합니다.
 go install github.com/Chaebin-Park/naru/cmd/naru@latest
 ```
 
+미출시 변경은 [배포 후보 준비·설치 시험·마이그레이션 안내](docs/release-preparation.md)를 따르세요. `@latest`는 게시된 모듈 버전을 설치하며 로컬 후보 준비는 릴리스 게시가 아닙니다.
+
 ## 빠른 시작
 
 ```sh

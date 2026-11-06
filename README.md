@@ -46,6 +46,8 @@ Requires Go 1.23 or newer.
 go install github.com/Chaebin-Park/naru/cmd/naru@latest
 ```
 
+For unreleased changes, use the [candidate preparation, installation smoke and migration guide](docs/release-preparation.md). `@latest` follows published module versions; a local candidate does not publish a release.
+
 ## Quick start
 
 ```sh
