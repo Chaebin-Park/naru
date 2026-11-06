@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "id": "NARU-018",
+  "previous": "NARU-018.4",
+  "base": "187cb429d4f311806a98886ab229d5a8240d8437",
+  "status": "active",
+  "plan": {
+    "title": "Complete common-report adapter acceptance and compatibility documentation",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "A combined relay, surface and policy project has deterministic common reports; missing baseline blocks despite valid relay, while NOT VERIFIED and D13 remain explicit adapter policies.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCommonReportIntegration"
+      },
+      {
+        "id": "AC-2",
+        "description": "Relay success cannot bypass other required checks or NOT VERIFIED pre-push policy.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestRelayWorkflow"
+      },
+      {
+        "id": "AC-3",
+        "description": "Surface adapter matrix remains covered across missing, unapproved, stale, changed, busy and approved states.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestSurfaceDecisionIntegration"
+      },
+      {
+        "id": "AC-4",
+        "description": "Policy adapter matrix preserves shrink-only approval and new finding rejection.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestPolicyDecisionIntegration"
+      }
+    ],
+    "limitations": [
+      "Completes NARU-018 after preparatory slices 018.1 through 018.4.",
+      "No claim of atomic filesystem snapshot, relay authentication, actual Git push or new live agent-session verification.",
+      "No independent review claimed; MVP independent acceptance remains NARU-022."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
