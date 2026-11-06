@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "id": "NARU-018.1",
+  "previous": "NARU-034",
+  "base": "534639f482f2a57db97841d82d7ffbcc1bad12ff",
+  "status": "active",
+  "plan": {
+    "title": "Evaluate every check in a report at one explicit instant",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Report evaluation at a supplied instant accepts valid relay evidence, rejects pre-acceptance evidence and rejects expiry at the boundary deterministically.",
+        "test": "github.com/Chaebin-Park/naru/internal/status/TestReportEvaluationTime"
+      },
+      {
+        "id": "AC-2",
+        "description": "Existing relay status behavior and evidence privacy remain intact.",
+        "test": "github.com/Chaebin-Park/naru/internal/status/TestRelayStatus"
+      }
+    ],
+    "limitations": [
+      "Preparatory slice of NARU-018; surface/policy aggregation, Markdown output and adapter matrix remain pending.",
+      "No historical filesystem reconstruction; supplied time evaluates current files and evidence.",
+      "No push, release, installation or repository setting changes."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
