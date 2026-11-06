@@ -16,7 +16,7 @@ On Apple M4 Pro, macOS 27.2 arm64, Go 1.27.3:
 | Go benchmark, 5 iterations | 306,465,158 ns/op; 342.15 MB/s |
 | Go allocations per operation | 347,447,616 bytes; 172,855 allocations |
 
-Allocation totals are not simultaneous resident memory. CLI wall time includes process launch and `/usr/bin/time`; the Go benchmark measures in-process evaluation. These are separate samples. The initial 2-second p95 target was met for this workload. No cold-cache, multi-check, remote filesystem or large policy/surface performance claim is made. A 256 MiB memory budget remains a planning proposal, not a universal product guarantee.
+Allocation totals are not simultaneous resident memory. CLI wall time includes process launch and `/usr/bin/time`; the Go benchmark measures in-process evaluation. These are separate samples. This one-check workload was below 2 seconds; it did not establish the planned three-check target. No cold-cache, multi-check, remote filesystem or large policy/surface performance claim is made. A 256 MiB memory budget remains a planning proposal, not a universal product guarantee.
 
 Measured macOS binary SHA-256: `85f4c670cd6016a0c24be4b1af98d2dde33ffb742a722f1d0a621bda65672e2b`.
 
@@ -63,3 +63,21 @@ Linux binary hashes: runner test `6242683bcd693269a0d352ef8991e3f59e9370f95d8309
 | Go 1.23 minimum | Go 1.23.12 build and public Web failure/recovery smoke on GitHub Ubuntu; see [CI evidence](ci-smoke.md) | Full minimum-version test suite remains unverified |
 
 Storage failure injection is covered by the existing runner/receipt tests; no physical power-loss durability claim is made. Per-resource locks do not establish a global filesystem snapshot. Processes that deliberately escape their process group and concurrent same-user state tampering remain outside the supported lifecycle boundary. Actual Git push, remote CI and independent MVP review remain separate tasks.
+
+## Planned three-check measurement (NARU-022)
+
+The acceptance audit found that the earlier 20-sample, one-check measurement was narrower than the original three-check, thirty-sample plan. A supplemental run on the same macOS machine used exactly 10,000 files/100MiB and three required `true` checks, all hashing the same declared inputs. Candidate source `089cbd36dcb10c1e335f0e22ed64cd5698c03a40` contains the same evaluator implementation as the earlier measurement.
+
+```sh
+python3 scripts/measure-status.py /path/to/naru --samples 30 --checks 3
+```
+
+| Measurement | Result |
+| --- | --- |
+| Measured samples / excluded warmup | 30 / 1 |
+| First status after preparing receipts | 1.035 seconds |
+| Median wall time | 1.072 seconds |
+| Nearest-rank p95 | 1.109 seconds |
+| Maximum sampled RSS | 15,515,648 bytes (14.80 MiB) |
+
+Binary SHA-256: `c18e111e101a2f3f077a2a67ac16c3326d7f0f4cddbf647c0915fc220b42c2de`. Every status was satisfied with all three checks passing. The initial 2-second target was met under the planned warm-cache workload. The first status is not a cold-cache measurement: receipt preparation had already read the inputs. No cache purge was performed and no cold-cache claim is made. Earlier one-check results remain historical evidence rather than being relabeled as three-check measurements.
