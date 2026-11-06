@@ -275,3 +275,5 @@ Use `naru relay new --target 'test workstation' --artifact execution.log CHECK` 
 Require selected contract baselines with `mode_surfaces: {code: [api]}`. CLI status, Stop and pre-push then require fresh, approved, unchanged surface evidence. Reports with selected surfaces use schema 3; check-only reports remain schema 2. See [required baselines](docs/baselines.md#required-baselines-in-a-mode).
 
 Require policy evidence with `mode_policy: {code: true}`. Shared status and gates block missing, stale, unapproved or new findings. Known findings warn; reductions require human approval to shrink the baseline. Reports selecting policy use schema 3. See [policy enforcement](docs/policy.md#required-policy-evidence).
+
+[Common report contract and adapter matrix](docs/common-report.md).

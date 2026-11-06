@@ -116,4 +116,8 @@ Checks and extractors inspect their Unix process group after the shell exits. Re
 
 ## NARU-018.1: report evaluation time
 
-Each status evaluation captures one UTC instant and applies it to every relay check in that report. Internal callers can supply the instant with `status.EvaluateAt` to compare reports at acceptance and expiry boundaries. Files and stored evidence are still read from the current workspace; this is not historical replay or an atomic filesystem snapshot. Surface/policy aggregation and Markdown reporting remain pending under NARU-018.
+Each status evaluation captures one UTC instant and applies it to every relay check in that report. Internal callers can supply the instant with `status.EvaluateAt` to compare reports at acceptance and expiry boundaries. Files and stored evidence are still read from the current workspace; this is not historical replay or an atomic filesystem snapshot. NARU-018 subsequently adds surface/policy aggregation and Markdown reporting, described below.
+
+## NARU-018: common report integration
+
+Opt-in `mode_surfaces` and `mode_policy` now join checks and relay evidence in the shared status decision. Extended reports use schema 3; check-only reports retain schema 2. CLI text/JSON/Markdown and both gate adapters consume the same requirements while retaining explicit Stop escapes and strict pre-push policy. See the [report contract and adapter matrix](common-report.md). Earlier numbered sections describe the scope of their historical tasks.

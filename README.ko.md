@@ -216,3 +216,5 @@ checks:
 `mode_surfaces: {code: [api]}`로 모드에 필수 기준본을 지정할 수 있습니다. CLI status·Stop·pre-push는 최신 입력과 일치하고 승인된 기준본에 변경이 없을 때만 통과합니다. 필수 surface가 있는 보고서는 schema 3, 검사만 있는 보고서는 schema 2입니다. [필수 기준본 안내](docs/baselines.md#required-baselines-in-a-mode)를 참고하세요.
 
 `mode_policy: {code: true}`로 정책 근거를 필수로 지정합니다. 공통 status와 gate는 근거 누락·stale·미승인·신규 위반을 차단합니다. 기존 위반은 경고하며, 기준 축소에는 사람 승인이 필요합니다. 정책을 선택한 보고서는 schema 3입니다. [정책 판정 안내](docs/policy.md#required-policy-evidence)를 참고하세요.
+
+[공통 보고서 계약과 adapter 판정 비교](docs/common-report.md).
