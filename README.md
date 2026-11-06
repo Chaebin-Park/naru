@@ -8,7 +8,7 @@ Terms: [NARU glossary](docs/glossary.md). Command names and quoted session outpu
 
 [한국어 README](README.ko.md)
 
-> Status: early development (P0). The core loop works: `init`, `check`, `status`, `mode`, and the Claude Code Stop gate. Contract baselines, policy review, local packs and a Spring Boot example are available. Relay and further platform packs are planned.
+> Status: early development (P0). The core loop works: `init`, `check`, `status`, `mode`, and the Claude Code Stop gate. Contract baselines, policy review, human relay, local packs, and Spring Boot, Android and Web examples are available. Further platform packs are planned.
 
 ## Why
 
@@ -201,7 +201,8 @@ For the MVP, validation prioritizes macOS and Linux. Windows has limited support
 - Receipts and config are local files. `naru gate pre-tool` blocks the obvious ways an agent could edit them, but its shell detection is a heuristic; rely on CI to re-run checks from a clean checkout.
 - Checks run sequentially with `sh -c`. Windows needs a POSIX shell (for example Git Bash), and a timeout there kills only the shell, not its children.
 - If a check leaves a background process holding its output open, naru records the exit status and stops waiting after 5 seconds.
-- Policy review is explicit; Stop/pre-push integration is pending. Relay and Android/Web packs are not implemented.
+- Policy review is explicit; Stop/pre-push integration is pending.
+- Relay does not authenticate the person who submits evidence, and CI must run its own checks. Android and Web packs cover only their public examples and pinned toolchains.
 
 ## Roadmap
 

@@ -2,7 +2,7 @@
 
 Use one name for each concept in NARU documents. The Korean column gives the preferred name for Korean prose. Keep commands, field names, paths, and quoted output unchanged.
 
-This glossary explains terms. It does not approve a design or mark a planned feature as complete. Baselines, packs, and relay are planned features. Waivers are deferred beyond the MVP. The design separates execution results, evidence sources, and exceptions. Existing receipts remain usable only when their meaning and evaluation rules are preserved. Otherwise, require a new check. The storage format remains undecided.
+This glossary explains terms. It does not approve a design or mark a planned feature as complete. Baselines, packs, policy review, and relay are implemented within the limits stated in their own documents. Waivers are deferred beyond the MVP. The design separates execution results, evidence sources, and exceptions. Existing receipts remain usable only when their meaning and evaluation rules are preserved. Otherwise, require a new check. Each implemented feature's document defines its storage format.
 
 ## Checks and decisions
 
@@ -12,9 +12,9 @@ This glossary explains terms. It does not approve a design or mark a planned fea
 | mode | 모드 | A named set of required checks. |
 | receipt | 검증 기록 | A saved check result tied to its inputs. |
 | evidence | 증거 | Information used to support a decision. A receipt is one form of evidence. |
-| result | 실행 결과 | The outcome of a check run. Current values are `pass`, `fail`, `timeout`, and `error`. |
-| evidence source / provenance | 증거 출처 | Where evidence came from. Current `evidence` labels are `local`, `agent-run`, and `ci`. A label does not authenticate its author. |
-| status | 검사 상태 | A receipt evaluated against current inputs and configuration. Current values are `pass`, `fail`, `stale`, `missing`, and `empty`. |
+| result | 실행 결과 | The outcome of a check run. Values include `pass`, `fail`, `timeout`, `error`, `cancelled`, and `not-run`. See [execution records](execution-records.md). |
+| evidence source / provenance | 증거 출처 | Where evidence came from. `check` accepts the labels `local`, `agent-run`, and `ci`. Relay submissions record `human-relayed`. A label does not authenticate its author. |
+| status | 검사 상태 | A receipt evaluated against current inputs and configuration. Values include `pass`, `fail`, `stale`, `missing`, `empty`, `not-run`, `running`, `interrupted`, and `cancelled`. See [execution records](execution-records.md) for the full list. |
 | gate | 진행 판정 | A decision to allow or block an action. Each gate has its own exit policy. |
 | decision report | 판정 보고서 | Data that explains which requirements are satisfied. The shared report format is proposed. |
 | fresh receipt | 현재 입력에 맞는 검증 기록 | A receipt whose inputs and check definition still match. Freshness alone does not mean the check passed. |
@@ -24,7 +24,7 @@ This glossary explains terms. It does not approve a design or mark a planned fea
 
 A check runs a command. A gate evaluates evidence. A gate does not run checks automatically. A receipt records one run. A decision report explains the evaluated state.
 
-## Planned features
+## Feature terms
 
 | English term | Korean name | Meaning |
 | --- | --- | --- |
@@ -33,14 +33,14 @@ A check runs a command. A gate evaluates evidence. A gate does not run checks au
 | surface baseline | 계약 기준본 | The accepted reference for external contract items. Approval accepts a specific change to that reference. |
 | violation baseline | 기존 위반 기준 | Recorded existing violations used to detect new violations. It is separate from contract approval. Remove resolved items only after human approval. If they return, treat them as new violations and block. |
 | pack | 플랫폼 묶음 | Platform checks, extractors, rule templates, and test fixtures. A pack is not a mode. For the MVP, packs are versioned files in the project repository. Automatic external downloads and updates are excluded. |
-| relay | 사용자 중계 | A person runs a prepared request and submits evidence. NARU does not run the remote command itself. Valid results can support local completion. Valid passing results can also satisfy the corresponding pre-push check. Other required checks and NOT VERIFIED recovery conditions still apply. CI runs checks separately. This policy is not implemented yet. |
+| relay | 사용자 중계 | A person runs a prepared request and submits evidence. NARU does not run the remote command itself. Valid results can support local completion. Valid passing results can also satisfy the corresponding pre-push check. Other required checks and NOT VERIFIED recovery conditions still apply. CI runs checks separately. See [relay](relay.md). |
 | waiver | 기한부 예외 | Permission to leave a requirement unmet within a defined scope and time. It is not a passing receipt. This feature is deferred beyond the MVP. No waiver registration or acceptance is part of the MVP. |
 | policy index | 정책 색인 | Links between tool rules and their reasons. |
-| not-run | 실행하지 못함 | A proposed outcome for a check that could not run. It is not implemented as a receipt result. |
-| human-relayed | 사람이 중계한 출처 | A proposed source label for evidence submitted through relay. |
-| waived | 예외 허용 상태 | A proposed exception decision, separate from check success. |
+| not-run | 실행하지 못함 | The result recorded when a declared prerequisite (a tool or OS) is unavailable, so the check did not run. It never satisfies a gate. |
+| human-relayed | 사람이 중계한 출처 | The source label for evidence submitted through relay. |
+| waived | 예외 허용 상태 | A proposed exception decision, separate from check success. It is deferred with waivers. |
 
-The current `evidence` field does not contain `not-run`, `human-relayed`, or `waived`. Their storage format and acceptance rules require a design decision.
+`not-run` is an execution result, not an evidence label. Only relay submission records `human-relayed`. `waived` is not implemented. Its storage format and acceptance rules require a design decision.
 
 ## Design and testing
 
