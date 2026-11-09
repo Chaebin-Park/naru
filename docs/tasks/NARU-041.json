@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "id": "NARU-041",
+  "previous": "NARU-040",
+  "base": "ba1565c14fe3290b3d97462eb8c13ebf62e3407d",
+  "status": "active",
+  "plan": {
+    "title": "Verify native Windows cancellation, recovery and local pre-push boundaries",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Same-check concurrent execution cannot replace running authority; native Windows job must directly observe test-owned child/grandchild handles across context cancellation and timeout, reject prior pass/restart until inspected cleanup, preserve affected state and successfully recover. Record actual surviving-process limits, not complete cleanup support.",
+        "test": "github.com/Chaebin-Park/naru/internal/runner/TestDuplicateExecutionCannotChangeOwner"
+      },
+      {
+        "id": "AC-2",
+        "description": "Actual installed pre-push hook on native Windows must reject missing/stale/unverified/narrowed-mode refs and create only the passing ref in an isolated temporary local bare remote. Explicit opt-in run is required before closure, with no skipped acceptance cases. Keep P08 paths passing.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIPathLifecycle"
+      }
+    ],
+    "limitations": [
+      "Windows-specific integration tests run separately on approved GitHub hosted amd64 runner; local code-v1 does not prove Windows runtime. No arbitrary PID kills, production/network push fixture or automatic owner recovery. Full descendant termination implementation is outside scope."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
