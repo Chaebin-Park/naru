@@ -81,3 +81,33 @@ python3 scripts/measure-status.py /path/to/naru --samples 30 --checks 3
 | Maximum sampled RSS | 15,515,648 bytes (14.80 MiB) |
 
 Binary SHA-256: `c18e111e101a2f3f077a2a67ac16c3326d7f0f4cddbf647c0915fc220b42c2de`. Every status was satisfied with all three checks passing. The initial 2-second target was met under the planned warm-cache workload. The first status is not a cold-cache measurement: receipt preparation had already read the inputs. No cache purge was performed and no cold-cache claim is made. Earlier one-check results remain historical evidence rather than being relabeled as three-check measurements.
+
+## Cache labels and reset requirements (NARU-042)
+
+The helper defaults to `--cache-mode warm-cache`: prepare the fixture and successful receipts, execute one excluded status warmup, then measure the requested positive sample count (default 20). This preserves the previous sampling procedure. `first-run` instead measures exactly one status immediately after receipt preparation, with no excluded status warmup. Its default sample count is 1; any other count is rejected. Separate invocations can collect separate first-status observations, but they are not OS cold-cache samples: creating files and `naru check` already read the inputs.
+
+```sh
+# Existing warm-cache procedure; default workload remains 10,000 files / 100 MiB.
+python3 scripts/measure-status.py /path/to/naru --samples 30 --checks 3
+# One first status after receipt preparation, explicitly not cold-cache.
+python3 scripts/measure-status.py /path/to/naru --cache-mode first-run --checks 3
+# Small functional smoke only; these results cannot establish the large-workload target.
+python3 scripts/measure-status.py /path/to/naru --samples 2 --checks 3 --files 10 --bytes 10240
+python3 -B scripts/test_measure_status.py
+```
+
+JSON adds `cache_mode` and `cache_evidence`; `warmups` is 1 or 0 respectively. Individual sample rows remain the source for median, nearest-rank p95 (`ceil(0.95 * n) - 1` in sorted zero-based order) and maximum RSS. `first_status_seconds` always describes the first status after preparation, excluded only in warm-cache mode. File/byte overrides are positive and recorded, so a small smoke cannot silently appear as the standard workload. macOS `/usr/bin/time -l` RSS semantics remain required. Every timed status must be satisfied with exactly the requested number of passing checks. These helpers do not measure `check` execution time.
+
+### Cold-cache protocol and current refusal
+
+`--cache-mode cold-cache` exits 2 before resolving the binary, preparing files or launching a workload. No cache-reset backend exists; an operator assertion, an evidence filename, a new subprocess, new filenames or a container restart cannot unlock this mode. No cold-cache performance result is claimed by NARU-042. Actual cold measurements remain a prerequisite of the later comparative measurement task.
+
+A future reset backend must satisfy all of the following before it can produce a cold-cache label:
+
+1. Use a dedicated disposable VM with an explicitly identified storage/cache boundary. Prepare the binary, inputs, configuration and passing receipts on its disk, then stop the guest. Hash and inventory this fixture during preparation, outside the measured boot. Retain its immutable identity in the evidence.
+2. Start each sample from that prepared disk using a fresh guest boot with fresh guest RAM, or apply a documented OS-specific cache reset only inside that disposable guest. A mere process/container restart retains the host page cache. Guest reboot addresses guest RAM only; hypervisor, host and device caches remain separate and must be identified. A guest-only reset must never claim physically cold storage.
+3. Keep preparation and measurement separate. After reset, do not run `check`, hash/walk/read fixture inputs, scan them with an agent/indexer, copy them, or run a status warmup. Provision a minimal measurement launcher before shutdown; its first fixture-reading command is the timed status. Collect logs and validate the result after that command. Instrumentation must not pre-read the measured files.
+4. Record per-sample reset method/version, isolated machine/boot identity, fixture identity, reset completion and monotonic ordering of reset → first input read → measurement. Preserve command exits, raw timings, passing-check results and independent OS/cache instrumentation that establishes the declared cache boundary. Missing, contradictory or unavailable cache-state evidence rejects the sample; a reset log alone is insufficient proof of residency.
+5. Reset before every cold sample. Stop immediately if fixture identity changes or a pre-read occurs. A failed reset or measurement is a rejected sample, never a warm sample relabeled as cold.
+
+Reset/reboot can interrupt processes, discard unsaved data, require privileges and change boot-time services; dropping caches can also degrade every workload sharing a kernel. This repository performs no host-wide purge, privileged reset, VM restart or automatic tool installation. If the guest cache instrumentation, isolated environment or necessary authorization is unavailable, cold-cache measurement remains blocked rather than falling back to first-run. No reset method has been validated here; this is an acceptance protocol for future environment-specific implementation, not an executable guarantee.

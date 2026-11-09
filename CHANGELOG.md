@@ -8,6 +8,8 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 
 ### Added
 
+- Label status measurements as warm-cache or first-run; reject unsupported cold-cache requests and invalid sample counts.
+
 - Add native Windows CI for executable/project paths with spaces and Korean text, including missing/pass/stale/fail/recovery receipt checks.
 - Extend Windows acceptance CI with process-handle observations across cancellation/timeout, inspected recovery and opt-in actual local push/ref checks.
 
