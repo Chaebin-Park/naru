@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "id": "NARU-037",
+  "previous": "NARU-036",
+  "base": "b5a16a0eb18d468e22795d63e525f1bdabbe0d5d",
+  "status": "active",
+  "plan": {
+    "title": "Prepare and execute native Linux amd64 full verification in GitHub CI",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "A least-privilege Ubuntu amd64 workflow installs pinned Go and existing pinned analysis tools and runs format, vet, race tests, cross-vet, build and naru check. Confirm actual remote run success and architecture before closure.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIExecutionLifecycle"
+      }
+    ],
+    "limitations": [
+      "User authorized GitHub runner preparation and actual validation. Push a dedicated CI branch; no main push, repository settings, releases or local system installation. Minimum Go full suite is separate P04."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
