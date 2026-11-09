@@ -3,7 +3,7 @@
   "id": "NARU-041",
   "previous": "NARU-040",
   "base": "ba1565c14fe3290b3d97462eb8c13ebf62e3407d",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Verify native Windows cancellation, recovery and local pre-push boundaries",
     "profile": "code-v1",
@@ -23,6 +23,6 @@
       "Windows-specific integration tests run separately on approved GitHub hosted amd64 runner; local code-v1 does not prove Windows runtime. No arbitrary PID kills, production/network push fixture or automatic owner recovery. Full descendant termination implementation is outside scope."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "9aaa55bffe39b2dd375d820d58db5899cd57b3f4",
+  "evidence": "b169793c88074ff166df7b06fa01bc4d1cb982566bd28d1137c27896a1aaa2cd"
 }
