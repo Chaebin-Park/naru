@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "id": "NARU-039",
+  "previous": "NARU-038",
+  "base": "1ae150c571c402a01b1283cfc50aa5e01a3d9803",
+  "status": "active",
+  "plan": {
+    "title": "Continuously verify both supported Go toolchains and failure propagation",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Main and PR CI matrix runs Go 1.23.12 and 1.27.3 with isolated newer analysis tools. Both actual remote matrix jobs must succeed; fault injection must show helper stops and propagates failures from vet, race tests, cross-vet and build.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIExecutionLifecycle"
+      }
+    ],
+    "limitations": [
+      "Publish dedicated CI branch for validation and main integration only after verification. No settings changes or deliberately failing main commits. Actual push integration remains excluded."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
