@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "id": "NARU-038",
+  "previous": "NARU-037",
+  "base": "924934b28ce1029189c6ddba972e5ad289925004",
+  "status": "active",
+  "plan": {
+    "title": "Verify the full application suite on Go 1.23.12 in native Linux CI",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Execute format, vet, full race tests, cross-vet and application build with Go 1.23.12 and GOTOOLCHAIN=local on Ubuntu amd64; separately run development analysis and dogfood checks with Go 1.27.3. Require actual remote success and record exact toolchain boundaries.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIExecutionLifecycle"
+      }
+    ],
+    "limitations": [
+      "Push only a dedicated ci/naru-038 branch for authorized runner validation. No main push, release or local tool installation. Analysis tools require newer Go and must not be described as Go 1.23 executions."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
