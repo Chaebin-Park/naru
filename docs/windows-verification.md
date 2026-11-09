@@ -51,3 +51,20 @@ Reproduce with Go, Git and POSIX `sh` on PATH:
 go vet ./...
 go test -count=1 -v ./internal/cli -run '^TestCLIPathLifecycle$'
 ```
+
+## Cancellation and push acceptance procedure
+
+`TestWindowsCancellationRecovery` is a Windows-only integration fixture for
+runner context cancellation and timeout. It starts test-owned child/grandchild
+processes, opens native process handles before cancellation, then observes those
+same handles. Surviving descendants are logged as a platform limit. The test
+requires unsatisfied status, rejected concurrent execution and blocked restart,
+then releases/cleans the fixtures, preserves the affected current record outside
+the current-state directory and requires a fresh passing execution. It never
+treats an available lock as proof of process termination.
+
+The workflow also runs `TestPrePushLocalRemote` with the explicit
+`NARU_TEST_LOCAL_PUSH=1` opt-in. It installs the actual hook and compares real
+push outcomes with ref existence in a temporary local bare repository; no
+network remote is used. These additions require an actual successful Windows
+run before they advance the verified support boundary above.

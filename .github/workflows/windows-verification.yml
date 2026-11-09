@@ -1,7 +1,7 @@
 name: Native Windows path verification
 on:
   push:
-    branches: [main, 'ci/naru-040-*']
+    branches: [main, 'ci/naru-040-*', 'ci/naru-041-*']
   pull_request:
   workflow_dispatch:
 permissions:
@@ -43,3 +43,11 @@ jobs:
       - name: Verify installed CLI paths and receipt lifecycle
         shell: bash
         run: go test -count=1 -v ./internal/cli -run '^TestCLIPathLifecycle$'
+      - name: Verify cancellation, timeout, ownership and inspected recovery
+        shell: bash
+        run: go test -count=1 -v ./internal/runner -run '^(TestWindowsCancellationRecovery|TestDuplicateExecutionCannotChangeOwner)$'
+      - name: Verify actual installed hook and local remote refs
+        shell: bash
+        env:
+          NARU_TEST_LOCAL_PUSH: '1'
+        run: go test -count=1 -v ./internal/cli -run '^TestPrePushLocalRemote$'

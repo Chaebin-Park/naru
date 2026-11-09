@@ -9,6 +9,7 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 ### Added
 
 - Add native Windows CI for executable/project paths with spaces and Korean text, including missing/pass/stale/fail/recovery receipt checks.
+- Extend Windows acceptance CI with process-handle observations across cancellation/timeout, inspected recovery and opt-in actual local push/ref checks.
 
 ## [0.2.0] - 2026-11-06
 
