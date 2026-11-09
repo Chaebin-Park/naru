@@ -1,0 +1,45 @@
+name: Native Windows path verification
+on:
+  push:
+    branches: [main, 'ci/naru-040-*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  paths:
+    runs-on: windows-2025
+    timeout-minutes: 15
+    env:
+      GOTOOLCHAIN: local
+      GOWORK: 'off'
+      GOENV: 'off'
+      GOFLAGS: ''
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: '1.23.12'
+          cache: false
+      - name: Assert native Windows and record tools
+        shell: bash
+        run: |
+          set -eu
+          test "$(go env GOHOSTOS)" = windows
+          test "$(go env GOHOSTARCH)" = amd64
+          test "$(go version)" = 'go version go1.23.12 windows/amd64'
+          cmd.exe //c ver
+          git rev-parse HEAD
+          go version
+          git --version
+          bash --version
+          command -v sh
+      - name: Verify native packages
+        shell: bash
+        run: go vet ./...
+      - name: Verify installed CLI paths and receipt lifecycle
+        shell: bash
+        run: go test -count=1 -v ./internal/cli -run '^TestCLIPathLifecycle$'

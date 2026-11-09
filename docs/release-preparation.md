@@ -46,6 +46,22 @@ This uses a temporary installation only. No shell profile, global binary directo
 
 See [reliability measurements and lifecycle limits](reliability-performance.md) and [remote CI evidence](ci-smoke.md). Cross-build success never implies runtime support. Tools/SDKs for Android, Web and Spring Boot packs are separate prerequisites; NARU does not install them.
 
+### Windows path acceptance
+
+The native Windows path workflow uses `windows-2025`, Go 1.23.12 and the
+runner's Git for Windows POSIX shell. It records the actual OS, Go, Git and
+shell versions, runs native vet and executes `TestCLIPathLifecycle` without
+skipping Windows. Each fixture copies the executable into a path with spaces
+or Korean text, runs version/init and checks missing/pass/stale/fail/recovery
+through new CLI processes. It asserts exactly two declared input files and
+proves that changes outside those inputs do not invalidate a pass.
+
+Run `go test -count=1 -v ./internal/cli -run '^TestCLIPathLifecycle$'` with
+`sh`, Git and Go on PATH. A successful run is bounded path/lifecycle evidence;
+it does not establish cancellation, process-tree cleanup, full pack support or
+actual Windows pre-push behavior. Those need separate native verification.
+The support table must only be advanced after the actual Windows job succeeds.
+
 ## Upgrade and migration
 
 Back up configuration and any reviewed baseline before upgrading. Read [execution records](execution-records.md), [common reports](common-report.md), [relay](relay.md) and [baseline approval](baselines.md). Do not hand-edit evidence to obtain a pass.
