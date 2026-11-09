@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "id": "NARU-043",
+  "previous": "NARU-042",
+  "base": "2e78fa6272ff145d3e97c92c0a66841205f7e6a7",
+  "status": "active",
+  "plan": {
+    "title": "Verify Linux input page residency and isolated guest cache reset controls",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Read-only Linux mincore helper rejects symlinks, unexpected ownership and changed file identities; zero/partial residency and probe failures cannot manufacture a cold proof. Portable injected tests cover rejection paths.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestLinuxCacheProbeHelper"
+      },
+      {
+        "id": "AC-2",
+        "description": "On the prepared isolated Linux guest, observe warm positive control, controller-issued sync/page-cache reset, two zero-residency probes and re-read warm control. Keep explicit snapshot and race limits; no host-wide reset command or cold performance claim.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestStatusMeasurementHelper"
+      }
+    ],
+    "limitations": [
+      "Guest-only integration runs separately through an E01-verified controller; portable tests do not prove Linux residency. Public helper is read-only and never writes drop_caches. Existing cold-cache measurement refusal remains; no timing/backend connection or thirty-sample P11 results."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
