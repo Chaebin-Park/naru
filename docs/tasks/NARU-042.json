@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "id": "NARU-042",
+  "previous": "NARU-041",
+  "base": "91d207c8377f5376ddd29afc2223292dc10d773c",
+  "status": "active",
+  "plan": {
+    "title": "Distinguish warm-cache, first-run and unsupported cold-cache measurements",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Measurement helper preserves default warm-cache samples, labels first-run separately, validates sample counts and computes nearest-rank summaries from fixtures. Cold-cache requests fail closed without verified cache-reset support.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestStatusMeasurementHelper"
+      },
+      {
+        "id": "AC-2",
+        "description": "Document controlled cold-cache preparation, side effects and evidence requirements without treating new processes or files as cache resets; run a small real workload smoke for both supported labels.",
+        "test": "github.com/Chaebin-Park/naru/internal/status/TestLargeWorkspaceStatus"
+      }
+    ],
+    "limitations": [
+      "No host-wide cache purge or tool installation. Actual cold-cache results and thirty-sample comparative performance conclusions belong to a later task; this helper refuses cold-cache until a verifiable reset backend exists. First-run means first status after receipt preparation, which already reads inputs."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
