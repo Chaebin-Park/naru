@@ -37,13 +37,42 @@ Every pass also asserts exactly two declared input files, including a filename
 with Korean text and a space. Executable/config/evidence and unrelated files
 are excluded from that fixture's inputs. No test case is skipped on Windows.
 
+## Native cancellation and recovery evidence
+
+On 2026-11-09, [run 42574881533](https://github.com/Chaebin-Park/naru/actions/runs/42574881533)
+passed the cancellation, ownership and actual local push fixtures at source
+`14992add8a5fed0612b104515ce1298c47b6db92`, on the same Windows/Go/Git/Bash
+versions listed above. No selected acceptance case was skipped.
+
+| Case | Direct observation | Authority and recovery |
+| --- | --- | --- |
+| Runner context cancellation | Child and grandchild both remained alive | Cancelled result, `owner_lost`, unsatisfied; restart blocked |
+| Configured timeout | Child and grandchild both remained alive | Timeout result, `owner_lost`, unsatisfied; restart blocked |
+| Concurrent same-check start | Original run ID remained running | Duplicate refused; owner not overwritten |
+| Inspected fixture cleanup | Both process handles signaled exit | Cleanup alone still did not authorize restart |
+| Preserve current record and rerun | New check passed | Fresh CLI status satisfied |
+
+These are confirmed descendant-cleanup limits, not automatic tree termination.
+The fixture cooperatively releases its own processes and verifies exit through
+handles acquired before cancellation. It never kills a PID recovered from stale
+metadata. See [process handle waiting](https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject)
+and the [manual recovery procedure](execution-records.md#interrupted-owners-and-manual-recovery).
+Context cancellation is exercised through the runner API; this is not a test of
+keyboard Ctrl-C delivery through Windows consoles.
+
+The actual installed hook accepted the passing ref and rejected missing,
+NOT VERIFIED, stale and narrowed-mode attempts. Each attempt targeted a distinct
+ref in a temporary local bare repository, and ref existence was asserted.
+The extended fixture also records exact push exit codes, matches successful refs
+to HEAD, and covers failed-check and recovered attempts.
+
 ## Remaining boundaries
 
 This does not verify the full Windows test suite, every pack, a published archive
-installer, global PATH installation, cancellation, concurrency, descendant
-cleanup or an actual Windows Git pre-push/ref change. Cancellation/recovery and
-push-hook acceptance are the next separate work unit. Native vet and the targeted
-runtime test do not substitute for those tests. No new cleanup guarantee is made.
+installer, global PATH installation, keyboard Ctrl-C delivery, every process-tree
+shape or automatic descendant cleanup. Only same-check local locking and the
+listed local push/ref cases are covered; no network/distributed locking or
+hostile-process isolation is claimed.
 
 Reproduce with Go, Git and POSIX `sh` on PATH:
 
@@ -66,5 +95,4 @@ treats an available lock as proof of process termination.
 The workflow also runs `TestPrePushLocalRemote` with the explicit
 `NARU_TEST_LOCAL_PUSH=1` opt-in. It installs the actual hook and compares real
 push outcomes with ref existence in a temporary local bare repository; no
-network remote is used. These additions require an actual successful Windows
-run before they advance the verified support boundary above.
+network remote is used. Their native execution evidence is recorded above.

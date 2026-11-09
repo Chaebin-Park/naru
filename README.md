@@ -280,7 +280,7 @@ Require policy evidence with `mode_policy: {code: true}`. Shared status and gate
 
 [Common report contract and adapter matrix](docs/common-report.md).
 
-[Runtime support, reliability evidence and status performance](docs/reliability-performance.md): the measured 10,000-file/100MiB warm-cache workload met the initial 2-second p95 target. [Native Windows path and receipt lifecycle tests](docs/windows-verification.md) pass with Go 1.23.12 and Git Bash; cancellation, descendant cleanup and actual Windows pre-push remain unverified. See the CI records for platform-specific Go coverage.
+[Runtime support, reliability evidence and status performance](docs/reliability-performance.md): the measured 10,000-file/100MiB warm-cache workload met the initial 2-second p95 target. [Native Windows tests](docs/windows-verification.md) pass with Go 1.23.12 and Git Bash for paths, receipt lifecycle, runner cancellation/timeout recovery, same-check locking and actual local pre-push. Descendants can survive cancellation/timeout, requiring inspected manual recovery; keyboard Ctrl-C remains unverified. See the CI records for platform-specific Go coverage.
 
 [Clean Web CI smoke](docs/ci-smoke.md) includes a source-only archive runner and pinned GitHub Actions workflow. Actual remote failure/recovery passed on Ubuntu with Go 1.23.12; exact revisions and run links are recorded there.
 

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -180,10 +181,28 @@ func TestPrePushLocalRemote(t *testing.T) {
 		if (err == nil) != allowed {
 			t.Fatalf("push %s allowed=%v: %v %s", ref, allowed, err, out)
 		}
-		probe := exec.Command("git", "--git-dir", remote, "show-ref", "--verify", "refs/heads/"+ref) // #nosec G204 -- Test-controlled executable and arguments exercise the CLI in isolated temporary directories.
-		if err := probe.Run(); (err == nil) != allowed {
-			t.Fatalf("remote ref %s existence must match allowed=%v: %v", ref, allowed, err)
+		exitCode := 0
+		if err != nil {
+			var exit *exec.ExitError
+			if !errors.As(err, &exit) || exit.ExitCode() != 1 {
+				t.Fatalf("push %s must fail with exit 1: %v %s", ref, err, out)
+			}
+			exitCode = exit.ExitCode()
 		}
+		probe := exec.Command("git", "--git-dir", remote, "show-ref", "--verify", "refs/heads/"+ref) // #nosec G204 -- Test-controlled executable and arguments exercise the CLI in isolated temporary directories.
+		refOutput, refErr := probe.CombinedOutput()
+		if (refErr == nil) != allowed {
+			t.Fatalf("remote ref %s existence must match allowed=%v: %v", ref, allowed, refErr)
+		}
+		if allowed {
+			head := exec.Command("git", "rev-parse", "HEAD")
+			head.Dir = root
+			headOutput, err := head.Output()
+			if err != nil || !strings.HasPrefix(string(refOutput), strings.TrimSpace(string(headOutput))+" ") {
+				t.Fatalf("remote ref %s does not match HEAD: %s %v", ref, refOutput, err)
+			}
+		}
+		t.Logf("push %s: exit=%d remote_ref_exists=%t", ref, exitCode, refErr == nil)
 	}
 	push("missing", false)
 	write(t, root, "src/value.txt", "ok")
@@ -208,4 +227,17 @@ func TestPrePushLocalRemote(t *testing.T) {
 		t.Fatal(r)
 	}
 	push("narrowed-mode", false)
+	if r := run(t, root, "", "mode", "--clear"); r.code != 0 {
+		t.Fatal(r)
+	}
+	write(t, root, "src/value.txt", "bad")
+	if r := run(t, root, "", "check"); r.code != 1 {
+		t.Fatal(r)
+	}
+	push("failed", false)
+	write(t, root, "src/value.txt", "ok")
+	if r := run(t, root, "", "check"); r.code != 0 {
+		t.Fatal(r)
+	}
+	push("recovered", true)
 }

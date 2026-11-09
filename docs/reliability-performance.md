@@ -59,7 +59,7 @@ Linux binary hashes: runner test `6242683bcd693269a0d352ef8991e3f59e9370f95d8309
 | --- | --- | --- |
 | macOS arm64 / Go 1.27.3 | Native race suite, vet, self-check, workload measurement | One machine and selected workload |
 | Linux amd64, emulated Rocky Linux 9 | Bounded runner/CLI tests and executable smoke above | Not full suite, no race run, build-dependent lifecycle test unverified |
-| Windows amd64 / Go 1.23.12 | Native vet and [CLI paths/receipt lifecycle](windows-verification.md) | Cancellation, descendant cleanup, concurrency and actual Windows pre-push remain unverified; POSIX shell required |
+| Windows amd64 / Go 1.23.12 | Native vet, [CLI paths, cancellation/timeout recovery, same-check locking and local pre-push](windows-verification.md) | Descendants survive cancellation/timeout; inspected manual recovery required; POSIX shell required; keyboard Ctrl-C unverified |
 | Go 1.23 minimum | Go 1.23.12 build and public Web failure/recovery smoke on GitHub Ubuntu; see [CI evidence](ci-smoke.md) | Full minimum-version test suite remains unverified |
 
 Storage failure injection is covered by the existing runner/receipt tests; no physical power-loss durability claim is made. Per-resource locks do not establish a global filesystem snapshot. Processes that deliberately escape their process group and concurrent same-user state tampering remain outside the supported lifecycle boundary. Actual Git push, remote CI and independent MVP review remain separate tasks.

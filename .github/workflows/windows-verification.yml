@@ -1,4 +1,4 @@
-name: Native Windows path verification
+name: Native Windows verification
 on:
   push:
     branches: [main, 'ci/naru-040-*', 'ci/naru-041-*']

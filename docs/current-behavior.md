@@ -4,6 +4,17 @@ Updated for NARU-006 on 2026-11-04. This describes the NARU-006 implementation, 
 
 Terms: [glossary](glossary.md). Live agent evidence: [verification](verification.md).
 
+## Native Windows lifecycle (NARU-041)
+
+Native Windows runner context cancellation, timeout, same-check concurrent
+execution rejection, inspected recovery and actual installed local pre-push
+passed on 2026-11-09. Child and grandchild processes survived both cancellation
+and timeout; `owner_lost` kept status unsatisfied and blocked restart. After the
+test inspected/cleaned its own processes, preserved the current record and reran
+the check, status passed. See [native observations](windows-verification.md).
+This supersedes the unverified lifecycle boundary in the NARU-040 entry below;
+automatic descendant cleanup and keyboard Ctrl-C delivery remain unverified.
+
 ## Native Windows paths (NARU-040)
 
 Native Windows amd64/Go 1.23.12 vet and the real-process CLI path lifecycle

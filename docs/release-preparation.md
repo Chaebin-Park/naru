@@ -42,7 +42,7 @@ This uses a temporary installation only. No shell profile, global binary directo
 | macOS arm64 | Native full checks and temporary candidate smoke | Requires POSIX `sh` and project-specific tools |
 | Linux amd64 | Selected Rocky Linux container tests; actual Ubuntu/Go 1.23.12 Web CI | Full minimum-Go suite not run |
 | macOS amd64, Linux arm64 | Candidate cross-build only | Runtime not verified |
-| Windows amd64 | Native Go 1.23.12 vet and CLI path/receipt lifecycle; [run and matrix](windows-verification.md) | Requires POSIX shell; cancellation, descendant cleanup and actual pre-push remain unverified |
+| Windows amd64 | Native Go 1.23.12 vet, CLI paths, cancellation/timeout recovery, same-check ownership and actual local pre-push; [runs and matrices](windows-verification.md) | Requires POSIX shell; descendants can survive cancellation/timeout and require inspected manual recovery; keyboard Ctrl-C unverified |
 
 See [reliability measurements and lifecycle limits](reliability-performance.md) and [remote CI evidence](ci-smoke.md). Cross-build success never implies runtime support. Tools/SDKs for Android, Web and Spring Boot packs are separate prerequisites; NARU does not install them.
 
@@ -58,8 +58,9 @@ proves that changes outside those inputs do not invalidate a pass.
 
 Run `go test -count=1 -v ./internal/cli -run '^TestCLIPathLifecycle$'` with
 `sh`, Git and Go on PATH. A successful run is bounded path/lifecycle evidence;
-it does not establish cancellation, process-tree cleanup, full pack support or
-actual Windows pre-push behavior. Those need separate native verification.
+it does not establish full pack support or automatic process-tree cleanup.
+Separate [cancellation and local push fixtures](windows-verification.md#native-cancellation-and-recovery-evidence)
+record the bounded native recovery and hook evidence.
 The [first actual Windows run and result matrix](windows-verification.md) passed
 on 2026-11-09. These results concern a source-built executable copied to the
 fixture paths, not a published archive installer or global PATH installation.
