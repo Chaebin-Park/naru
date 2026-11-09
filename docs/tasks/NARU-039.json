@@ -3,7 +3,7 @@
   "id": "NARU-039",
   "previous": "NARU-038",
   "base": "1ae150c571c402a01b1283cfc50aa5e01a3d9803",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Continuously verify both supported Go toolchains and failure propagation",
     "profile": "code-v1",
@@ -18,6 +18,6 @@
       "Publish dedicated CI branch for validation and main integration only after verification. No settings changes or deliberately failing main commits. Actual push integration remains excluded."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "63029ec88387071ee030892aa1fc5bbb997febc4",
+  "evidence": "eb5d072497c882f04067cbd4a89939e6fcb99746708ce0e63e8d604c1b1b0215"
 }
