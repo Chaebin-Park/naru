@@ -3,7 +3,7 @@
   "id": "NARU-036",
   "previous": "NARU-035",
   "base": "535097c3c3c2df74a798eeca362ea047cea839cf",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Align public installation guidance with the published v0.2.0 release",
     "profile": "code-v1",
@@ -18,6 +18,6 @@
       "Documentation only; preserve historical evidence and platform limits. No publication or settings changes."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "9347d58e21522b8548cb9a7c0e54239fe0eb7c20",
+  "evidence": "ecd4e9b6a83a5d2dbfadbb991128c67c3a67b04043ab946bb70c1f6a5ff6deb9"
 }
