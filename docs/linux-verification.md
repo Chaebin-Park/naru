@@ -16,3 +16,14 @@ A successful run establishes results only for its recorded source and environmen
 It does not prove the full Go 1.23 suite, Windows runtime or Linux arm64 runtime.
 Actual local-remote push tests remain opt-in and excluded from this run. Required
 platform tests must execute rather than skip before native coverage is claimed.
+
+## Minimum application Go version
+
+`minimum-go.yml` uses a separate scoped `ci/naru-038-*` branch trigger. It
+prepares analysis tools with Go 1.27.3, then explicitly selects Go 1.23.12
+with GOTOOLCHAIN=local for format, native vet, the full race suite,
+Windows/Linux vet and the application build. The built binary's Go metadata
+is printed. A final explicit switch to Go 1.27.3 runs `naru check`, including
+development analysis whose tools require the newer version. That final scan
+is not evidence of Go 1.23 analysis-tool compatibility. Neither workflow
+automatically installs a toolchain on a developer's machine.
