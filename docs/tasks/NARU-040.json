@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "id": "NARU-040",
+  "previous": "NARU-039",
+  "base": "0c80ff59d8a26934dfaf302f602d8028051e80d6",
+  "status": "active",
+  "plan": {
+    "title": "Verify native Windows CLI paths and receipt lifecycle",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "A portable real-process CLI acceptance test verifies executable and project paths with spaces and Korean text, version/init and missing/pass/stale/fail/recovery states with exact exit codes and observed input counts. The committed test must also pass on an actual Windows amd64 runner with recorded Go, Git and POSIX shell versions before closure.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIPathLifecycle"
+      }
+    ],
+    "limitations": [
+      "P08 only: cancellation, descendant cleanup, concurrency and actual pre-push on Windows remain P09. Use an isolated CI branch; no repository settings or release changes. Record actual Windows evidence before changing the support claim."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
