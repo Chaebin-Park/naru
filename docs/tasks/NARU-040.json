@@ -3,7 +3,7 @@
   "id": "NARU-040",
   "previous": "NARU-039",
   "base": "0c80ff59d8a26934dfaf302f602d8028051e80d6",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Verify native Windows CLI paths and receipt lifecycle",
     "profile": "code-v1",
@@ -18,6 +18,6 @@
       "P08 only: cancellation, descendant cleanup, concurrency and actual pre-push on Windows remain P09. Use an isolated CI branch; no repository settings or release changes. Record actual Windows evidence before changing the support claim."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "b1b1b9763e3fc1cee356c80be6988753b9d29a2a",
+  "evidence": "7934c0122e7c711456adb11214e5fed0776917c66b51fd62695c8cae349778ef"
 }
