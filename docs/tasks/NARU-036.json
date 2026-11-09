@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "id": "NARU-036",
+  "previous": "NARU-035",
+  "base": "535097c3c3c2df74a798eeca362ea047cea839cf",
+  "status": "active",
+  "plan": {
+    "title": "Align public installation guidance with the published v0.2.0 release",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Current release guidance links v0.2.0 and distinguishes historical candidate evidence; version selection and regression counts match current scripts. Manually verify remote tag and release assets.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIExecutionLifecycle"
+      }
+    ],
+    "limitations": [
+      "Documentation only; preserve historical evidence and platform limits. No publication or settings changes."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
