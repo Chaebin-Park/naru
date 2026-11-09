@@ -3,7 +3,7 @@
   "id": "NARU-042",
   "previous": "NARU-041",
   "base": "91d207c8377f5376ddd29afc2223292dc10d773c",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Distinguish warm-cache, first-run and unsupported cold-cache measurements",
     "profile": "code-v1",
@@ -23,6 +23,6 @@
       "No host-wide cache purge or tool installation. Actual cold-cache results and thirty-sample comparative performance conclusions belong to a later task; this helper refuses cold-cache until a verifiable reset backend exists. First-run means first status after receipt preparation, which already reads inputs."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "fc0fc16e8a7a1925614185ba1df7ecfe35665132",
+  "evidence": "25f6cfb185a523eb461e4bcd630c4cc3cbf06dc42918d5e7fa571757cfd510cb"
 }
