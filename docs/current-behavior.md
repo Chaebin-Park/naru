@@ -4,6 +4,15 @@ Updated for NARU-006 on 2026-11-04. This describes the NARU-006 implementation, 
 
 Terms: [glossary](glossary.md). Live agent evidence: [verification](verification.md).
 
+## Native Windows paths (NARU-040)
+
+Native Windows amd64/Go 1.23.12 vet and the real-process CLI path lifecycle
+passed on 2026-11-09 with Git Bash. Both spaces and Korean executable/project
+paths cover version/init and missing/pass/stale/fail/recovery, including exact
+input counts. See the [environment and acceptance matrix](windows-verification.md).
+This advances runtime evidence only for those cases; cancellation, descendant
+cleanup, concurrency and actual Windows pre-push remain unverified.
+
 ## Policy addition (NARU-012)
 
 The [policy contract](policy.md) adds strict rule indexing, executable fixtures, complete findings, explicit bootstrap and reduction-only approval. Policy authority is separate from contract baselines and ordinary check receipts. Missing coverage, stale candidates and changed definitions block approval; this task does not integrate policy commands into Stop/pre-push automatically. The older command table below remains historical for non-policy commands.
