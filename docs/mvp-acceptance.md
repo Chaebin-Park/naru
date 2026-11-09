@@ -1,6 +1,6 @@
 # MVP acceptance evidence
 
-Updated 2026-11-06. **Required acceptance evidence is collected within the documented support boundaries.** After explicit maintainer approval, actual temporary-local-remote pre-push integration passed. Independent review found no remaining implementation blocker; its tool limitations and platform gaps remain explicit below. Final verification/closure is recorded in the NARU-022 task ledger; this report is not a release publication.
+Updated 2026-11-06. **Required acceptance evidence is collected within the documented support boundaries.** After explicit maintainer approval, actual temporary-local-remote pre-push integration passed. Independent review found no remaining implementation blocker; its tool limitations and platform gaps remain explicit below. Final verification/closure is recorded in the NARU-022 task ledger; the subsequent v0.2.0 publication is recorded in NARU-035 and [release verification](release-preparation.md#published-v020-verification).
 
 ## Acceptance matrix
 
@@ -59,7 +59,7 @@ The author reproduced ignored-source injection, fixed the build to use a single 
 - Windows runtime/process-tree behavior, full Go 1.23 suite, full native Linux suite and cold-cache performance: explicitly unverified environments/scenarios; cross-vet/build is not execution evidence.
 - Complete filesystem snapshot isolation, A→B→A detection and escaped process descendants: documented lifecycle boundaries; stronger guarantees require separately scoped design.
 - Time-limited waivers, additional framework adapters, multiple CI-provider templates and PR posting: post-MVP backlog.
-- Signing, tags, release publication and repository settings: separate maintainer decisions. Candidate preparation is not publication.
+- Binary signing and repository settings remain separate maintainer decisions. The approved v0.2.0 tag and release were published under NARU-035; candidate preparation alone never publishes.
 
 ## Approved actual local push execution
 

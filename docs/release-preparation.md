@@ -1,6 +1,8 @@
 # Installation and release preparation
 
-This document describes unpublished candidates from the current repository. `go install ...@latest` installs the latest published module version, which may not contain these changes. The preparation script creates no tag or release; publication is a separate approved step.
+The published [v0.2.0 release](https://github.com/Chaebin-Park/naru/releases/tag/v0.2.0) provides five platform archives and SHA256SUMS. Its source is `87b6f10747cbd3804bcd89ae8f83c6b8b5474783`. Install that version with `go install github.com/Chaebin-Park/naru/cmd/naru@v0.2.0`, or download the archive for your platform and verify its checksum before extraction. Binaries are unsigned; runtime support limits are listed below.
+
+The candidate preparation procedure below is for subsequent builds. It creates no tag or release; publication is a separate approved step.
 
 ## Candidate preparation
 
@@ -15,7 +17,7 @@ shasum -a 256 -c SHA256SUMS
 
 For an approved release, pass an explicit version as the second argument, for example `sh scripts/prepare-candidate.sh /tmp/naru-v020-UNIQUE v0.2.0`. Only `vMAJOR.MINOR.PATCH` is accepted; `VERSION` records the selected value. Without it the candidate revision label remains the default.
 
-The output directory must be new and absolute. The script refuses a dirty checkout or existing destination. It reads the resolved commit’s exact tree/blob objects into a temporary source directory, bypasses archive attributes and Git replacement objects, rejects symlinks/submodules/non-regular entries, disables ambient Go overlays/workspaces/saved settings and automatic toolchain selection, then builds CGO-disabled macOS arm64/amd64, Linux amd64/arm64 and Windows amd64 executables with a `candidate-<revision>` version, records the full source revision, build toolchain and effective source-isolation settings, includes LICENSE, and hashes every artifact/metadata file. These are raw executable candidates, not signed installers. Output stays outside the repository; retain failed preparation output for diagnosis and use a new directory on retry.
+The output directory must be new and absolute. The script refuses a dirty checkout or existing destination. It reads the resolved commit’s exact tree/blob objects into a temporary source directory, bypasses archive attributes and Git replacement objects, rejects symlinks/submodules/non-regular entries, disables ambient Go overlays/workspaces/saved settings and automatic toolchain selection, then builds CGO-disabled macOS arm64/amd64, Linux amd64/arm64 and Windows amd64 executables with the explicit release version or, by default, a `candidate-<revision>` version, records the full source revision, build toolchain and effective source-isolation settings, includes LICENSE, and hashes every artifact/metadata file. These are raw executable candidates, not signed installers. Output stays outside the repository; retain failed preparation output for diagnosis and use a new directory on retry.
 
 A SHA256 sum detects changed bytes; it does not authenticate the publisher. Check the trusted source revision separately. Do not sign, tag, push or publish a release without maintainer approval. The checksum file does not hash itself.
 
@@ -53,7 +55,7 @@ Back up configuration and any reviewed baseline before upgrading. Read [executio
 - Existing modes keep their check requirements. Add `mode_surfaces` or `mode_policy` explicitly only when those requirements are intended; missing/stale/busy evidence blocks selected modes.
 - Check-only status JSON remains schema 2. Extended reports use schema 3. Consumers must inspect the schema and handle additional requirement rows; `--markdown` and `--json` are mutually exclusive.
 - Relay success remains human-relayed evidence with validity limits. CI executes independently; do not migrate local receipts into CI as a substitute.
-- Compare English/Korean README instructions and review Unreleased changes before distribution. Existing generated hook configuration is not silently replaced by a binary upgrade.
+- Compare English/Korean README instructions and review the target version’s changelog before distribution. Existing generated hook configuration is not silently replaced by a binary upgrade.
 
 ## Publication review checklist
 
@@ -84,4 +86,8 @@ Subsequent documentation/task-metadata commits do not retroactively change this 
 
 ## Independent review correction
 
-NARU-022 independent code and architecture reviews identified that the original preparation script built the live checkout: ignored Go source or an ambient overlay could enter a revision-labeled candidate. The ignored-source regression was reproduced before the fix (the candidate printed the injected marker). Exact tree/blob export and explicit Go environment isolation now prevent that input substitution. The six tests in `python3 scripts/test_prepare_candidate.py` verify ignored-source exclusion, ambient override isolation, a valid replacement overlay, attribute-driven source omission, Git replacement objects and a live edit after snapshot capture. All passed after the fix; attribute-driven omission was also reproduced before the follow-up correction. The historical candidate above was not proven contaminated, but is superseded for publication readiness by the corrected preparation workflow. New candidates have `BUILD_SETTINGS`; their isolated build deliberately disables VCS auto-detection and binds the version/REVISION to the exported commit.
+NARU-022 independent code and architecture reviews identified that the original preparation script built the live checkout: ignored Go source or an ambient overlay could enter a revision-labeled candidate. The ignored-source regression was reproduced before the fix (the candidate printed the injected marker). Exact tree/blob export and explicit Go environment isolation now prevent that input substitution. The source-isolation tests in `python3 scripts/test_prepare_candidate.py` verify ignored-source exclusion, ambient override isolation, a valid replacement overlay, attribute-driven source omission, Git replacement objects and a live edit after snapshot capture. All passed after the fix; attribute-driven omission was also reproduced before the follow-up correction. The historical candidate above was not proven contaminated, but is superseded for publication readiness by the corrected preparation workflow. New candidates have `BUILD_SETTINGS`; their isolated build deliberately disables VCS auto-detection and binds the version/REVISION to the exported commit.
+
+## Published v0.2.0 verification
+
+On 2026-11-06, source `87b6f10747cbd3804bcd89ae8f83c6b8b5474783` was published as v0.2.0 after full code-v1 verification. Five platform archives and SHA256SUMS were uploaded; all six remote asset digests matched local files. The public macOS arm64 archive was downloaded again, its checksum verified, and its executable reported `naru v0.2.0`. The native temporary-install lifecycle passed all 13 invocations. All eight preparation regressions, including explicit and invalid release-version cases, passed. Source CI and the subsequent task-completion commit CI succeeded. See the NARU-035 ledger for the implementation and completion boundary. This does not extend the platform support table above.
