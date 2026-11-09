@@ -3,7 +3,7 @@
   "id": "NARU-037",
   "previous": "NARU-036",
   "base": "b5a16a0eb18d468e22795d63e525f1bdabbe0d5d",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Prepare and execute native Linux amd64 full verification in GitHub CI",
     "profile": "code-v1",
@@ -18,6 +18,6 @@
       "User authorized GitHub runner preparation and actual validation. Push a dedicated CI branch; no main push, repository settings, releases or local system installation. Minimum Go full suite is separate P04."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "499ee0698bb9dd39b6facfcc2b703ce17ff21a2a",
+  "evidence": "1e1b3ff614d0bcac1287dbb275358f4452c1410b088029faa3db4363e8cecb70"
 }
