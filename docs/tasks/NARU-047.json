@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "id": "NARU-047",
+  "previous": "NARU-046",
+  "base": "d8066de3f71e52ca24065a306d8a946b7491ef3b",
+  "status": "active",
+  "plan": {
+    "title": "Integrate ordered isolated-guest input-cold status collection",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Cold collection requires a live controller reset callback and matching Linux/root boot identity, not a JSON assertion. Portable protocol tests prove sync/reset/two nonresident probes/closed probe descriptors/guarded collector ordering, fixed 100ms probe-finish-to-collector-start bound, rejection of reset failure, resident or invalid probes, identity changes and cleanup failures. A narrow controller-only probe-fd exception does not authorize external descriptors or mappings.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestLinuxColdStatusHelper"
+      },
+      {
+        "id": "AC-2",
+        "description": "Measurement accepts cold mode only through its controller API with reader guard required, uses zero cold warmups and per-sample reset, preserves one warm-cache warmup and existing macOS/first-run paths, validates expected passing status and post-sample provenance, and emits manifest-bound raw status/timing/transition evidence only after all samples succeed. Public CLI cold requests remain rejected.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestStatusMeasurementHelper"
+      },
+      {
+        "id": "AC-3",
+        "description": "Existing real warm/first-run status smoke remains passing. Separately, before task closure an approved isolated disposable Linux guest must execute small guarded warm and cold workloads with source/binary hashes, boot/environment evidence and fixed gap bound; ordinary CI never resets caches.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestLinuxStatusMeasurementSmoke"
+      }
+    ],
+    "limitations": [
+      "E03b-3 only, no P11 thirty-sample results, new dependency, toolchain installation, release or general-host cache-reset command. The public helper has no built-in reset backend or JSON/environment-variable unlock. Actual reset is supplied by the host-verified private disposable-VM controller; guest root and a claimed UUID alone are insufficient isolation evidence. Strict cold means observed nonresident input file pages before collector launch, not cold host/hypervisor/storage caches or an atomic snapshot. Shell handoff and observer overhead remain timed; the fixed 100ms gap is not a latency SLA or proof against later readers. Existing fd/mmap/provenance limitations persist. The coherent integration may exceed 300 implementation lines because probe-fd lifetime, collector timing, measurement API and their fault tests share one rollback boundary."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
