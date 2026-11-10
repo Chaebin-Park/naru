@@ -51,6 +51,9 @@ jobs:
         run: python3 scripts/test_ci_go_verify.py
       - name: Verify application toolchain
         run: sh scripts/ci-go-verify.sh
+      - name: Verify native reader guard permissions and actual status
+        run: |
+          sudo env NARU_READER_TEST_BINARY="$RUNNER_TEMP/naru-application" python3 -B scripts/test_linux_reader_guard.py --native
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version: '1.27.3'

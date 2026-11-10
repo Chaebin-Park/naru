@@ -13,6 +13,23 @@ import (
 	"time"
 )
 
+func TestLinuxReaderGuardHelper(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("reader guard protocol requires POSIX descriptors")
+	}
+	python, err := exec.LookPath("python3")
+	if err != nil {
+		t.Fatal("Python 3 required for reader guard verification")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	// #nosec G204 -- Fixed repository-owned tests; no privileges or cache reset requested.
+	output, err := exec.CommandContext(ctx, python, "-B", "../../scripts/test_linux_reader_guard.py").CombinedOutput()
+	if err != nil {
+		t.Fatalf("reader guard: %v\n%s", err, output)
+	}
+}
+
 func TestStatusProvenanceHelper(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("prepared workload provenance requires POSIX directory descriptors")

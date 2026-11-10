@@ -14,7 +14,7 @@ The controller exclusively reaps its selected child and converts Linux `ru_maxrs
 
 A nonzero/signaled exit, timeout, oversized output, unavailable collector or invalid RSS rejects the run. Status JSON must report boolean `satisfied: true` and exactly the expected unique check names in `pass` state. JSON/validation errors abort instead of yielding a successful sample. The helper emits its final summary only after all requested samples pass; it does not silently discard failures or retry them.
 
-The result records `collector`, `wall_scope`, `rss_scope`, platform, binary SHA-256, cache label, workload size, warmups and raw sample rows. `go` is the installed measurement-host toolchain version, or null when unavailable; it does not attest the binary's build toolchain. Binary hashing and fixture preparation precede measurement. The prepared workload manifest described below binds samples to observed files. It does not control other readers.
+The result records `collector`, `wall_scope`, `rss_scope`, platform, binary SHA-256, cache label, workload size, warmups and raw sample rows. `go` is the installed measurement-host toolchain version, or null when unavailable; it does not attest the binary's build toolchain. Binary hashing and fixture preparation precede measurement. The prepared workload manifest described below binds samples to observed files. Reader control is optional and described below.
 
 Do not compare these Linux values directly with historical macOS time-wrapper measurements or treat a small smoke as P11's thirty-sample workload. No Linux performance threshold is claimed here. The UTM reset control in [NARU-043](linux-cache-probe.md) remains separate; this task's native Linux coverage comes from the CI runner, not a status run in that VM.
 
@@ -37,6 +37,75 @@ Only directory descriptors remain open between checks, and they are not inherite
 
 The manifest can make output substantially larger than the previous timing summary. Save full JSON if the inventory is needed for later verification; its paths are relative and it contains hashes rather than receipt/log contents. Generated execution IDs/evidence vary across preparations, so a manifest digest is not a cross-run reproducibility claim, a signature, or a build-toolchain attestation. The declared binary SHA-256 identifies bytes observed around preparation and collection, not authenticated build provenance.
 
-This is an observational binding for a controlled synthetic fixture. It does not prevent a hostile same-user/root actor from modifying and restoring files between observations; metadata and content observations are not filesystem snapshots or proof that status saw a single immutable version. E03b-2 still owns reader control, and E03b-3 owns reset/probe/start ordering. `cold-cache` remains rejected before any preparation. No VM reset or performance threshold is enabled here.
+This is an observational binding for a controlled synthetic fixture. It does not prevent a hostile same-user/root actor from modifying and restoring files between observations; metadata and content observations are not filesystem snapshots or proof that status saw a single immutable version. The optional E03b-2 guard below checks readers during collection; E03b-3 still owns reset/probe/start ordering. `cold-cache` remains rejected before any preparation. No VM reset or performance threshold is enabled here.
 
 `TestStatusProvenanceHelper` runs manifest/digest, metadata-only validation, input/config/receipt/binary mutation, same-content replacement, path/root replacement, unsafe-file, cleanup and bounded-descriptor tests. A fake executable also demonstrates that valid passing status JSON cannot rescue changed inputs/receipts or a binary changed during preparation. POSIX tests run on macOS/Linux and skip on Windows. `TestLinuxStatusMeasurementSmoke` checks actual warm/first-run status output and recomputes the sample's manifest digest. A macOS pass is not native Linux runtime evidence.
+
+
+## Optional Linux reader guard (E03b-2 / NARU-046)
+
+`--reader-guard` requires Linux, root, permission-capable fanotify and complete
+procfs visibility in an already approved isolated environment. Use it only for
+this helper's freshly created private synthetic fixture and a trusted binary.
+Do not elevate an untrusted executable. Nothing installs privileges or resets
+caches. Without the flag, the existing warm/first-run path is unchanged.
+
+```sh
+# In the approved isolated Linux environment, with an approved root session:
+python3 scripts/measure-status.py /path/to/trusted/naru --reader-guard --files 4 --bytes 4096 --samples 1
+```
+
+After preparation and before each timed launch, `ReaderGuard` marks every pinned
+fixture directory for direct-child OPEN/ACCESS/OPEN_EXEC permission events, plus
+the selected binary itself. Directory marks avoid a mark/descriptor per input.
+The guard then examines visible processes' `/proc/<pid>/fd` and `maps` for the
+prepared files and binary by device/inode. An existing descriptor or mapping,
+restricted procfs, malformed map or inspection error blocks collection. Only
+processes/descriptors observed to have disappeared may be skipped. The controller
+retains directory descriptors only; subprocesses use `close_fds` and no exported
+fixture descriptors. The default fanotify PID mode reports TGID, allowing the
+selected Go process's threads without authorizing its child processes.
+
+A fixed `/bin/sh` handoff waits on a pipe before executing the binary with the
+same TGID. This lets the collector learn its PID before an executable permission
+event can block `Popen`. The synchronous collector owns monitoring and reaping;
+there is no separate monitor thread/process whose death could go unnoticed.
+Only the selected TGID is allowed during collection. Unexpected readers receive
+DENY and invalidate the run. Overflow, malformed/unsupported events, monitor EOF,
+read/write/close failures, a short response, an undrained event storm, no observed
+permission event, child failure, timeout or terminal queued events invalidate the
+run. Event and group descriptors close on error; the collector kills its created
+process group and reaps its direct child on monitoring failure or timeout.
+No partial successful JSON summary is printed.
+
+Successful output and each sample row record `reader_guard: fanotify-tgid-v1`;
+unguarded output records `none`. Wall time and waited-child peak RSS include the
+shell handoff and monitoring overhead, so they must not be compared as the same
+protocol as historical unguarded measurements. Setup/procfs inspection and
+post-sample provenance hashing remain outside reported timing. Marks are removed
+before controller hashing to avoid authorizing the controller as a second reader.
+
+This is a controlled measurement protocol, not a security sandbox or an immutable
+snapshot. Procfs enumeration is not atomic; hidden namespaces, hostile privileged
+processes, transient reads/mappings and file replacement races are outside its
+proof. Already opened descriptors/mappings are checked because fanotify alone
+cannot revoke mmap access. Other processes must not be allowed to create racing
+unobserved access in the isolated environment. Closing a fanotify group can allow
+pending permission requests: a rejected sample stays rejected even if such an
+open later succeeds. New/replaced files and changed directory membership are
+also rejected by post-sample provenance. This task does not guarantee absence of
+readers before/after the guarded interval, cache residency or reset/probe/start
+ordering; **cold-cache remains rejected**.
+
+`TestLinuxReaderGuardHelper` runs portable protocol/failure tests (native wait4
+cleanup only on Linux). Privileged kernel acceptance is a separate required Linux
+CI step, `python3 -B scripts/test_linux_reader_guard.py --native`, using a test-built
+binary via `NARU_READER_TEST_BINARY`. Native mode fails rather than skipping when
+Linux/root/support is unavailable. It tests real threaded access, existing fd and
+mmap rejection, actual external-reader DENY, timeout/failure recovery and actual
+warm/first-run status. Portable mocked events alone do not prove fanotify support.
+The [fanotify overview](https://man7.org/linux/man-pages/man7/fanotify.7.html),
+[initialization](https://man7.org/linux/man-pages/man2/fanotify_init.2.html) and
+[mark API](https://man7.org/linux/man-pages/man2/fanotify_mark.2.html) document
+permission replies, TGID reporting, CAP_SYS_ADMIN, mmap limitations and pending
+request behavior on group close.

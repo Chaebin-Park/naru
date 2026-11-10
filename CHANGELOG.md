@@ -8,6 +8,8 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 
 ### Added
 
+- Add opt-in Linux synthetic measurement reader guarding with fanotify TGID permission decisions, pre-existing descriptor/mapping rejection and fail-closed collection; cold-cache requests remain disabled.
+
 - Bind synthetic warm/first-run status samples to a prepared workload manifest; reject observed input, configuration, receipt and binary changes without enabling cold-cache measurements.
 
 - Support Linux warm-cache/first-run status measurements using monotonic wall time and wait4 peak RSS, with strict status validation; cold-cache requests remain disabled.

@@ -1,6 +1,7 @@
 """Measure explicitly labeled status latency and peak RSS on macOS or Linux in a temporary project."""
 
 import argparse
+from contextlib import nullcontext
 import json
 import math
 import platform
@@ -13,6 +14,7 @@ from pathlib import Path
 
 from linux_status_measure import collect as collect_linux
 from status_provenance import PreparedWorkload, binary_digest
+from linux_reader_guard import ReaderGuard
 
 def summarize(rows):
     """Use nearest-rank p95; resident memory is a maximum, not an allocation sum."""
@@ -36,7 +38,11 @@ def parse_args(argv=None):
     parser.add_argument("--bytes", type=int, default=100 * 1024 * 1024)
     parser.add_argument("--cache-mode", choices=("warm-cache", "first-run", "cold-cache"),
                         default="warm-cache")
+    parser.add_argument("--reader-guard", action="store_true",
+                        help="require Linux fanotify and visible procfs; isolated synthetic fixture only")
     args = parser.parse_args(argv)
+    if args.reader_guard and platform.system() != "Linux":
+        parser.error("--reader-guard requires Linux")
     if args.cache_mode == "cold-cache":
         parser.error("cold-cache requires a verified OS cache-reset backend; none is implemented")
     if args.samples is None:
@@ -88,7 +94,11 @@ def main():
             for i in range(args.samples + warmups):
                 prepared.validate_metadata()
                 if system == "Linux":
-                    sample = collect_linux([str(binary), "status", "--json"], root)
+                    with ReaderGuard(prepared) if args.reader_guard else nullcontext() as guard:
+                        sample = collect_linux([str(binary), "status", "--json"], root,
+                                               reader_guard=guard)
+                        if guard is not None and guard.allowed_events == 0:
+                            raise RuntimeError("reader guard observed no selected-child permission events")
                     elapsed, rss = sample["seconds"], sample["max_rss_bytes"]
                     report = json.loads(sample["stdout"])
                 else:
@@ -109,7 +119,8 @@ def main():
                     first_status_seconds = elapsed
                 if i >= warmups:  # First-run includes the first status; warm-cache excludes it.
                     rows.append({"seconds": elapsed, "max_rss_bytes": rss,
-                                 "manifest_sha256": prepared.manifest_sha256})
+                                 "manifest_sha256": prepared.manifest_sha256,
+                                 "reader_guard": "fanotify-tgid-v1" if args.reader_guard else "none"})
             provenance = prepared.export()
         result = {
             "files": count,
@@ -122,6 +133,7 @@ def main():
             "checks": args.checks,
             "first_status_seconds": first_status_seconds,
             "platform": platform.platform(),
+            "reader_guard": "fanotify-tgid-v1" if args.reader_guard else "none",
             "collector": "linux-wait4" if system == "Linux" else "macos-time-l",
             "wall_scope": "launch-through-observed-reap" if system == "Linux" else "time-wrapper-process",
             "rss_scope": "wait4 child peak; not simultaneous process-tree RSS" if system == "Linux" else "time-l maximum resident set size",

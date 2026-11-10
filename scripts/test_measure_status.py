@@ -33,6 +33,20 @@ class MeasurementTests(unittest.TestCase):
         first = measure.parse_args(["naru", "--cache-mode", "first-run"])
         self.assertEqual((first.cache_mode, first.samples), ("first-run", 1))
 
+    def test_reader_guard_platform_and_unavailable_setup(self):
+        with patch.object(measure.platform, "system", return_value="Darwin"), contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                measure.parse_args(["naru", "--reader-guard"])
+        with patch.object(measure.platform, "system", return_value="Linux"):
+            self.assertTrue(measure.parse_args(["naru", "--reader-guard"]).reader_guard)
+        args = measure.parse_args(["naru", "--files", "1", "--bytes", "1"])
+        args.reader_guard = True
+        output = io.StringIO()
+        with patch.object(measure, "parse_args", return_value=args), patch.object(measure.platform, "system", return_value="Linux"), patch.object(measure, "binary_digest", return_value="sha"), patch.object(measure.subprocess, "run"), patch.object(measure, "PreparedWorkload"), patch.object(measure, "ReaderGuard", side_effect=PermissionError("unavailable")), patch.object(measure, "collect_linux") as collect, contextlib.redirect_stdout(output):
+            with self.assertRaises(PermissionError): measure.main()
+            collect.assert_not_called()
+        self.assertEqual(output.getvalue(), "")
+
     def test_reject_invalid_and_unproven_cold(self):
         for flags in (["--samples", "0"], ["--samples", "-1"],
                       ["--checks", "0"], ["--files", "0"], ["--bytes", "0"],
