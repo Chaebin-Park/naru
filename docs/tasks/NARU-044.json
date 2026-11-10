@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "id": "NARU-044",
+  "previous": "NARU-043",
+  "base": "5a7c9304bad771719af06acaff896809ec43318b",
+  "status": "active",
+  "plan": {
+    "title": "Add Linux status measurement collection while preserving cold-cache refusal",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Linux collector uses monotonic launch-through-reap wall time and wait4 peak RSS KiB-to-byte conversion; rejects failed, signaled, timed-out or invalid status results. Injected and real-child tests cover failure paths.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestStatusMeasurementHelper"
+      },
+      {
+        "id": "AC-2",
+        "description": "Existing warm/first-run sample contracts and cold-cache rejection remain; Linux small synthetic workload verifies actual warm/first-run output and explicit collection semantics.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestLinuxStatusMeasurementSmoke"
+      }
+    ],
+    "limitations": [
+      "E03a prerequisite only. No reset backend or cold-cache enablement; E03b owns reset/probe/start ordering and reader controls. One small workload is not the P11 thirty-sample performance result. Linux wait4 peak RSS is not simultaneous process-tree RSS and Linux timings are not directly compared to historical macOS time-l timings."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
