@@ -223,6 +223,8 @@ checks:
 
 [실행 환경·신뢰성 검증·판정 성능](docs/reliability-performance.md): 10,000개 파일·100MiB warm-cache 측정에서 초기 p95 2초 목표를 충족했습니다. Go 1.23.12·Git Bash의 [Windows 실제 테스트](docs/windows-verification.md)에서 경로·검증 기록 생명주기·runner 취소/timeout 복구·동일 검사 잠금·실제 로컬 pre-push가 통과했습니다. 취소/timeout 후 하위 프로세스가 남을 수 있어 확인 후 수동 복구가 필요하며, 키보드 Ctrl-C는 미검증입니다. 플랫폼별 Go 검증 범위는 CI 기록을 참고하세요. 측정 도구는 `warm-cache`와 `first-run`을 구분하며, 검증 가능한 캐시 초기화 기능이 없는 `cold-cache` 요청은 거부합니다.
 
+[Linux residency probe](docs/linux-cache-probe.md)는 격리 실험용 입력 페이지 상주 상태를 읽기 전용으로 관찰합니다. cold-cache 성능 측정은 아직 활성화하지 않습니다.
+
 [Web clean CI smoke](docs/ci-smoke.md)는 커밋된 소스만 사용하는 실행기와 고정된 GitHub Actions workflow를 제공합니다. Ubuntu·Go 1.23.12에서 실제 원격 실패·복구 검증을 마쳤으며 해당 문서에 리비전과 실행 링크를 기록했습니다.
 
 [MVP 수용 근거와 남은 조건](docs/mvp-acceptance.md)에서 승인 후 실행한 실제 로컬 push 검증과 남은 환경 제한을 확인할 수 있습니다.

@@ -8,6 +8,8 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 
 ### Added
 
+- Add a read-only Linux file-page residency probe with fixture identity checks and isolated-guest control documentation; cold-cache measurements remain disabled.
+
 - Label status measurements as warm-cache or first-run; reject unsupported cold-cache requests and invalid sample counts.
 
 - Add native Windows CI for executable/project paths with spaces and Korean text, including missing/pass/stale/fail/recovery receipt checks.
