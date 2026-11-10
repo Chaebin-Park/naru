@@ -3,7 +3,7 @@
   "id": "NARU-043",
   "previous": "NARU-042",
   "base": "2e78fa6272ff145d3e97c92c0a66841205f7e6a7",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Verify Linux input page residency and isolated guest cache reset controls",
     "profile": "code-v1",
@@ -23,6 +23,6 @@
       "Guest-only integration runs separately through an E01-verified controller; portable tests do not prove Linux residency. Public helper is read-only and never writes drop_caches. Existing cold-cache measurement refusal remains; no timing/backend connection or thirty-sample P11 results."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "28752d9e2873ec582b8875e65e0ebb4fec8cb5d2",
+  "evidence": "ec0ade41786e4aa22b7390fe1349504dab3adc85bb816ad5e55ae58d53e9f5a5"
 }
