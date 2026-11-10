@@ -1,15 +1,18 @@
-"""Measure explicitly labeled status latency and peak RSS on macOS in a temporary project."""
+"""Measure explicitly labeled status latency and peak RSS on macOS or Linux in a temporary project."""
 
 import argparse
 import hashlib
 import json
 import math
 import platform
+import shutil
 import statistics
 import subprocess
 import tempfile
 import time
 from pathlib import Path
+
+from linux_status_measure import collect as collect_linux
 
 def summarize(rows):
     """Use nearest-rank p95; resident memory is a maximum, not an allocation sum."""
@@ -45,10 +48,21 @@ def parse_args(argv=None):
     return args
 
 
+def validate_status(report, names):
+    if (type(report.get("satisfied")) is not bool or not report["satisfied"]
+            or not isinstance(report.get("checks"), list)
+            or len(report["checks"]) != len(names)
+            or any(not isinstance(check, dict) or check.get("state") != "pass"
+                   for check in report["checks"])
+            or sorted(check.get("check", "") for check in report["checks"]) != sorted(names)):
+        raise RuntimeError("measured status did not verify the expected fixture checks")
+
+
 def main():
     args = parse_args()
-    if platform.system() != "Darwin":
-        raise SystemExit("RSS measurement currently requires macOS /usr/bin/time -l")
+    system = platform.system()
+    if system not in ("Darwin", "Linux"):
+        raise SystemExit("RSS measurement requires macOS time -l or Linux wait4")
     binary = args.binary.resolve(strict=True)
     # Hash before fixture preparation; metadata collection is outside timed status runs.
     binary_sha256 = hashlib.sha256(binary.read_bytes()).hexdigest()
@@ -71,20 +85,23 @@ def main():
         rows = []
         warmups = 1 if args.cache_mode == "warm-cache" else 0
         for i in range(args.samples + warmups):
-            started = time.perf_counter()
-            run = subprocess.run(
-                ["/usr/bin/time", "-l", str(binary), "status", "--json"],
-                cwd=root, capture_output=True, text=True, check=True, timeout=120,
-            )
-            elapsed = time.perf_counter() - started
-            report = json.loads(run.stdout)
-            if (not report["satisfied"] or len(report["checks"]) != args.checks
-                    or any(check["state"] != "pass" for check in report["checks"])):
-                raise RuntimeError("measured status did not verify the fixture")
-            rss = int(next(
-                line.split()[0] for line in run.stderr.splitlines()
-                if "maximum resident set size" in line
-            ))
+            if system == "Linux":
+                sample = collect_linux([str(binary), "status", "--json"], root)
+                elapsed, rss = sample["seconds"], sample["max_rss_bytes"]
+                report = json.loads(sample["stdout"])
+            else:
+                started = time.perf_counter()
+                run = subprocess.run(
+                    ["/usr/bin/time", "-l", str(binary), "status", "--json"],
+                    cwd=root, capture_output=True, text=True, check=True, timeout=120,
+                )
+                elapsed = time.perf_counter() - started
+                report = json.loads(run.stdout)
+                rss = int(next(
+                    line.split()[0] for line in run.stderr.splitlines()
+                    if "maximum resident set size" in line
+                ))
+            validate_status(report, names)
             if not i:
                 first_status_seconds = elapsed
             if i >= warmups:  # First-run includes the first status; warm-cache excludes it.
@@ -100,8 +117,12 @@ def main():
             "checks": args.checks,
             "first_status_seconds": first_status_seconds,
             "platform": platform.platform(),
+            "collector": "linux-wait4" if system == "Linux" else "macos-time-l",
+            "wall_scope": "launch-through-observed-reap" if system == "Linux" else "time-wrapper-process",
+            "rss_scope": "wait4 child peak; not simultaneous process-tree RSS" if system == "Linux" else "time-l maximum resident set size",
             "machine": platform.machine(),
-            "go": subprocess.check_output(["go", "version"], text=True).strip(),
+            "go": (subprocess.check_output(["go", "version"], text=True, timeout=10).strip()
+                   if shutil.which("go") else None),
             "binary_sha256": binary_sha256,
             **summarize(rows),
             "samples_data": rows,

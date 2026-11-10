@@ -284,6 +284,8 @@ Require policy evidence with `mode_policy: {code: true}`. Shared status and gate
 
 The [Linux residency probe](docs/linux-cache-probe.md) provides read-only input-page snapshots for isolated experiments; it does not enable cold-cache performance measurements.
 
+Linux warm-cache/first-run measurements use the [wait4 collector](docs/linux-status-measurement.md), with explicit timing and RSS scope; cold-cache requests remain blocked.
+
 [Clean Web CI smoke](docs/ci-smoke.md) includes a source-only archive runner and pinned GitHub Actions workflow. Actual remote failure/recovery passed on Ubuntu with Go 1.23.12; exact revisions and run links are recorded there.
 
 [MVP acceptance evidence and remaining conditions](docs/mvp-acceptance.md) record the approved local push integration and distinguish verified behavior from remaining runtime gaps.

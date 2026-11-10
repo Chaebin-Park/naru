@@ -8,6 +8,8 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 
 ### Added
 
+- Support Linux warm-cache/first-run status measurements using monotonic wall time and wait4 peak RSS, with strict status validation; cold-cache requests remain disabled.
+
 - Add a read-only Linux file-page residency probe with fixture identity checks and isolated-guest control documentation; cold-cache measurements remain disabled.
 
 - Label status measurements as warm-cache or first-run; reject unsupported cold-cache requests and invalid sample counts.

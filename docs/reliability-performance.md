@@ -20,7 +20,7 @@ Allocation totals are not simultaneous resident memory. CLI wall time includes p
 
 Measured macOS binary SHA-256: `85f4c670cd6016a0c24be4b1af98d2dde33ffb742a722f1d0a621bda65672e2b`.
 
-Reproduce with an approved installed Go toolchain; the Python CLI measurement currently supports macOS RSS semantics:
+Reproduce with an approved installed Go toolchain; the historical results below use macOS RSS semantics (the later Linux collector is documented separately):
 
 ```sh
 go test ./internal/status -run '^TestLargeWorkspaceStatus$' -count=1
@@ -96,7 +96,7 @@ python3 scripts/measure-status.py /path/to/naru --samples 2 --checks 3 --files 1
 python3 -B scripts/test_measure_status.py
 ```
 
-JSON adds `cache_mode` and `cache_evidence`; `warmups` is 1 or 0 respectively. Individual sample rows remain the source for median, nearest-rank p95 (`ceil(0.95 * n) - 1` in sorted zero-based order) and maximum RSS. `first_status_seconds` always describes the first status after preparation, excluded only in warm-cache mode. File/byte overrides are positive and recorded, so a small smoke cannot silently appear as the standard workload. macOS `/usr/bin/time -l` RSS semantics remain required. Every timed status must be satisfied with exactly the requested number of passing checks. These helpers do not measure `check` execution time.
+JSON adds `cache_mode` and `cache_evidence`; `warmups` is 1 or 0 respectively. Individual sample rows remain the source for median, nearest-rank p95 (`ceil(0.95 * n) - 1` in sorted zero-based order) and maximum RSS. `first_status_seconds` always describes the first status after preparation, excluded only in warm-cache mode. File/byte overrides are positive and recorded, so a small smoke cannot silently appear as the standard workload. macOS retains `/usr/bin/time -l` RSS semantics; Linux uses the separately documented [wait4 collector](linux-status-measurement.md). Every timed status must be satisfied with exactly the requested number of passing checks. These helpers do not measure `check` execution time.
 
 ### Cold-cache protocol and current refusal
 
@@ -115,3 +115,7 @@ Reset/reboot can interrupt processes, discard unsaved data, require privileges a
 ## Linux residency probe (NARU-043)
 
 The [read-only Linux probe and isolated-guest control](linux-cache-probe.md) separate page-residency observations from reset requests and performance acceptance. The helper rejects unsafe or changed fixtures and partial/failed probes. This prerequisite experiment does not enable cold-cache status measurements; reset/probe-to-status ordering and reader control remain for the next task.
+
+## Linux collection prerequisite (E03a / NARU-044)
+
+The [Linux wall-time and peak-RSS collector](linux-status-measurement.md) supports warm-cache/first-run synthetic smoke measurements, with explicit timing and memory scope. Cold-cache refusal remains; reset/probe/start ordering, reader controls and P11 measurements are pending E03b.
