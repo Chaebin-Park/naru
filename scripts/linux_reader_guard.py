@@ -15,12 +15,13 @@ _CHILD = 0x08000000
 _OVERFLOW = 0x4000
 
 
-def assert_no_existing_readers(identities, proc=Path('/proc')):
+def assert_no_existing_readers(identities, proc=Path('/proc'), probe_fds=()):
     """Fail closed on visible pre-existing regular file descriptors or mappings.
 
     Procfs visibility is required; this is a bounded observation of an isolated
     environment, not an atomic proof against racing privileged processes.
     """
+    probe_fds = frozenset(probe_fds)
     if os.geteuid() != 0:
         raise RuntimeError('reader guard requires root and complete procfs visibility')
     mounts = (proc / 'mounts').read_text()
@@ -38,6 +39,11 @@ def assert_no_existing_readers(identities, proc=Path('/proc')):
                 except FileNotFoundError:  # A descriptor closed while enumerating.
                     continue
                 if (info.st_dev, info.st_ino) in identities:
+                    # Only this controller's exact, non-inherited read-only probe
+                    # descriptors may predate reset. Never exempt another process
+                    # or any mapping; the probe must unmap and close before launch.
+                    if process.name == str(os.getpid()) and int(entry.name) in probe_fds:
+                        continue
                     raise RuntimeError('reader guard found an existing file descriptor')
             for line in (process / 'maps').read_text().splitlines():
                 fields = line.split(None, 5)
@@ -55,7 +61,7 @@ def assert_no_existing_readers(identities, proc=Path('/proc')):
 
 class ReaderGuard:
     """Single-owner synchronous monitor; no thread or monitor process can die unseen."""
-    def __init__(self, prepared):
+    def __init__(self, prepared, probe_fds=()):
         self.fd = None
         self.failed = False
         self.allowed_events = 0
@@ -84,7 +90,16 @@ class ReaderGuard:
                 raise OSError(ctypes.get_errno(), 'reader guard binary mark')
             identities = {record[0][:2] for record in prepared.files.values()}
             identities.add(prepared.binary_identity[:2])
-            assert_no_existing_readers(identities)
+            if probe_fds:
+                input_identities = {r[0][:2] for name, r in prepared.files.items() if name.startswith('src/')}
+                import fcntl
+                for probe_fd in probe_fds:
+                    info = os.fstat(probe_fd)
+                    if ((info.st_dev, info.st_ino) not in input_identities
+                            or os.get_inheritable(probe_fd)
+                            or fcntl.fcntl(probe_fd, fcntl.F_GETFL) & os.O_ACCMODE != os.O_RDONLY):
+                        raise ValueError('reader guard requires exact non-inherited read-only fixture probe descriptors')
+            assert_no_existing_readers(identities, probe_fds=probe_fds)
             prepared.validate_metadata()
             self.service(None)  # No PID is authorized before launch.
         except BaseException:

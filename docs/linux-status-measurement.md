@@ -1,6 +1,6 @@
 # Linux status collection (E03a / NARU-044)
 
-The synthetic `scripts/measure-status.py` workload supports Linux and macOS. Linux uses `scripts/linux_status_measure.py`; macOS retains `/usr/bin/time -l`. Warm-cache still excludes one warmup; first-run includes exactly one first status after receipt preparation. Preparation reads inputs, so first-run is not cold. All cold-cache requests still exit 2 before preparation. E03b must separately implement and verify reset/probe/start ordering and reader controls before enabling a cold backend.
+The synthetic `scripts/measure-status.py` workload supports Linux and macOS. Linux uses `scripts/linux_status_measure.py`; macOS retains `/usr/bin/time -l`. Warm-cache still excludes one warmup; first-run includes exactly one first status after receipt preparation. Preparation reads inputs, so first-run is not cold. All cold-cache requests still exit 2 before preparation. Controller-only isolated-guest integration is described below; the public CLI does not provide a reset backend.
 
 ```sh
 go build -o /tmp/naru-measure ./cmd/naru
@@ -37,7 +37,7 @@ Only directory descriptors remain open between checks, and they are not inherite
 
 The manifest can make output substantially larger than the previous timing summary. Save full JSON if the inventory is needed for later verification; its paths are relative and it contains hashes rather than receipt/log contents. Generated execution IDs/evidence vary across preparations, so a manifest digest is not a cross-run reproducibility claim, a signature, or a build-toolchain attestation. The declared binary SHA-256 identifies bytes observed around preparation and collection, not authenticated build provenance.
 
-This is an observational binding for a controlled synthetic fixture. It does not prevent a hostile same-user/root actor from modifying and restoring files between observations; metadata and content observations are not filesystem snapshots or proof that status saw a single immutable version. The optional E03b-2 guard below checks readers during collection; E03b-3 still owns reset/probe/start ordering. `cold-cache` remains rejected before any preparation. No VM reset or performance threshold is enabled here.
+This is an observational binding for a controlled synthetic fixture. It does not prevent a hostile same-user/root actor from modifying and restoring files between observations; metadata and content observations are not filesystem snapshots or proof that status saw a single immutable version. The optional E03b-2 guard below checks readers during collection; The E03b-3 controller API below adds ordered guest reset/probe/start evidence. `cold-cache` remains rejected before any preparation. No VM reset or performance threshold is enabled here.
 
 `TestStatusProvenanceHelper` runs manifest/digest, metadata-only validation, input/config/receipt/binary mutation, same-content replacement, path/root replacement, unsafe-file, cleanup and bounded-descriptor tests. A fake executable also demonstrates that valid passing status JSON cannot rescue changed inputs/receipts or a binary changed during preparation. POSIX tests run on macOS/Linux and skip on Windows. `TestLinuxStatusMeasurementSmoke` checks actual warm/first-run status output and recomputes the sample's manifest digest. A macOS pass is not native Linux runtime evidence.
 
@@ -93,9 +93,9 @@ cannot revoke mmap access. Other processes must not be allowed to create racing
 unobserved access in the isolated environment. Closing a fanotify group can allow
 pending permission requests: a rejected sample stays rejected even if such an
 open later succeeds. New/replaced files and changed directory membership are
-also rejected by post-sample provenance. This task does not guarantee absence of
-readers before/after the guarded interval, cache residency or reset/probe/start
-ordering; **cold-cache remains rejected**.
+also rejected by post-sample provenance. This guard alone does not guarantee absence of readers before/after the guarded
+interval, cache residency or reset/probe/start ordering. Public CLI cold-cache
+requests remain rejected; the controller protocol below owns ordered collection.
 
 `TestLinuxReaderGuardHelper` runs portable protocol/failure tests (native wait4
 cleanup only on Linux). Privileged kernel acceptance is a separate required Linux
@@ -109,3 +109,84 @@ The [fanotify overview](https://man7.org/linux/man-pages/man7/fanotify.7.html),
 [mark API](https://man7.org/linux/man-pages/man2/fanotify_mark.2.html) document
 permission replies, TGID reporting, CAP_SYS_ADMIN, mmap limitations and pending
 request behavior on group close.
+
+
+## Controller-only input-cold collection (E03b-3 / NARU-047)
+
+The public CLI still rejects `--cache-mode cold-cache` before preparation. There
+is no reset command, JSON attestation, UUID flag or environment-variable unlock.
+`scripts/linux_cold_status.py` instead exposes an internal protocol used by an
+already host-verified disposable-VM controller. A `GuestSession` requires a live
+trusted reset callback, expected boot UUID and controller context. Boot identity,
+Linux and root are checked before and during collection; they do **not** prove
+host isolation. The module never writes `drop_caches` and cannot decide whether
+an arbitrary host is approved. The caller must verify the VM identity/running
+state, original stopped, ordinary guest disk, no NIC/share/clipboard redirection
+and transferred source/binary hashes before delivering the private reset code.
+Do not use Docker Desktop's shared VM, the personal host or a production guest.
+
+The controller calls `measure(args, session)` with cold mode and reader guarding;
+an absent/wrong session, disabled guard or reset session on a non-cold mode is
+rejected. This Python API is trusted orchestration, not a security boundary
+against someone modifying the interpreter or calling arbitrary privileged code.
+Cold mode uses zero warmups and repeats the complete reset protocol for **every**
+requested sample. Guarded warm mode uses the same wait4 collector and shell
+handoff, with exactly one excluded warmup and no reset.
+
+Each cold sample follows this sequence:
+
+1. Open the complete private flat `src` input fixture before reset. Inputs must
+   be nonempty. A narrow reader-guard exception permits only the controller's
+   exact, non-inherited, read-only prepared input probe descriptors. It does not
+   exempt other processes, other descriptors or any existing mappings.
+2. Arm the permission guard and observe every prepared input page resident.
+   This warm positive control must also be rejected as nonresident.
+3. `fsync` the probe descriptors, `sync`, recheck boot/monitor health, then invoke
+   the controller's reset callback and require successful return, including its
+   write/flush/close completion. A returned claimed-evidence object is rejected.
+4. Check prepared metadata without reading content. Require two consecutive
+   read-only probes covering every input/page, both with zero resident pages.
+5. Unmap/close probe resources, reject queued external reader events, then start
+   guarded status collection. At the collector's actual pre-launch timestamp,
+   require a nonnegative second-probe-finish → collector-start gap of at most
+   **100,000,000 ns (100 ms)**. Negative/excess gaps reject before `Popen`; this
+   constant is not a user option. All sync/reset/probe/collection timestamps must
+   also be ordered. The bound concerns collector launch, not first input read.
+6. Reap successful status, drain the guard, close marks, recheck boot, and require
+   every input page resident again after the actual status read. Then validate
+   the expected passing check names/boolean `satisfied` and rehash provenance
+   outside timing. Only a wholly successful invocation returns summary JSON.
+
+`cache_transition` records scope, boot/controller context, manifest digest,
+prepared/first/second/post-status probe snapshots, sync/reset boundaries,
+collector boundaries, fixed bound and observed gap. `collection_complete` means
+that collection/probes finished, not that later status/provenance validation
+passed. The session retains attempted traces on failure; controllers must keep
+rejected attempts and exceptions, not silently retry them into success. Every
+returned row includes raw parsed status, exit code 0, manifest digest and reader
+protocol; Linux rows also include monotonic collector timestamps and observed
+permission-event count. Reset/probe work is excluded from reported status time.
+Session context can contain private VM identifiers: keep raw results private and
+publish only anonymized observations. Boot UUIDs and context are recorded claims
+from the trusted controller, not signed attestations.
+
+This protocol establishes **observed guest input-file-page nonresidency before
+launch**, not a globally cold application, filesystem metadata, executable,
+hypervisor, host or storage cache. Residency is a snapshot; later readahead,
+unobserved privileged races and the existing provenance/reader limitations
+remain. The 100 ms bound is an acceptance rule, not a performance SLA. Probe
+FDs are pinned until the last probe, so the approved guest process needs enough
+file descriptors for the workload; exhausting that limit rejects preparation.
+Nothing installs tools or changes system limits automatically. Thirty-sample
+P11 performance collection is a separate task.
+
+`TestLinuxColdStatusHelper` runs ordering, fixed-gap, callback/boot, bad-residency,
+coverage, monitor/provenance and cleanup failure decisions without a real reset.
+`TestStatusMeasurementHelper` tests controller-only acceptance, sample/warmup
+counts, raw status binding and rejection. Native Linux CI additionally invokes
+`test_linux_cold_status.py --native` to exercise actual probe descriptors with the
+guard, closing before child reads and rejecting writable/extra descriptors; it
+**never resets OS caches**. Actual reset/status acceptance belongs to the
+separately controlled isolated guest, not mocked tests or ordinary CI. See
+[the probe controls and kernel sources](linux-cache-probe.md) for residency/reset
+semantics and snapshot limits.

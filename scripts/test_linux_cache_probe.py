@@ -68,6 +68,25 @@ class ProbeTests(unittest.TestCase):
         with patch.object(cache.os, "geteuid", return_value=os.geteuid() + 1):
             with self.assertRaises(ValueError): cache.Fixture(self.root)
 
+    def test_close_failure_still_releases_other_descriptors(self):
+        fixture = cache.Fixture(self.root)
+        descriptors = [r[0] for r in fixture.files.values()] + [fixture.root_fd]
+        closed = []
+        real_close = os.close
+        def close(fd):
+            closed.append(fd)
+            real_close(fd)
+            if len(closed) == 1:
+                raise OSError("injected close failure")
+        with patch.object(cache.os, "close", side_effect=close):
+            with self.assertRaises(OSError): fixture.close()
+        try:
+            self.assertEqual(closed, descriptors)
+            self.assertEqual(fixture.files, {})
+            self.assertIsNone(fixture.root_fd)
+        finally:
+            for fd in descriptors[len(closed):]: real_close(fd)
+
     def test_syscall_failures(self):
         for stage in ["mmap", "mincore", "munmap"]:
             with self.subTest(stage=stage):

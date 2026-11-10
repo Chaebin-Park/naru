@@ -7,7 +7,7 @@ import signal
 import subprocess
 import sys
 import tempfile
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 import linux_status_measure as linux
 from pathlib import Path
 import unittest
@@ -42,10 +42,44 @@ class MeasurementTests(unittest.TestCase):
         args = measure.parse_args(["naru", "--files", "1", "--bytes", "1"])
         args.reader_guard = True
         output = io.StringIO()
-        with patch.object(measure, "parse_args", return_value=args), patch.object(measure.platform, "system", return_value="Linux"), patch.object(measure, "binary_digest", return_value="sha"), patch.object(measure.subprocess, "run"), patch.object(measure, "PreparedWorkload"), patch.object(measure, "ReaderGuard", side_effect=PermissionError("unavailable")), patch.object(measure, "collect_linux") as collect, contextlib.redirect_stdout(output):
+        with patch.object(measure, "parse_args", return_value=args), patch.object(measure.platform, "system", return_value="Linux"), patch.object(measure, "binary_digest", return_value="sha"), patch.object(measure.subprocess, "run"), patch.object(measure, "PreparedWorkload"), patch.object(measure, "collect_guarded", side_effect=PermissionError("unavailable")), patch.object(measure, "collect_linux") as collect, contextlib.redirect_stdout(output):
             with self.assertRaises(PermissionError): measure.main()
             collect.assert_not_called()
         self.assertEqual(output.getvalue(), "")
+
+    def test_controller_only_cold_and_warm_sample_counts(self):
+        with patch.object(measure.platform, "system", return_value="Linux"):
+            args = measure.parse_args(["naru", "--files", "1", "--bytes", "1", "--samples", "2", "--reader-guard"])
+        session = measure.GuestSession.__new__(measure.GuestSession)
+        session.validate = Mock()
+        prepared = MagicMock(manifest_sha256="digest")
+        prepared.export.return_value = {"manifest_sha256": "digest"}
+        prepared.__enter__.return_value = prepared
+        sample = {"stdout": '{"satisfied":true,"checks":[{"check":"check0","state":"pass"}]}',
+                  "seconds": .001, "max_rss_bytes": 4096, "started_ns": 10, "finished_ns": 11,
+                  "cache_transition": {"manifest_sha256": "digest"}, "reader_guard_events": 3}
+        for mode, capability, calls in [("warm-cache", None, 3), ("cold-cache", session, 2)]:
+            args.cache_mode = mode
+            with patch.object(measure.platform, "system", return_value="Linux"), patch.object(measure, "binary_digest", return_value="sha"), patch.object(measure.subprocess, "run"), patch.object(measure, "PreparedWorkload", return_value=prepared), patch.object(measure, "collect_guarded", return_value=sample) as collect:
+                report = measure.measure(args, capability)
+                self.assertEqual(collect.call_count, calls)
+                self.assertEqual(report["warmups"], calls - 2)
+                self.assertEqual(report["samples"], 2)
+                self.assertTrue(report["samples_data"][0]["status"]["satisfied"])
+                self.assertEqual(report["samples_data"][0]["manifest_sha256"], "digest")
+                self.assertEqual(report["samples_data"][0]["exit_code"], 0)
+                self.assertIs(collect.call_args.args[1], capability)
+                prepared.verify_contents.side_effect = ValueError("provenance changed")
+                with self.assertRaises(ValueError): measure.measure(args, capability)
+                prepared.verify_contents.side_effect = None
+                with patch.object(measure, "collect_guarded", return_value={**sample, "stdout": "{}"}):
+                    with self.assertRaises(RuntimeError): measure.measure(args, capability)
+        for capability in [None, {"verified": True}]:
+            with patch.object(measure, "binary_digest") as digest:
+                with self.assertRaises(ValueError): measure.measure(args, capability)
+                digest.assert_not_called()
+        args.reader_guard = False
+        with self.assertRaises(ValueError): measure.measure(args, session)
 
     def test_reject_invalid_and_unproven_cold(self):
         for flags in (["--samples", "0"], ["--samples", "-1"],

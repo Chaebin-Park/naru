@@ -104,12 +104,19 @@ class Fixture:
                 "started_ns": started, "finished_ns": time.monotonic_ns()}
 
     def close(self):
-        for fd, _ in self.files.values():
-            os.close(fd)
+        descriptors = [record[0] for record in self.files.values()]
         self.files.clear()
         if self.root_fd is not None:
-            os.close(self.root_fd)
+            descriptors.append(self.root_fd)
             self.root_fd = None
+        failure = None
+        for fd in descriptors:
+            try:
+                os.close(fd)
+            except OSError as error:
+                failure = failure or error
+        if failure is not None:
+            raise failure
 
     def __enter__(self):
         return self

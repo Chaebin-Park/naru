@@ -8,6 +8,8 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 
 ### Added
 
+- Integrate controller-only isolated-guest input-cold status collection with guarded reset/probe/launch ordering, a fixed 100 ms gap bound and per-sample provenance; retain public CLI cold-cache refusal.
+
 - Add opt-in Linux synthetic measurement reader guarding with fanotify TGID permission decisions, pre-existing descriptor/mapping rejection and fail-closed collection; cold-cache requests remain disabled.
 
 - Bind synthetic warm/first-run status samples to a prepared workload manifest; reject observed input, configuration, receipt and binary changes without enabling cold-cache measurements.

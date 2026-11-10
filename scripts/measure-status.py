@@ -1,7 +1,6 @@
 """Measure explicitly labeled status latency and peak RSS on macOS or Linux in a temporary project."""
 
 import argparse
-from contextlib import nullcontext
 import json
 import math
 import platform
@@ -14,7 +13,7 @@ from pathlib import Path
 
 from linux_status_measure import collect as collect_linux
 from status_provenance import PreparedWorkload, binary_digest
-from linux_reader_guard import ReaderGuard
+from linux_cold_status import GuestSession, collect_guarded
 
 def summarize(rows):
     """Use nearest-rank p95; resident memory is a maximum, not an allocation sum."""
@@ -44,7 +43,7 @@ def parse_args(argv=None):
     if args.reader_guard and platform.system() != "Linux":
         parser.error("--reader-guard requires Linux")
     if args.cache_mode == "cold-cache":
-        parser.error("cold-cache requires a verified OS cache-reset backend; none is implemented")
+        parser.error("cold-cache is controller-only; no public cache-reset backend is available")
     if args.samples is None:
         args.samples = 1 if args.cache_mode == "first-run" else 20
     if min(args.samples, args.checks, args.files, args.bytes) < 1:
@@ -64,8 +63,13 @@ def validate_status(report, names):
         raise RuntimeError("measured status did not verify the expected fixture checks")
 
 
-def main():
-    args = parse_args()
+def measure(args, session=None):
+    if args.cache_mode == "cold-cache":
+        if type(session) is not GuestSession or not args.reader_guard:
+            raise ValueError("cold-cache requires a live verified-guest session and reader guard")
+        session.validate()
+    elif session is not None:
+        raise ValueError("reset session may only be used for cold-cache")
     system = platform.system()
     if system not in ("Darwin", "Linux"):
         raise SystemExit("RSS measurement requires macOS time -l or Linux wait4")
@@ -75,7 +79,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="naru-status-workload-") as temporary:
         root = Path(temporary)
         (root / ".naru").mkdir()
-        (root / "src").mkdir()
+        (root / "src").mkdir(mode=0o700)
         names = [f"check{i}" for i in range(args.checks)]
         (root / ".naru/config.yaml").write_text(
             "version: 1\ndefault_mode: code\nmodes: {code: [" + ", ".join(names) + "]}\nchecks:\n"
@@ -94,11 +98,8 @@ def main():
             for i in range(args.samples + warmups):
                 prepared.validate_metadata()
                 if system == "Linux":
-                    with ReaderGuard(prepared) if args.reader_guard else nullcontext() as guard:
-                        sample = collect_linux([str(binary), "status", "--json"], root,
-                                               reader_guard=guard)
-                        if guard is not None and guard.allowed_events == 0:
-                            raise RuntimeError("reader guard observed no selected-child permission events")
+                    sample = (collect_guarded(prepared, session) if args.reader_guard else
+                              collect_linux([str(binary), "status", "--json"], root))
                     elapsed, rss = sample["seconds"], sample["max_rss_bytes"]
                     report = json.loads(sample["stdout"])
                 else:
@@ -118,9 +119,15 @@ def main():
                 if not i:
                     first_status_seconds = elapsed
                 if i >= warmups:  # First-run includes the first status; warm-cache excludes it.
-                    rows.append({"seconds": elapsed, "max_rss_bytes": rss,
-                                 "manifest_sha256": prepared.manifest_sha256,
-                                 "reader_guard": "fanotify-tgid-v1" if args.reader_guard else "none"})
+                    row = {"seconds": elapsed, "max_rss_bytes": rss,
+                           "manifest_sha256": prepared.manifest_sha256,
+                           "reader_guard": "fanotify-tgid-v1" if args.reader_guard else "none",
+                           "status": report, "exit_code": 0}
+                    if system == "Linux":
+                        row.update({key: sample[key] for key in
+                                    ("started_ns", "finished_ns", "reader_guard_events", "cache_transition")
+                                    if key in sample})
+                    rows.append(row)
             provenance = prepared.export()
         result = {
             "files": count,
@@ -128,7 +135,8 @@ def main():
             "samples": len(rows),
             "warmups": warmups,
             "cache_mode": args.cache_mode,
-            "cache_evidence": "receipt preparation reads inputs; no OS cache reset",
+            "cache_evidence": ("verified-guest reset; two nonresident input-page snapshots; bounded guarded launch"
+                               if session is not None else "receipt preparation reads inputs; no OS cache reset"),
             "filesystem": "plain-directory, " + args.cache_mode,
             "checks": args.checks,
             "first_status_seconds": first_status_seconds,
@@ -145,7 +153,11 @@ def main():
             **summarize(rows),
             "samples_data": rows,
         }
-        print(json.dumps(result, indent=2))
+        return result
+
+
+def main():
+    print(json.dumps(measure(parse_args()), indent=2))
 
 
 if __name__ == "__main__":

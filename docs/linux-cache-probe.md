@@ -29,7 +29,7 @@ The integration controller prepares a synthetic file on the guest's ordinary dis
 
 No retry silently converts a failed reset or a partially resident result into success. Zero residency after reset also excludes remaining dirty input data pages at that snapshot; this experiment does not separately report guest-wide dirty-page counters. There is no status timing or thirty-sample performance conclusion here.
 
-`mincore` gives a point-in-time observation. Other readers, readahead or later activity can change residency immediately afterward. Two zero probes are a control, not proof of absence of all intervening or future readers. Connecting a status measurement requires the later controller to bind input identities, control readers, record the probe-to-start gap and reject inadequate ordering/pre-read evidence. Until then strict cold performance acceptance remains blocked. Guest RAM page-cache results say nothing about host, hypervisor or storage-controller cache temperatures.
+`mincore` gives a point-in-time observation. Other readers, readahead or later activity can change residency immediately afterward. Two zero probes are a control, not proof of absence of all intervening or future readers. The [controller-only status protocol](linux-status-measurement.md#controller-only-input-cold-collection-e03b-3--naru-047) now binds input identities, reader control and the fixed probe-to-start gap. Its actual reset remains confined to a separately host-verified isolated guest; ordinary CLI cold requests remain blocked. Guest RAM page-cache results say nothing about host, hypervisor or storage-controller cache temperatures.
 
 ## Observed guest control (2026-11-10)
 

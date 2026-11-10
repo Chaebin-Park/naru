@@ -13,6 +13,23 @@ import (
 	"time"
 )
 
+func TestLinuxColdStatusHelper(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("cold protocol uses POSIX descriptors")
+	}
+	python, err := exec.LookPath("python3")
+	if err != nil {
+		t.Fatal("Python 3 required for cold protocol verification")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	// #nosec G204 -- Fixed synthetic protocol tests; no privileges or cache reset requested.
+	output, err := exec.CommandContext(ctx, python, "-B", "../../scripts/test_linux_cold_status.py").CombinedOutput()
+	if err != nil {
+		t.Fatalf("cold status protocol: %v\n%s", err, output)
+	}
+}
+
 func TestLinuxReaderGuardHelper(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("reader guard protocol requires POSIX descriptors")

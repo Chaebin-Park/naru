@@ -284,7 +284,7 @@ Require policy evidence with `mode_policy: {code: true}`. Shared status and gate
 
 The [Linux residency probe](docs/linux-cache-probe.md) provides read-only input-page snapshots for isolated experiments; it does not enable cold-cache performance measurements.
 
-Linux warm-cache/first-run measurements use the [wait4 collector](docs/linux-status-measurement.md), with explicit timing and RSS scope. Samples include a prepared input/configuration/receipt/binary manifest and reject observed changes; Linux `--reader-guard` optionally rejects other readers using fanotify in an isolated environment with full procfs visibility. Cold-cache requests remain blocked.
+Linux warm-cache/first-run measurements use the [wait4 collector](docs/linux-status-measurement.md), with explicit timing and RSS scope. Samples include a prepared input/configuration/receipt/binary manifest and reject observed changes; Linux `--reader-guard` optionally rejects other readers using fanotify in an isolated environment with full procfs visibility. Public CLI cold-cache requests remain blocked; a separate host-verified VM controller can collect ordered input-cold samples with a fixed 100 ms probe-to-launch bound.
 
 [Clean Web CI smoke](docs/ci-smoke.md) includes a source-only archive runner and pinned GitHub Actions workflow. Actual remote failure/recovery passed on Ubuntu with Go 1.23.12; exact revisions and run links are recorded there.
 

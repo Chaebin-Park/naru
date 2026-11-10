@@ -14,7 +14,7 @@ def rss_bytes(kib):
     return kib * 1024
 
 
-def collect(command, cwd, timeout=120, reader_guard=None):
+def collect(command, cwd, timeout=120, reader_guard=None, probe_finished_ns=None):
     if platform.system() != "Linux" or not hasattr(os, "wait4"):
         raise RuntimeError("Linux wait4 collection requires Linux")
     if not math.isfinite(timeout) or timeout <= 0:
@@ -22,6 +22,10 @@ def collect(command, cwd, timeout=120, reader_guard=None):
     # Files avoid pipe deadlock while this function exclusively owns wait4/reaping.
     with tempfile.TemporaryFile() as output, tempfile.TemporaryFile() as errors:
         started = time.monotonic_ns()
+        if probe_finished_ns is not None:
+            if (type(probe_finished_ns) is not int
+                    or not 0 <= started - probe_finished_ns <= 100_000_000):
+                raise ValueError("probe-to-collector-start gap must be within 0..100ms")
         # A fixed shell waits for release so Popen cannot deadlock on a permission
         # event during exec before the controller learns the child TGID. exec keeps
         # that TGID. Both shell handoff and monitoring overhead are timed/accounted.
