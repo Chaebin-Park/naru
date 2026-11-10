@@ -1,7 +1,6 @@
 """Measure explicitly labeled status latency and peak RSS on macOS or Linux in a temporary project."""
 
 import argparse
-import hashlib
 import json
 import math
 import platform
@@ -13,6 +12,7 @@ import time
 from pathlib import Path
 
 from linux_status_measure import collect as collect_linux
+from status_provenance import PreparedWorkload, binary_digest
 
 def summarize(rows):
     """Use nearest-rank p95; resident memory is a maximum, not an allocation sum."""
@@ -63,9 +63,9 @@ def main():
     system = platform.system()
     if system not in ("Darwin", "Linux"):
         raise SystemExit("RSS measurement requires macOS time -l or Linux wait4")
-    binary = args.binary.resolve(strict=True)
+    binary = args.binary.absolute()
     # Hash before fixture preparation; metadata collection is outside timed status runs.
-    binary_sha256 = hashlib.sha256(binary.read_bytes()).hexdigest()
+    binary_sha256 = binary_digest(binary)
     with tempfile.TemporaryDirectory(prefix="naru-status-workload-") as temporary:
         root = Path(temporary)
         (root / ".naru").mkdir()
@@ -82,30 +82,35 @@ def main():
         subprocess.run(
             [str(binary), "check"], cwd=root, check=True, capture_output=True, timeout=120
         )
-        rows = []
-        warmups = 1 if args.cache_mode == "warm-cache" else 0
-        for i in range(args.samples + warmups):
-            if system == "Linux":
-                sample = collect_linux([str(binary), "status", "--json"], root)
-                elapsed, rss = sample["seconds"], sample["max_rss_bytes"]
-                report = json.loads(sample["stdout"])
-            else:
-                started = time.perf_counter()
-                run = subprocess.run(
-                    ["/usr/bin/time", "-l", str(binary), "status", "--json"],
-                    cwd=root, capture_output=True, text=True, check=True, timeout=120,
-                )
-                elapsed = time.perf_counter() - started
-                report = json.loads(run.stdout)
-                rss = int(next(
-                    line.split()[0] for line in run.stderr.splitlines()
-                    if "maximum resident set size" in line
-                ))
-            validate_status(report, names)
-            if not i:
-                first_status_seconds = elapsed
-            if i >= warmups:  # First-run includes the first status; warm-cache excludes it.
-                rows.append({"seconds": elapsed, "max_rss_bytes": rss})
+        with PreparedWorkload(root, binary, binary_sha256) as prepared:
+            rows = []
+            warmups = 1 if args.cache_mode == "warm-cache" else 0
+            for i in range(args.samples + warmups):
+                prepared.validate_metadata()
+                if system == "Linux":
+                    sample = collect_linux([str(binary), "status", "--json"], root)
+                    elapsed, rss = sample["seconds"], sample["max_rss_bytes"]
+                    report = json.loads(sample["stdout"])
+                else:
+                    started = time.perf_counter()
+                    run = subprocess.run(
+                        ["/usr/bin/time", "-l", str(binary), "status", "--json"],
+                        cwd=root, capture_output=True, text=True, check=True, timeout=120,
+                    )
+                    elapsed = time.perf_counter() - started
+                    report = json.loads(run.stdout)
+                    rss = int(next(
+                        line.split()[0] for line in run.stderr.splitlines()
+                        if "maximum resident set size" in line
+                    ))
+                validate_status(report, names)
+                prepared.verify_contents()
+                if not i:
+                    first_status_seconds = elapsed
+                if i >= warmups:  # First-run includes the first status; warm-cache excludes it.
+                    rows.append({"seconds": elapsed, "max_rss_bytes": rss,
+                                 "manifest_sha256": prepared.manifest_sha256})
+            provenance = prepared.export()
         result = {
             "files": count,
             "bytes": total,
@@ -124,6 +129,7 @@ def main():
             "go": (subprocess.check_output(["go", "version"], text=True, timeout=10).strip()
                    if shutil.which("go") else None),
             "binary_sha256": binary_sha256,
+            "provenance": provenance,
             **summarize(rows),
             "samples_data": rows,
         }

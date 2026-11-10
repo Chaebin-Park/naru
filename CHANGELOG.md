@@ -8,6 +8,8 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 
 ### Added
 
+- Bind synthetic warm/first-run status samples to a prepared workload manifest; reject observed input, configuration, receipt and binary changes without enabling cold-cache measurements.
+
 - Support Linux warm-cache/first-run status measurements using monotonic wall time and wait4 peak RSS, with strict status validation; cold-cache requests remain disabled.
 
 - Add a read-only Linux file-page residency probe with fixture identity checks and isolated-guest control documentation; cold-cache measurements remain disabled.

@@ -119,3 +119,8 @@ The [read-only Linux probe and isolated-guest control](linux-cache-probe.md) sep
 ## Linux collection prerequisite (E03a / NARU-044)
 
 The [Linux wall-time and peak-RSS collector](linux-status-measurement.md) supports warm-cache/first-run synthetic smoke measurements, with explicit timing and memory scope. Cold-cache refusal remains; reset/probe/start ordering, reader controls and P11 measurements are pending E03b.
+
+
+### Prepared status workload binding (E03b-1)
+
+Warm/first-run results now include a [prepared workload manifest](linux-status-measurement.md#prepared-workload-provenance-e03b-1--naru-045) for inputs, configuration, receipts/evidence and the observed binary. Every sample references its digest. Pre-sample metadata checks avoid content reads, while post-sample rehashing rejects changed observations before any result summary is emitted. This adds preparation/verification work outside the reported wall time and changes cache history around samples; retain the source revision when comparing protocols. It does not supply reader control, an immutable filesystem snapshot or a cold-cache backend. Historical measurements above retain their original source/protocol scope.
