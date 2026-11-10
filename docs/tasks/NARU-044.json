@@ -3,7 +3,7 @@
   "id": "NARU-044",
   "previous": "NARU-043",
   "base": "5a7c9304bad771719af06acaff896809ec43318b",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Add Linux status measurement collection while preserving cold-cache refusal",
     "profile": "code-v1",
@@ -23,6 +23,6 @@
       "E03a prerequisite only. No reset backend or cold-cache enablement; E03b owns reset/probe/start ordering and reader controls. One small workload is not the P11 thirty-sample performance result. Linux wait4 peak RSS is not simultaneous process-tree RSS and Linux timings are not directly compared to historical macOS time-l timings."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "6e0a6a42846203c4394ee57858c50ba31232b431",
+  "evidence": "286b336bc1d656b8338a111d73831e0cf405dfc8f0f32c882325a1c5fda9fb8c"
 }
