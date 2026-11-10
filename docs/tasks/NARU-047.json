@@ -3,7 +3,7 @@
   "id": "NARU-047",
   "previous": "NARU-046",
   "base": "d8066de3f71e52ca24065a306d8a946b7491ef3b",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Integrate ordered isolated-guest input-cold status collection",
     "profile": "code-v1",
@@ -28,6 +28,6 @@
       "E03b-3 only, no P11 thirty-sample results, new dependency, toolchain installation, release or general-host cache-reset command. The public helper has no built-in reset backend or JSON/environment-variable unlock. Actual reset is supplied by the host-verified private disposable-VM controller; guest root and a claimed UUID alone are insufficient isolation evidence. Strict cold means observed nonresident input file pages before collector launch, not cold host/hypervisor/storage caches or an atomic snapshot. Shell handoff and observer overhead remain timed; the fixed 100ms gap is not a latency SLA or proof against later readers. Existing fd/mmap/provenance limitations persist. The coherent integration may exceed 300 implementation lines because probe-fd lifetime, collector timing, measurement API and their fault tests share one rollback boundary."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "33c4da231c01694ca303ad7e7e979b329f8eb1a1",
+  "evidence": "59fd410ed6425c44d21eb68ba9fe3e0bdd70e5669e03b5f286b29eae5f854e48"
 }
