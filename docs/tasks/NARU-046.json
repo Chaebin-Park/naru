@@ -3,7 +3,7 @@
   "id": "NARU-046",
   "previous": "NARU-045",
   "base": "b41dc70bd63ef498a62dff9edca48643c7b95264",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Connect a fail-closed Linux synthetic status reader guard",
     "profile": "code-v1",
@@ -28,6 +28,6 @@
       "E03b-2 only. Guarding is opt-in, requires Linux fanotify permission events and complete procfs visibility in an approved isolated environment. It rejects observed pre-existing workload/binary file descriptors and mappings, but is not a hostile same-user/root sandbox or proof against unobserved races. Privileged native Linux integration is exercised separately; portable mocked protocol cases do not establish kernel support. Guarded launch includes a shell handoff in elapsed time and waited-child peak RSS. No reset, mincore/start ordering, cold-cache enablement, performance threshold, new dependency or installation. Implementation may exceed 300 lines to keep event parsing, procfs preconditions, collector lifetime and failure tests in one rollback boundary."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "86377295e5c2c2753194626922178bfa22c64e5b",
+  "evidence": "0ce0b00b46a3b809f54bfea1c95d7ad4df620c734a6afa9b543158dc6211f683"
 }
