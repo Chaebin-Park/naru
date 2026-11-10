@@ -3,7 +3,7 @@
   "id": "NARU-045",
   "previous": "NARU-044",
   "base": "e37472405cd98cd380dc34314a39c6bac2aef3ca",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Bind status samples to prepared workload provenance",
     "profile": "code-v1",
@@ -28,6 +28,6 @@
       "E03b-1 only: provenance detects observed changes, not a hostile same-user/root actor that restores files between observations. Metadata checks are not a proof of no prior reads or cold state. E03b-2 owns reader control and E03b-3 owns ordered reset/probe/start integration. POSIX provenance tests skip on Windows; native Linux runtime is verified separately from cross-platform vet. No new dependency, installation or cold-cache enablement. A manifest includes generated evidence metadata and its digest is not cross-run reproducibility or binary build attestation."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "61d24a3c354eef5fba4b13dd702bb7156ff4989f",
+  "evidence": "a078d85b0ac52bf8283cc06b1625246c3cc35d7a4b048b06015cff1221dd18e9"
 }
