@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "id": "NARU-046",
+  "previous": "NARU-045",
+  "base": "b41dc70bd63ef498a62dff9edca48643c7b95264",
+  "status": "active",
+  "plan": {
+    "title": "Connect a fail-closed Linux synthetic status reader guard",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Reader guard protocol tests reject unexpected TGIDs, overflow, malformed/short events, monitor EOF/read/write failures and closed guards; event descriptors close on failure. Existing descriptor/mapping checks fail closed when unavailable or occupied. The collector services the guard throughout child lifetime, rejects terminal failures and cleans up its direct child on timeout/error.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestLinuxReaderGuardHelper"
+      },
+      {
+        "id": "AC-2",
+        "description": "Synthetic measurement offers explicit Linux-only reader guarding, binds successful rows to the prepared manifest and guard protocol, rejects unavailable guard setup without summary, and preserves warm/first-run and cold-cache refusal behavior.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestStatusMeasurementHelper"
+      },
+      {
+        "id": "AC-3",
+        "description": "Existing actual status smoke and prepared-workload provenance remain passing.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestLinuxStatusMeasurementSmoke"
+      }
+    ],
+    "limitations": [
+      "E03b-2 only. Guarding is opt-in, requires Linux fanotify permission events and complete procfs visibility in an approved isolated environment. It rejects observed pre-existing workload/binary file descriptors and mappings, but is not a hostile same-user/root sandbox or proof against unobserved races. Privileged native Linux integration is exercised separately; portable mocked protocol cases do not establish kernel support. Guarded launch includes a shell handoff in elapsed time and waited-child peak RSS. No reset, mincore/start ordering, cold-cache enablement, performance threshold, new dependency or installation. Implementation may exceed 300 lines to keep event parsing, procfs preconditions, collector lifetime and failure tests in one rollback boundary."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
