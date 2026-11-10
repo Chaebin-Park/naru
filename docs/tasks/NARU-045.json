@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "id": "NARU-045",
+  "previous": "NARU-044",
+  "base": "e37472405cd98cd380dc34314a39c6bac2aef3ca",
+  "status": "active",
+  "plan": {
+    "title": "Bind status samples to prepared workload provenance",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "A POSIX preparation helper hashes the binary and complete synthetic workload (inputs, configuration and prepared evidence), records a canonical manifest, rejects unsafe paths/types and detects file set, content, identity and root/directory replacement changes. Metadata-only pre-sample validation does not read file content; post-sample hashing is outside timed collection. Regression tests prove mutation rejection and descriptor cleanup.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestStatusProvenanceHelper"
+      },
+      {
+        "id": "AC-2",
+        "description": "Warm/first-run measurement output binds each accepted sample to a single prepared manifest; actual small workload smoke verifies matching provenance, existing labels/units and cold-cache refusal. No reset backend or reader guard is enabled.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestLinuxStatusMeasurementSmoke"
+      },
+      {
+        "id": "AC-3",
+        "description": "Existing measurement validation, collector failure and cache-label regression suite remains passing.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestStatusMeasurementHelper"
+      }
+    ],
+    "limitations": [
+      "E03b-1 only: provenance detects observed changes, not a hostile same-user/root actor that restores files between observations. Metadata checks are not a proof of no prior reads or cold state. E03b-2 owns reader control and E03b-3 owns ordered reset/probe/start integration. POSIX provenance tests skip on Windows; native Linux runtime is verified separately from cross-platform vet. No new dependency, installation or cold-cache enablement. A manifest includes generated evidence metadata and its digest is not cross-run reproducibility or binary build attestation."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
