@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "id": "NARU-054",
+  "previous": "NARU-053",
+  "base": "2fcdf6207da31b774c018079184f5a2f9729dcc1",
+  "status": "active",
+  "plan": {
+    "title": "Consolidate public user documentation in English and Korean",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Both README versions have equivalent installation, commands, support limits and links. Current isolated performance results replace stale claims.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIExecutionLifecycle"
+      },
+      {
+        "id": "AC-2",
+        "description": "Remove outdated planning illustrations from the public tree and keep navigable operational reference and evidence.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIPathLifecycle"
+      }
+    ],
+    "limitations": [
+      "Verified task ledger and published Git history remain intact. Link and language parity are reviewed separately from CLI tests."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
