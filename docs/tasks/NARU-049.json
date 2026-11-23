@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "id": "NARU-049",
+  "previous": "NARU-048",
+  "base": "c6aee51006397d768490792bdfdf2356606466bd",
+  "status": "active",
+  "plan": {
+    "title": "Patch the native Linux CI Go toolchain",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Use Go 1.27.4 for the current Linux matrix leg, development tool setup, and dogfood analysis while retaining Go 1.23.12 compatibility coverage. Check the workflow pins and observe successful main CI on the pushed completion SHA.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIExecutionLifecycle"
+      }
+    ],
+    "limitations": [
+      "Local test evidence covers the CLI lifecycle. Actual native matrix and analysis evidence comes from GitHub Actions after push."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
