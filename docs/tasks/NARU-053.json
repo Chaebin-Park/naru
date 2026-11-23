@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "id": "NARU-053",
+  "previous": "NARU-052",
+  "base": "81e57944b3d937e2e1fb57a14a171d12234003e0",
+  "status": "active",
+  "plan": {
+    "title": "Validate release provenance in an isolated manual workflow",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "A manually dispatched validation-only GitHub-hosted workflow obtains short-lived identity only on the dedicated test ref and confirms the exact pinned source. It generates a test provenance bundle that verifies for the expected subjects, issuer, workflow, ref and commit.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIExecutionLifecycle"
+      },
+      {
+        "id": "AC-2",
+        "description": "The actual remote run rejects changed bytes, wrong signer identity, wrong source commit and absent evidence. Record the run SHA and outcome before closure.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIPathLifecycle"
+      }
+    ],
+    "limitations": [
+      "Requires an approved public test attestation. There is no production signing, release publishing, tag or repository settings change. The isolated test identity cannot satisfy production policy."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
