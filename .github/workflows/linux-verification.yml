@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go: ['1.23.12', '1.27.3']
+        go: ['1.23.12', '1.27.4']
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -26,7 +26,7 @@ jobs:
           ref: ${{ github.sha }}
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
-          go-version: '1.27.3'
+          go-version: '1.27.4'
           cache: false
       - name: Assert native target and record environment
         run: |
@@ -57,7 +57,7 @@ jobs:
           sudo python3 -B scripts/test_linux_cold_status.py --native
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
-          go-version: '1.27.3'
+          go-version: '1.27.4'
           cache: false
       - name: Build and dogfood all checks
         run: |

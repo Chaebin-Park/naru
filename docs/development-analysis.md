@@ -4,7 +4,7 @@ This is a temporary Go development aid for this repository. It does not add a re
 
 ## Setup and use
 
-Put a compatible Go toolchain on the current shell's PATH. The application remains Go 1.23-compatible by policy; these **development tools** have higher requirements. The verified setup uses Go 1.27.3 on macOS arm64, golangci-lint 2.15.0 (built with Go 1.27.0), and govulncheck 1.9.0 (module minimum Go 1.26). Minimum application-toolchain compatibility is a separate check.
+Put a compatible Go toolchain on the current shell's PATH. The application remains Go 1.23-compatible by policy; these **development tools** have higher requirements. The verified setup uses Go 1.27.4 on macOS arm64, golangci-lint 2.15.0 (built with Go 1.27.0), and govulncheck 1.9.0 (module minimum Go 1.26). Minimum application-toolchain compatibility is a separate check.
 
 ```sh
 sh scripts/setup-devtools.sh      # explicit local download/build, no system installation
