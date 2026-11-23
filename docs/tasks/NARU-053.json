@@ -3,7 +3,7 @@
   "id": "NARU-053",
   "previous": "NARU-052",
   "base": "81e57944b3d937e2e1fb57a14a171d12234003e0",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Validate release provenance in an isolated manual workflow",
     "profile": "code-v1",
@@ -23,6 +23,6 @@
       "Requires an approved public test attestation. There is no production signing, release publishing, tag or repository settings change. The isolated test identity cannot satisfy production policy."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "a02bb26f68770e62a323620726b3fb0f1e46e8a7",
+  "evidence": "adeddb115229173611c5e6b380e8ef19aa0ac3da1c75a74c930ccf07c598f5d3"
 }
