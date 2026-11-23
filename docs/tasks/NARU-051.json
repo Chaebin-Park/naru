@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "id": "NARU-051",
+  "previous": "NARU-050",
+  "base": "0bd7eb3ce2897c5fdd1fd9fc6f5a066226a33de4",
+  "status": "active",
+  "plan": {
+    "title": "Define the public release artifact trust policy",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Select one credential and trust model. Document repository, signer workflow, OIDC issuer, trusted source revision and tag, artifact digest and provenance predicate. Set rules for absent or mismatched evidence, fork and PR authorization, and recovery.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIExecutionLifecycle"
+      }
+    ],
+    "limitations": [
+      "Policy only. The lifecycle test verifies the underlying CLI; actual attestation issuance and rejection tests belong to the later isolated workflow. No release, tag, credentials or repository settings changes."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
