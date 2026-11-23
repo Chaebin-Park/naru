@@ -82,8 +82,18 @@ Treat affected digests as rejected even if their historical signatures
 still verify. Keep the original verification evidence for incident review.
 [Sigstore timestamp verification](https://docs.sigstore.dev/cosign/verifying/timestamps/)
 
-The current v0.2.0 release is unsigned. The isolated workflow must prove the
-accept and reject cases above before this policy is used for publication.
+The v0.2.0 release is unsigned. The [isolated validation run](https://github.com/Chaebin-Park/naru/actions/runs/45142636900)
+verified all six subjects and rejected each planned mismatch at source commit
+`a02bb26f68770e62a323620726b3fb0f1e46e8a7`.
+
+## Production run
+
+Dispatch `release.yml` at the approved version tag with its full peeled
+commit as `source_commit`. The job checks the workflow and checkout revision,
+builds and attests the five archives and manifest, verifies each subject,
+and provides the exact bytes as the `naru-release` Actions artifact.
+The maintainer verifies the downloaded bytes and publishes them in a separate
+GitHub release operation. The workflow has no publication permission.
 
 ## Isolated validation run
 

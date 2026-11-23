@@ -6,6 +6,17 @@ All notable changes to naru are recorded here. The format follows [Keep a Change
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-23
+
+### Changed
+
+- Consolidate English and Korean user guides, remove outdated planning images, and link verification records from the contribution guide.
+- Verify the minimum Go toolchain alongside the current toolchain in native Linux CI.
+
+### Distribution
+
+- Package five archives from one source revision and attest them and the checksum manifest with GitHub Actions and Sigstore.
+
 ### Added
 
 - Integrate controller-only isolated-guest input-cold status collection with guarded reset/probe/launch ordering, a fixed 100 ms gap bound and per-sample provenance; retain public CLI cold-cache refusal.
@@ -102,5 +113,7 @@ First release: the core loop that gates an AI agent's "done" on receipts.
 - Windows needs a POSIX `sh`, and timeouts there do not kill child processes.
 - No baselines, policy index, relay, git hooks or CI templates yet.
 
-[Unreleased]: https://github.com/Chaebin-Park/naru/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Chaebin-Park/naru/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Chaebin-Park/naru/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/Chaebin-Park/naru/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Chaebin-Park/naru/releases/tag/v0.1.0

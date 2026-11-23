@@ -1,0 +1,74 @@
+name: Build and attest release
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Full approved commit referenced by the release tag
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  build:
+    if: github.repository == 'Chaebin-Park/naru' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    env:
+      APPROVED_SOURCE: ${{ inputs.source_commit }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.ref }}
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: '1.27.4'
+          cache: false
+      - name: Build and check all platforms
+        shell: bash
+        run: |
+          version="${GITHUB_REF#refs/tags/}"
+          [[ "$version" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          [[ "$APPROVED_SOURCE" =~ ^[0-9a-f]{40}$ ]]
+          test "$APPROVED_SOURCE" = "$GITHUB_SHA"
+          test "$APPROVED_SOURCE" = "$GITHUB_WORKFLOW_SHA"
+          test "$APPROVED_SOURCE" = "$(git rev-parse HEAD)"
+          PACKAGE_DIR="$RUNNER_TEMP/naru-release"
+          echo "PACKAGE_DIR=$PACKAGE_DIR" >> "$GITHUB_ENV"
+          python3 -B scripts/package-release.py "$PACKAGE_DIR" "$version"
+          (cd "$PACKAGE_DIR" && sha256sum -c SHA256SUMS)
+      - name: Attest release artifacts
+        id: attestation
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: |
+            ${{ env.PACKAGE_DIR }}/*.tar.gz
+            ${{ env.PACKAGE_DIR }}/*.zip
+            ${{ env.PACKAGE_DIR }}/SHA256SUMS
+      - name: Verify production provenance
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUNDLE: ${{ steps.attestation.outputs.bundle-path }}
+        run: |
+          identity="https://github.com/$GITHUB_REPOSITORY/.github/workflows/release.yml@$GITHUB_REF"
+          for path in "$PACKAGE_DIR"/*.tar.gz "$PACKAGE_DIR"/*.zip "$PACKAGE_DIR/SHA256SUMS"; do
+            gh attestation verify "$path" --bundle "$BUNDLE" \
+              --repo "$GITHUB_REPOSITORY" --cert-identity "$identity" \
+              --cert-oidc-issuer https://token.actions.githubusercontent.com \
+              --signer-digest "$APPROVED_SOURCE" --source-digest "$APPROVED_SOURCE" \
+              --source-ref "$GITHUB_REF" --predicate-type https://slsa.dev/provenance/v1 \
+              --deny-self-hosted-runners
+          done
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: naru-release
+          path: ${{ env.PACKAGE_DIR }}/
+          if-no-files-found: error
+          compression-level: 0
