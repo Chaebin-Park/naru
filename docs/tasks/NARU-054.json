@@ -3,7 +3,7 @@
   "id": "NARU-054",
   "previous": "NARU-053",
   "base": "2fcdf6207da31b774c018079184f5a2f9729dcc1",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Consolidate public user documentation in English and Korean",
     "profile": "code-v1",
@@ -23,6 +23,6 @@
       "Verified task ledger and published Git history remain intact. Link and language parity are reviewed separately from CLI tests."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "7f4df6d7868b808991b9e94ceaca67c661d0e08c",
+  "evidence": "a03ab00d6b3fc63c53fff889c54e87b4f55a1a617187d6a2de7f7d0d9d46578a"
 }
