@@ -3,7 +3,7 @@
   "id": "NARU-050",
   "previous": "NARU-049",
   "base": "8358981238c9db25b76c5f0b13129373273956ab",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Measure status on an isolated public project snapshot",
     "profile": "code-v1",
@@ -23,6 +23,6 @@
       "Automated tests cover the measurement protocol. Actual guest samples are required for closure. Guest residency does not establish host storage cache state."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "6c7c050cad6cf60567543d77c82d10b6ad78bd73",
+  "evidence": "fe36dcfbbc161cab485babb2c4fb189d79a57bf7c783ccec142d85849c6783f9"
 }
