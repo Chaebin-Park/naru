@@ -3,7 +3,7 @@
   "id": "NARU-052",
   "previous": "NARU-051",
   "base": "bfe9e23d859f49dcdd706d74a06581c6ec6c69db",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Automate source-bound release packaging",
     "profile": "code-v1",
@@ -23,6 +23,6 @@
       "Local unpublished artifacts only. Cross-build and checksum success do not establish native execution or bitwise reproducibility. Actual archive signing and publication belong to subsequent tasks."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "85d3d5074f695ed4b37d07a0c05fb79afc1da32c",
+  "evidence": "91bce8f1aa4c311b1119c5860f2945c0e5e2481bd92d9bcabb8d0ad270f60895"
 }
