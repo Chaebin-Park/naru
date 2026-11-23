@@ -229,3 +229,31 @@ This is integration acceptance, not P11's thirty-sample performance result or
 an operating-system comparison. It does not establish cold host/storage
 caches, an atomic filesystem snapshot or independent physical backing-chain
 isolation. The existing observer, provenance and reader limitations apply.
+
+### Controlled synthetic performance (NARU-048)
+
+The isolated ARM64 Rocky Linux 9.8 guest used the same source, binary, kernel,
+Python and XFS environment as the integration smoke. Both modes used the
+Linux wait4 collector with the fanotify reader guard and the same synthetic
+input inventory: 10,000 files totaling 104,857,600 bytes and three required
+checks. The guest controller used a process-local soft descriptor limit of
+16,384. Warm collection excluded one warmup. Cold collection used zero warmups
+and reset guest caches before each sample.
+
+| Mode | Valid samples | Median wall seconds | Nearest-rank p95 wall seconds | Maximum waited-child RSS bytes |
+| --- | ---: | ---: | ---: | ---: |
+| warm-cache | 30 | 96.703279194 | 97.904902535 | 23,601,152 |
+| cold-cache | 30 | 97.198288531 | 98.027843615 | 37,892,096 |
+
+An independent verifier recomputed the statistics from the raw rows and checked
+their prepared manifest binding, the matching input inventories and all three
+passing checks in each sample. Every cold row had zero resident input pages in
+both pre-launch probes and full residency after status. The largest gap from
+the second probe to collector start was 5,476,401 ns, within 100,000,000 ns.
+Both raw JSON files and their hashes were retained as private guest evidence.
+Neither collection rejected a sample.
+
+Warm p95 exceeded the two-second target in this guarded setup. The measured
+wall time includes reader-guard polling and event handling. These runs alone
+cannot attribute that time to the guard or to status itself. Cold observations
+apply to guest input pages. Real-project measurement remains a separate task.
