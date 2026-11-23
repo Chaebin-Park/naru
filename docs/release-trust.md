@@ -84,3 +84,18 @@ still verify. Keep the original verification evidence for incident review.
 
 The current v0.2.0 release is unsigned. The isolated workflow must prove the
 accept and reject cases above before this policy is used for publication.
+
+## Isolated validation run
+
+The manual `release-attestation-validation.yml` workflow accepts only the
+dedicated `ci/release-attestation-validation` branch of the canonical public
+repository. The supplied commit must match the workflow and checkout commit.
+The run creates test archives marked `v0.0.0` and requests provenance for the
+five archives and their checksum manifest. This creates public transparency
+log entries. Dispatch only an approved run and record its URL and source SHA.
+
+The validation uses the test workflow's exact identity and ref and requires
+successful verification of all six subjects. Using the same verified bundle,
+the run then checks that changed bytes, a different workflow identity and a
+different source commit are each rejected. A separate empty bundle checks
+absent evidence. The workflow has no release publishing step.

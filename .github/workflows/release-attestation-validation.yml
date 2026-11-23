@@ -1,0 +1,94 @@
+name: Isolated release attestation validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Full approved commit on the validation branch
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  validate:
+    if: github.repository == 'Chaebin-Park/naru' && github.ref == 'refs/heads/ci/release-attestation-validation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    env:
+      APPROVED_SOURCE: ${{ inputs.source_commit }}
+      PACKAGE_DIR: ${{ runner.temp }}/naru-attestation-validation
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version: '1.27.4'
+          cache: false
+      - name: Build test archives from the approved revision
+        shell: bash
+        run: |
+          [[ "$APPROVED_SOURCE" =~ ^[0-9a-f]{40}$ ]]
+          test "$APPROVED_SOURCE" = "$GITHUB_SHA"
+          test "$APPROVED_SOURCE" = "$GITHUB_WORKFLOW_SHA"
+          test "$APPROVED_SOURCE" = "$(git rev-parse HEAD)"
+          python3 -B scripts/package-release.py "$PACKAGE_DIR" v0.0.0
+          (cd "$PACKAGE_DIR" && sha256sum -c SHA256SUMS)
+      - name: Attest validation subjects
+        id: test-attestation
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: |
+            ${{ env.PACKAGE_DIR }}/*.tar.gz
+            ${{ env.PACKAGE_DIR }}/*.zip
+            ${{ env.PACKAGE_DIR }}/SHA256SUMS
+      - name: Verify chosen provenance and reject mismatches
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUNDLE: ${{ steps.test-attestation.outputs.bundle-path }}
+        run: |
+          verify() {
+            local subject=$1 bundle=$2 identity=$3 revision=$4
+            gh attestation verify "$subject" --bundle "$bundle" \
+              --repo Chaebin-Park/naru --cert-identity "$identity" \
+              --cert-oidc-issuer https://token.actions.githubusercontent.com \
+              --signer-digest "$APPROVED_SOURCE" --source-digest "$revision" \
+              --source-ref refs/heads/ci/release-attestation-validation \
+              --predicate-type https://slsa.dev/provenance/v1 --deny-self-hosted-runners
+          }
+          reject() {
+            local label=$1
+            shift
+            if verify "$@"; then
+              echo "Unexpectedly accepted: $label" >&2
+              exit 1
+            fi
+            echo "Rejected: $label"
+          }
+
+          identity='https://github.com/Chaebin-Park/naru/.github/workflows/release-attestation-validation.yml@refs/heads/ci/release-attestation-validation'
+          subject="$PACKAGE_DIR/SHA256SUMS"
+          for path in "$PACKAGE_DIR"/*.tar.gz "$PACKAGE_DIR"/*.zip "$subject"; do
+            verify "$path" "$BUNDLE" "$identity" "$APPROVED_SOURCE"
+          done
+
+          tampered="$RUNNER_TEMP/tampered-checksums"
+          cp "$subject" "$tampered"
+          printf '\nchanged\n' >> "$tampered"
+          rejected_source="$(printf '%040d' 0)"
+          if test "$rejected_source" = "$APPROVED_SOURCE"; then
+            rejected_source="$(printf '%040d' 1)"
+          fi
+          empty_bundle="$RUNNER_TEMP/missing-attestation.jsonl"
+          : > "$empty_bundle"
+          reject "changed bytes" "$tampered" "$BUNDLE" "$identity" "$APPROVED_SOURCE"
+          reject "wrong signer" "$subject" "$BUNDLE" "${identity/.yml@/-other.yml@}" "$APPROVED_SOURCE"
+          reject "wrong source" "$subject" "$BUNDLE" "$identity" "$rejected_source"
+          reject "absent evidence" "$subject" "$empty_bundle" "$identity" "$APPROVED_SOURCE"
