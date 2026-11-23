@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "id": "NARU-052",
+  "previous": "NARU-051",
+  "base": "bfe9e23d859f49dcdd706d74a06581c6ec6c69db",
+  "status": "active",
+  "plan": {
+    "title": "Automate source-bound release packaging",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Use the existing committed-source build to create exactly five platform archives and SHA256SUMS with approved regular members, source revision, version and Go build metadata. Refuse unsafe candidate contents and existing output.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIExecutionLifecycle"
+      },
+      {
+        "id": "AC-2",
+        "description": "Pass the eight source isolation regressions, packaging success and rejection tests and a temporary native install smoke against a fresh archive with the expected binary version and source revision.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIPathLifecycle"
+      }
+    ],
+    "limitations": [
+      "Local unpublished artifacts only. Cross-build and checksum success do not establish native execution or bitwise reproducibility. Actual archive signing and publication belong to subsequent tasks."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
