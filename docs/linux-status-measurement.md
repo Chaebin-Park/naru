@@ -257,3 +257,42 @@ Warm p95 exceeded the two-second target in this guarded setup. The measured
 wall time includes reader-guard polling and event handling. These runs alone
 cannot attribute that time to the guard or to status itself. Cold observations
 apply to guest input pages. Real-project measurement remains a separate task.
+
+### Public project performance (NARU-050)
+
+The project was a clean, plain-directory archive of this repository at
+`8358981238c9db25b76c5f0b13129373273956ab`. Its default code mode used the
+existing `fmt`, `vet`, `test`, and `analysis` checks. Those checks ran on
+macOS ARM64 with Go 1.27.4. The Linux guest measured `status` against the same
+four passing records and independently rehashed the current inputs for each
+sample. The union of the four checks covered 210 files totaling 743,527 bytes.
+The project source, configuration, records and empty lock files were pinned in
+one manifest for both modes. An untimed preparation run created the locks
+before the manifest was fixed.
+
+The isolated Linux ARM64 XFS guest used a Go 1.27.4 Linux ARM64 binary
+(SHA-256 `e324469e23ca109393b1826dc182d54d9babd33c62e43379c46f363ff3743c91`)
+with the same fanotify guard and wait4 collector as the synthetic measurement.
+Cold probes covered the union of configured input paths across the project
+tree. Warm mode excluded one guarded warmup. Cold mode reset guest caches
+per sample with no guarded warmup. Two setup attempts were retained and
+excluded after archive permissions and first-run lock creation caused
+provenance checks to reject them.
+
+| Mode | Valid samples | Median wall seconds | Nearest-rank p95 wall seconds | Maximum waited-child RSS bytes |
+| --- | ---: | ---: | ---: | ---: |
+| warm-cache | 30 | 2.096413318 | 2.119485635 | 13,774,848 |
+| cold-cache | 30 | 2.083210985 | 2.112144184 | 13,639,680 |
+
+Both pre-launch probes found zero resident input pages for every cold sample,
+and every input page was resident after status. The largest second-probe to
+collector-start gap was 249,168 ns. The raw rows, manifest and rejected setup
+attempts were retained privately. A separate verifier recomputed the table
+from those rows.
+
+The synthetic guarded warm p95 missed its two-second target. The public
+project run measures a smaller, different input set with actual check
+records. Its warm and cold figures describe this run without defining a
+real-project or cold latency target. The timed interval includes the reader
+guard. Separating guard overhead from status work requires an additional
+matched comparison. The cold evidence covers guest input pages only.
