@@ -3,7 +3,7 @@
   "id": "NARU-051",
   "previous": "NARU-050",
   "base": "0bd7eb3ce2897c5fdd1fd9fc6f5a066226a33de4",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Define the public release artifact trust policy",
     "profile": "code-v1",
@@ -18,6 +18,6 @@
       "Policy only. The lifecycle test verifies the underlying CLI; actual attestation issuance and rejection tests belong to the later isolated workflow. No release, tag, credentials or repository settings changes."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "94a73a0f22fc17a41fe0f11f65e2f6e6d3867ad7",
+  "evidence": "e4a54ad9da39d97bd4beee1380881e74210f470540135d64b5216e5b653e4831"
 }
