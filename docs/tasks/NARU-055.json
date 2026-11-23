@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "id": "NARU-055",
+  "previous": "NARU-054",
+  "base": "025bc382a20ac70a18701453785f91307c0ae8d7",
+  "status": "active",
+  "plan": {
+    "title": "Prepare the v0.3.0 release and verify production provenance",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "The canonical tag workflow builds five source-bound archives, verifies checksums and provenance, and makes the validated bytes available for separate release publication.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIExecutionLifecycle"
+      },
+      {
+        "id": "AC-2",
+        "description": "Bilingual release notes identify the user-visible changes and honest support limits. The reviewed version, exact tag commit, assets and attestation identity agree during release verification.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestCLIPathLifecycle"
+      }
+    ],
+    "limitations": [
+      "No replacement of an existing tag or release. The remote run and asset checks supplement the local gate."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
