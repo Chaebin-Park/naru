@@ -3,7 +3,7 @@
   "id": "NARU-048",
   "previous": "NARU-047",
   "base": "aea59f87be8260a4078d94f8f72cd1a0ac42ef6a",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Measure controlled synthetic warm and input-cold status performance",
     "profile": "code-v1",
@@ -23,6 +23,6 @@
       "Synthetic workload only. Actual guest measurement is required before closure; the automated tests verify protocol behavior. Guest input page evidence does not establish host/storage cache state."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "2440d395dcab1f16f79b4f709dfeb4d7c00275d5",
+  "evidence": "3c7d00ce3c2324cfa5573745066342104bc2e784e24ade2cac7675c1ae49d442"
 }
