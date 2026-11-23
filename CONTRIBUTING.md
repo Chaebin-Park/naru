@@ -78,3 +78,13 @@ Before marking a task complete:
 5. Report changed behavior, verification, limitations, and commit status. Self-review is not independent review.
 
 Keep private planning and company-specific context outside the public repository. Do not commit local diagrams, generated receipts/logs, or temporary artifacts. A task can be locally verified while an explicitly approval-gated integration test remains pending; report these statuses separately instead of calling the entire feature complete.
+
+## Verification references
+
+The public [English](README.md) and [Korean](README.ko.md) guides cover installation and usage. Maintainers can find the supporting evidence here.
+
+- [Agent sessions](docs/verification.md), [behavior baseline](docs/current-behavior.md) and [acceptance mapping](docs/mvp-acceptance.md)
+- [Native Linux](docs/linux-verification.md), [native Windows](docs/windows-verification.md) and [cancellation recovery](docs/cancellation-recovery.md)
+- [Web CI](docs/ci-smoke.md), [Web pack](docs/web-verification.md) and [Android pack](docs/android-verification.md)
+- [Runtime and reliability](docs/reliability-performance.md), [Linux measurement](docs/linux-status-measurement.md) and [page residency experiment](docs/linux-cache-probe.md)
+- [Release preparation](docs/release-preparation.md) and [artifact trust](docs/release-trust.md)

@@ -62,8 +62,9 @@ This uses a temporary installation only. No shell profile, global binary directo
 | Target | Current evidence | Support boundary |
 | --- | --- | --- |
 | macOS arm64 | Native full checks and temporary candidate smoke | Requires POSIX `sh` and project-specific tools |
-| Linux amd64 | Selected Rocky Linux container tests; actual Ubuntu/Go 1.23.12 Web CI | Full minimum-Go suite not run |
-| macOS amd64, Linux arm64 | Candidate cross-build only | Runtime not verified |
+| Linux amd64 | [Native Linux CI](linux-verification.md) on the supported Go matrix and Web CI | CI evidence covers the recorded jobs and toolchains |
+| Linux arm64 | Cross-build plus isolated native status measurements on a naru checkout | Measurement covers the recorded status workload only |
+| macOS amd64 | Candidate cross-build only | Runtime not verified |
 | Windows amd64 | Native Go 1.23.12 vet, CLI paths, cancellation/timeout recovery, same-check ownership and actual local pre-push; [runs and matrices](windows-verification.md) | Requires POSIX shell; descendants can survive cancellation/timeout and require inspected manual recovery; keyboard Ctrl-C unverified |
 
 See [reliability measurements and lifecycle limits](reliability-performance.md) and [remote CI evidence](ci-smoke.md). Cross-build success never implies runtime support. Tools/SDKs for Android, Web and Spring Boot packs are separate prerequisites; NARU does not install them.
