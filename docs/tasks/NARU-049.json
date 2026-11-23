@@ -3,7 +3,7 @@
   "id": "NARU-049",
   "previous": "NARU-048",
   "base": "c6aee51006397d768490792bdfdf2356606466bd",
-  "status": "active",
+  "status": "completed",
   "plan": {
     "title": "Patch the native Linux CI Go toolchain",
     "profile": "code-v1",
@@ -18,6 +18,6 @@
       "Local test evidence covers the CLI lifecycle. Actual native matrix and analysis evidence comes from GitHub Actions after push."
     ]
   },
-  "implementation": "",
-  "evidence": ""
+  "implementation": "af03092938eff9cc65e9cba667b00ab2444ee1a8",
+  "evidence": "721b27c14511f886f0cb68216f8b0ebf1e1e3a6fb12e977c7309cabcf1bea75f"
 }
