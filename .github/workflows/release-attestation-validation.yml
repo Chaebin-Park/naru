@@ -21,7 +21,6 @@ jobs:
       attestations: write
     env:
       APPROVED_SOURCE: ${{ inputs.source_commit }}
-      PACKAGE_DIR: ${{ runner.temp }}/naru-attestation-validation
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -38,6 +37,8 @@ jobs:
           test "$APPROVED_SOURCE" = "$GITHUB_SHA"
           test "$APPROVED_SOURCE" = "$GITHUB_WORKFLOW_SHA"
           test "$APPROVED_SOURCE" = "$(git rev-parse HEAD)"
+          PACKAGE_DIR="$RUNNER_TEMP/naru-attestation-validation"
+          echo "PACKAGE_DIR=$PACKAGE_DIR" >> "$GITHUB_ENV"
           python3 -B scripts/package-release.py "$PACKAGE_DIR" v0.0.0
           (cd "$PACKAGE_DIR" && sha256sum -c SHA256SUMS)
       - name: Attest validation subjects
