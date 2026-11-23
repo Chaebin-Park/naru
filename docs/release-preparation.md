@@ -22,6 +22,27 @@ The output directory must be new and absolute. The script refuses a dirty checko
 
 A SHA256 sum detects changed bytes; it does not authenticate the publisher. Check the trusted source revision separately. Do not sign, tag, push or publish a release without maintainer approval. The checksum file does not hash itself.
 
+## Build unpublished release archives
+
+From a clean committed checkout with Go and Python 3 on PATH, run:
+
+```sh
+python3 scripts/package-release.py /tmp/naru-release-UNIQUE v0.0.0
+cd /tmp/naru-release-UNIQUE
+shasum -a 256 -c SHA256SUMS
+```
+
+Use the intended version in place of the example. The command reuses the
+candidate build's source isolation and checks that its exact inventory,
+revision, version and checksums agree before creating the output directory.
+The destination must be new, absolute and outside the checkout, with an
+existing parent directory. The output contains four Unix tarballs, one Windows
+ZIP and a checksum manifest. Each archive contains its platform executable and
+`LICENSE`, `REVISION`, `VERSION`, `TOOLCHAIN` and `BUILD_SETTINGS`.
+If packaging fails after creating the directory, keep it for diagnosis and
+retry with a new path. These archives share the recorded source commit.
+Bitwise reproducibility across independent builds has not been verified.
+
 ## Isolated installation smoke
 
 Copy the host candidate into a temporary `bin/naru`, add that directory to a command-scoped PATH, and create a separate synthetic Go module with a passing test. In that module, verify:
