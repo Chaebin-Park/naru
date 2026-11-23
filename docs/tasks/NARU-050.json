@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "id": "NARU-050",
+  "previous": "NARU-049",
+  "base": "8358981238c9db25b76c5f0b13129373273956ab",
+  "status": "active",
+  "plan": {
+    "title": "Measure status on an isolated public project snapshot",
+    "profile": "code-v1",
+    "criteria": [
+      {
+        "id": "AC-1",
+        "description": "Collect and retain 30 valid warm and 30 valid guarded guest input-cold status samples from the pinned public naru snapshot and its actual four passing self-check receipts, with manifest binding and cold transition evidence.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestLinuxColdStatusHelper"
+      },
+      {
+        "id": "AC-2",
+        "description": "Recompute median, nearest-rank p95 and maximum waited-child RSS from the exact sample sets and document real-project and synthetic performance boundaries.",
+        "test": "github.com/Chaebin-Park/naru/internal/cli/TestStatusMeasurementHelper"
+      }
+    ],
+    "limitations": [
+      "Automated tests cover the measurement protocol. Actual guest samples are required for closure. Guest residency does not establish host storage cache state."
+    ]
+  },
+  "implementation": "",
+  "evidence": ""
+}
