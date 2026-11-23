@@ -3,6 +3,7 @@
 The published [v0.2.0 release](https://github.com/Chaebin-Park/naru/releases/tag/v0.2.0) provides five platform archives and SHA256SUMS. Its source is `87b6f10747cbd3804bcd89ae8f83c6b8b5474783`. Install that version with `go install github.com/Chaebin-Park/naru/cmd/naru@v0.2.0`, or download the archive for your platform and verify its checksum before extraction. Binaries are unsigned; runtime support limits are listed below.
 
 The candidate preparation procedure below is for subsequent builds. It creates no tag or release; publication is a separate approved step.
+Future signed publication follows the [release artifact trust policy](release-trust.md).
 
 ## Candidate preparation
 
